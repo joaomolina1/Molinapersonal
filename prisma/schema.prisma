@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BreastSide {
+  LEFT
+  RIGHT
+  BOTH
+  UNKNOWN
+}
+
+enum MilkType {
+  BREAST_MILK
+  SUPPLEMENT
+  AR
+}
+
+model Child {
+  id          String       @id @default(cuid())
+  userId      String
+  name        String
+  birthDate   DateTime?
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  directFeeds DirectFeed[]
+  bottleFeeds BottleFeed[]
+
+  @@index([userId])
+}
+
+model DirectFeed {
+  id              String     @id @default(cuid())
+  userId          String
+  childId         String
+  startAt         DateTime
+  endAt           DateTime
+  durationSeconds Int
+  breastSide      BreastSide @default(UNKNOWN)
+  isManual        Boolean    @default(false)
+  notes           String?
+  createdAt       DateTime   @default(now())
+  child           Child      @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startAt])
+  @@index([childId, startAt])
+}
+
+model BottleFeed {
+  id        String   @id @default(cuid())
+  userId    String
+  childId   String
+  fedAt     DateTime
+  amountMl  Int
+  milkType  MilkType
+  notes     String?
+  createdAt DateTime @default(now())
+  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([userId, fedAt])
+  @@index([childId, fedAt])
+}
