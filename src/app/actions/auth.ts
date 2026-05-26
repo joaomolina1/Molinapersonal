@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -66,6 +67,7 @@ export async function registerAction(formData: FormData) {
     redirect(`/register?error=${encodeURIComponent(error.message)}`);
   }
 
+  revalidatePath("/", "layout");
   redirect(
     "/login?message=Conta+criada.+Se+tiveres+confirmacao+de+email+ativa,+valida+o+email+antes+de+entrar.",
   );
@@ -89,11 +91,13 @@ export async function loginAction(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
 
+  revalidatePath("/", "layout");
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
+  revalidatePath("/", "layout");
   redirect("/login?message=Terminaste+sessao");
 }

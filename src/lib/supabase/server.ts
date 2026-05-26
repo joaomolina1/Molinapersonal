@@ -22,13 +22,14 @@ export async function createSupabaseServerClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, _headers) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // Cookie writes can fail in some server render contexts.
+            // Cookie writes can fail in some Server Component render contexts;
+            // `proxy.ts` refresh still applies cookies on the next navigation.
           }
         },
       },

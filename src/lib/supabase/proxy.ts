@@ -33,8 +33,10 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        setAll(cookiesToSet, headers) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
 
           response = NextResponse.next({
             request,
@@ -43,6 +45,14 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options as CookieOptions);
           });
+
+          // Required by @supabase/ssr: auth responses must not be cached by CDNs
+          // (see SetAllCookies second parameter in @supabase/ssr types).
+          if (headers) {
+            for (const [key, value] of Object.entries(headers)) {
+              response.headers.set(key, value);
+            }
+          }
         },
       },
     },
