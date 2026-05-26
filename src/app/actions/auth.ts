@@ -53,10 +53,12 @@ export async function registerAction(formData: FormData) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signUp({
+  const origin = await getOrigin();
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      emailRedirectTo: `${origin}/auth/callback`,
       data: {
         display_name: name,
       },
@@ -67,9 +69,16 @@ export async function registerAction(formData: FormData) {
     redirect(`/register?error=${encodeURIComponent(error.message)}`);
   }
 
+  // Supabase returns an empty identities array when the email is already registered.
+  if (data.user && data.user.identities?.length === 0) {
+    redirect(
+      "/register?error=Este+email+ja+esta+registado.+Tenta+entrar+ou+recuperar+a+palavra-passe.",
+    );
+  }
+
   revalidatePath("/", "layout");
   redirect(
-    "/login?message=Conta+criada.+Se+tiveres+confirmacao+de+email+ativa,+valida+o+email+antes+de+entrar.",
+    "/login?message=Conta+criada.+Confirma+o+email+que+recebeste+antes+de+entrar+(verifica+spam).",
   );
 }
 
@@ -88,7 +97,12 @@ export async function loginAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    const message =
+      error.message.toLowerCase().includes("email not confirmed") ||
+      error.message.toLowerCase().includes("not confirmed")
+        ? "Confirma+o+teu+email+antes+de+entrar.+Verifica+a+caixa+de+entrada+e+spam."
+        : encodeURIComponent(error.message);
+    redirect(`/login?error=${message}`);
   }
 
   revalidatePath("/", "layout");
