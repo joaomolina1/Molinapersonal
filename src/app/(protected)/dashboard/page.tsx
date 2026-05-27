@@ -80,15 +80,13 @@ export default async function DashboardPage() {
     "";
 
   return (
-    <div className="flex flex-col gap-5 fade-up">
+    <div className="flex flex-col gap-5">
       {/* Hero greeting card */}
-      <section className="card rounded-3xl p-5 sm:p-7 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-gradient-to-br from-[#ffd9e4] to-[#e9e1ff] blur-2xl opacity-70" />
+      <section className="card rounded-3xl p-5 sm:p-7 relative overflow-hidden fade-up">
+        <div className="hero-orb w-40 h-40 bg-[#ffc8d7]/60 -top-12 -right-12" aria-hidden />
         <div className="relative">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            {greeting}
-          </p>
-          <h1 className="mt-1.5 text-2xl sm:text-3xl font-bold tracking-tight">
+          <p className="section-label">{greeting}</p>
+          <h1 className="font-display mt-1.5 text-2xl sm:text-3xl font-semibold tracking-tight">
             {displayName ? `Olá, ${displayName}` : "Olá!"}
           </h1>
           <p className="mt-1.5 text-sm text-[var(--muted)]">
@@ -96,7 +94,7 @@ export default async function DashboardPage() {
               ? "Vamos começar — adiciona o teu bebé."
               : todayCount > 0
                 ? `${todayCount} ${todayCount === 1 ? "registo" : "registos"} hoje. Boa.`
-                : "Ainda sem registos hoje. Pronta?"}
+                : "Ainda sem registos hoje. Pronto para registar?"}
           </p>
 
           {children.length === 0 ? (
@@ -115,7 +113,7 @@ export default async function DashboardPage() {
 
       {/* Quick actions */}
       {children.length > 0 ? (
-        <section className="grid grid-cols-2 gap-3">
+        <section className="grid grid-cols-2 gap-3 fade-up fade-up-delay-1">
           <ActionCard
             href="/feeds"
             title="Mamada"
@@ -149,11 +147,9 @@ export default async function DashboardPage() {
 
       {/* Last events */}
       {children.length > 0 && (lastDirect || lastBottle) ? (
-        <section className="card rounded-3xl p-5 sm:p-6">
+        <section className="card rounded-3xl p-5 sm:p-6 fade-up fade-up-delay-2">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">
-              Últimos registos
-            </h2>
+            <h2 className="section-label">Últimos registos</h2>
             <Link
               href="/history"
               className="text-xs font-semibold text-[var(--primary)] hover:underline"
@@ -162,31 +158,51 @@ export default async function DashboardPage() {
             </Link>
           </div>
           <ul className="flex flex-col divide-y divide-[var(--border)]">
-            {lastDirect ? (
-              <LastItem
-                kind="direct"
-                title={`${Math.floor(lastDirect.durationSeconds / 60)}m ${lastDirect.durationSeconds % 60}s`}
-                detail={SIDE_LABELS[lastDirect.breastSide] ?? "—"}
-                date={lastDirect.startAt}
-              />
-            ) : null}
-            {lastBottle ? (
-              <LastItem
-                kind="bottle"
-                title={`${lastBottle.amountMl} ml`}
-                detail={MILK_LABELS[lastBottle.milkType] ?? lastBottle.milkType}
-                date={lastBottle.fedAt}
-              />
-            ) : null}
+            {(
+              [
+                lastDirect
+                  ? {
+                      kind: "direct" as const,
+                      date: lastDirect.startAt,
+                      title: `${Math.floor(lastDirect.durationSeconds / 60)}m ${lastDirect.durationSeconds % 60}s`,
+                      detail: SIDE_LABELS[lastDirect.breastSide] ?? "—",
+                    }
+                  : null,
+                lastBottle
+                  ? {
+                      kind: "bottle" as const,
+                      date: lastBottle.fedAt,
+                      title: `${lastBottle.amountMl} ml`,
+                      detail:
+                        MILK_LABELS[lastBottle.milkType] ?? lastBottle.milkType,
+                    }
+                  : null,
+              ].filter(Boolean) as {
+                kind: "direct" | "bottle";
+                date: Date;
+                title: string;
+                detail: string;
+              }[]
+            )
+              .sort((a, b) => b.date.getTime() - a.date.getTime())
+              .map((event) => (
+                <LastItem
+                  key={event.kind}
+                  kind={event.kind}
+                  title={event.title}
+                  detail={event.detail}
+                  date={event.date}
+                />
+              ))}
           </ul>
         </section>
       ) : null}
 
       {/* Children chips */}
       {children.length > 0 ? (
-        <section className="card rounded-3xl p-5 sm:p-6">
+        <section className="card rounded-3xl p-5 sm:p-6 fade-up fade-up-delay-3">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">
+            <h2 className="section-label">
               {children.length === 1 ? "Bebé" : "Bebés"}
             </h2>
             <Link
@@ -260,7 +276,7 @@ function ActionCard({
   return (
     <Link
       href={href}
-      className="card rounded-3xl p-4 sm:p-5 hover:translate-y-[-1px] transition group"
+      className="card card-hover rounded-3xl p-4 sm:p-5 group"
     >
       <span
         className={`grid place-items-center w-11 h-11 rounded-2xl text-white bg-gradient-to-br ${grad[tone]} shadow-sm group-hover:scale-105 transition`}

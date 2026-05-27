@@ -18,33 +18,30 @@ export default async function LoginPage({ searchParams }: AuthPageProps) {
   const message = readParam(params?.message);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-10">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-10 overflow-hidden">
+      <div className="hero-orb w-56 h-56 bg-[#ffc8d7]/40 -top-16 -right-20" aria-hidden />
+      <div className="hero-orb w-48 h-48 bg-[#c4b5ff]/30 bottom-0 -left-16" aria-hidden />
+
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] mb-5 self-start"
+        className="relative inline-flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] mb-5 self-start transition-colors"
       >
         <Icon name="back" size={16} /> Voltar
       </Link>
 
-      <div className="card rounded-3xl p-7 sm:p-8 fade-up">
-        <span className="grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#f06292] to-[#e94e77] text-white shadow-sm mb-4">
+      <div className="card rounded-3xl p-7 sm:p-8 fade-up relative">
+        <span className="grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#f06b92] to-[var(--primary)] text-white shadow-sm mb-4">
           <Icon name="drop" size={22} />
         </span>
-        <h1 className="text-2xl font-bold tracking-tight">Bem-vinda de volta</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          Bem-vindo de volta
+        </h1>
         <p className="mt-1.5 text-sm text-[var(--muted)]">
           Entra com o teu email e palavra-passe.
         </p>
 
-        {message ? (
-          <p className="mt-5 rounded-xl bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-800 border border-emerald-200/60">
-            {message}
-          </p>
-        ) : null}
-        {error ? (
-          <p className="mt-5 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-800 border border-rose-200/60">
-            {error}
-          </p>
-        ) : null}
+        {message ? <p className="alert alert-success mt-5">{message}</p> : null}
+        {error ? <p className="alert alert-error mt-5">{error}</p> : null}
 
         <div className="mt-6">
           <GoogleButton label="Entrar com Google" />

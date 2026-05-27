@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import BottleForm from "@/components/BottleForm";
 import PageHeader from "@/components/PageHeader";
 import ChildSwitcher from "@/components/ChildSwitcher";
+import EmptyState from "@/components/EmptyState";
 import Icon from "@/components/Icon";
 
 const MILK_LABELS: Record<string, string> = {
@@ -64,18 +66,21 @@ export default async function BottlePage({
             Últimos biberões
           </h2>
           {recentFeeds.length > 0 ? (
-            <a
+            <Link
               href="/history"
               className="text-xs font-semibold text-[var(--bottle)] hover:underline"
             >
               Ver tudo
-            </a>
+            </Link>
           ) : null}
         </div>
         {recentFeeds.length === 0 ? (
-          <p className="text-sm text-[var(--muted)] text-center py-6">
-            Sem biberões registados.
-          </p>
+          <EmptyState
+            icon="bottle"
+            tone="bottle"
+            title="Ainda sem biberões"
+            description="Regista volume e tipo de leite no formulário acima."
+          />
         ) : (
           <ul className="flex flex-col divide-y divide-[var(--border)]">
             {recentFeeds.map((f) => (

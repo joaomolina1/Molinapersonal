@@ -17,28 +17,29 @@ export default async function RegisterPage({ searchParams }: AuthPageProps) {
   const error = readParam(params?.error);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-10">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-10 overflow-hidden">
+      <div className="hero-orb w-56 h-56 bg-[#c4b5ff]/35 -top-12 -left-20" aria-hidden />
+      <div className="hero-orb w-48 h-48 bg-[#ffc8d7]/30 bottom-0 -right-16" aria-hidden />
+
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] mb-5 self-start"
+        className="relative inline-flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] mb-5 self-start transition-colors"
       >
         <Icon name="back" size={16} /> Voltar
       </Link>
 
-      <div className="card rounded-3xl p-7 sm:p-8 fade-up">
-        <span className="grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#8b6dff] to-[#7c5cff] text-white shadow-sm mb-4">
+      <div className="card rounded-3xl p-7 sm:p-8 fade-up relative">
+        <span className="grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#9175ff] to-[var(--accent)] text-white shadow-sm mb-4">
           <Icon name="sparkle" size={22} />
         </span>
-        <h1 className="text-2xl font-bold tracking-tight">Cria a tua conta</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          Cria a tua conta
+        </h1>
         <p className="mt-1.5 text-sm text-[var(--muted)]">
           Em segundos. Os dados ficam só contigo.
         </p>
 
-        {error ? (
-          <p className="mt-5 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-800 border border-rose-200/60">
-            {error}
-          </p>
-        ) : null}
+        {error ? <p className="alert alert-error mt-5">{error}</p> : null}
 
         <div className="mt-6">
           <GoogleButton label="Continuar com Google" />

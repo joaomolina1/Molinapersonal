@@ -23,17 +23,19 @@ export default function TopBar({ userEmail }: Props) {
 
   return (
     <header className="sticky top-0 z-20 px-3 pt-3 sm:px-6 sm:pt-4">
-      <div className="mx-auto max-w-5xl card rounded-2xl px-3 sm:px-4 py-2.5 flex items-center gap-3">
+      <div className="mx-auto max-w-3xl card rounded-2xl px-3 sm:px-4 py-2.5 flex items-center gap-3">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 shrink-0 group"
           aria-label="Início"
         >
-          <span className="grid place-items-center w-9 h-9 rounded-2xl bg-gradient-to-br from-[#f06292] to-[#e94e77] text-white shadow-sm group-hover:scale-105 transition">
+          <span className="grid place-items-center w-9 h-9 rounded-2xl bg-gradient-to-br from-[#f06b92] to-[var(--primary)] text-white shadow-sm group-hover:scale-105 transition-transform">
             <Icon name="drop" size={18} />
           </span>
           <span className="hidden sm:flex flex-col leading-tight">
-            <span className="text-[15px] font-bold tracking-tight">Mama</span>
+            <span className="font-display text-[15px] font-semibold tracking-tight">
+              Mama
+            </span>
             <span className="text-[11px] text-[var(--muted)]">Diário</span>
           </span>
         </Link>

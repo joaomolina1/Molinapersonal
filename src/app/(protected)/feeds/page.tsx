@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import FeedTimer from "@/components/FeedTimer";
 import PageHeader from "@/components/PageHeader";
 import ChildSwitcher from "@/components/ChildSwitcher";
+import EmptyState from "@/components/EmptyState";
 import Icon from "@/components/Icon";
 
 const SIDE_LABELS: Record<string, string> = {
@@ -65,18 +67,21 @@ export default async function FeedsPage({
             Últimas mamadas
           </h2>
           {recentFeeds.length > 0 ? (
-            <a
+            <Link
               href="/history"
               className="text-xs font-semibold text-[var(--primary)] hover:underline"
             >
               Ver tudo
-            </a>
+            </Link>
           ) : null}
         </div>
         {recentFeeds.length === 0 ? (
-          <p className="text-sm text-[var(--muted)] text-center py-6">
-            Sem mamadas registadas.
-          </p>
+          <EmptyState
+            icon="drop"
+            tone="primary"
+            title="Ainda sem mamadas"
+            description="Usa o cronómetro acima para registar a primeira mamada."
+          />
         ) : (
           <ul className="flex flex-col divide-y divide-[var(--border)]">
             {recentFeeds.map((f) => {

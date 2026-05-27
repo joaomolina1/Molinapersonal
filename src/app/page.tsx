@@ -3,25 +3,32 @@ import Icon from "@/components/Icon";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center px-5 py-12 sm:px-8">
-      <div className="grid gap-8 md:grid-cols-[1.1fr_1fr] items-center">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center px-5 py-12 sm:px-8 overflow-hidden">
+      <div
+        className="hero-orb w-72 h-72 bg-[#ffc8d7]/50 -top-20 -left-20"
+        aria-hidden
+      />
+      <div
+        className="hero-orb w-64 h-64 bg-[#c4b5ff]/40 top-10 -right-16"
+        aria-hidden
+      />
+
+      <div className="grid gap-10 md:grid-cols-[1.08fr_1fr] items-center relative">
         <div className="fade-up">
           <span className="chip bg-[var(--primary-soft)] text-[var(--primary)]">
             <Icon name="sparkle" size={14} />
             Diário de amamentação
           </span>
-          <h1 className="mt-5 text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05]">
+          <h1 className="font-display mt-5 text-4xl sm:text-[2.75rem] font-semibold tracking-tight leading-[1.08]">
             Mamadas e biberões,
-            <span className="block bg-gradient-to-r from-[#e94e77] via-[#a06bff] to-[#4f8cff] bg-clip-text text-transparent">
-              registados em segundos.
-            </span>
+            <span className="block text-gradient mt-1">registados em segundos.</span>
           </h1>
           <p className="mt-5 text-base sm:text-lg leading-7 text-[var(--muted)] max-w-lg">
             Um cronómetro simples, histórico claro e estatísticas honestas — feito
             para usar com uma mão, no telemóvel ou no computador.
           </p>
 
-          <div className="mt-7 flex flex-col sm:flex-row gap-3">
+          <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Link href="/register" className="btn btn-primary">
               Criar conta
               <Icon name="right" size={16} />
@@ -31,7 +38,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <ul className="mt-9 grid grid-cols-2 gap-3 max-w-md text-sm">
+          <ul className="mt-10 grid grid-cols-2 gap-3 max-w-md text-sm">
             <Feature icon="drop" label="Cronómetro ao peito" />
             <Feature icon="bottle" label="Registo de biberões" />
             <Feature icon="history" label="Histórico completo" />
@@ -39,24 +46,24 @@ export default function Home() {
           </ul>
         </div>
 
-        <div className="relative fade-up">
-          <div className="card rounded-[28px] p-6 sm:p-8">
+        <div className="relative fade-up fade-up-delay-2">
+          <div className="card card-hover rounded-[28px] p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                  Em curso
-                </p>
+                <p className="section-label">Em curso</p>
                 <p className="mt-1 text-sm text-[var(--foreground)] font-semibold">
                   Maria · lado esquerdo
                 </p>
               </div>
               <span className="chip bg-[var(--primary-soft)] text-[var(--primary)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
                 Ao vivo
               </span>
             </div>
             <div className="mt-6 grid place-items-center">
-              <div className="relative w-44 h-44 rounded-full bg-gradient-to-br from-[#fde7ec] to-[#efeaff] grid place-items-center timer-pulse">
-                <span className="font-mono text-4xl font-bold tabular-nums text-[var(--primary)]">
+              <div className="relative w-44 h-44 rounded-full bg-gradient-to-br from-[#fde8ee] via-white to-[#f0ebff] grid place-items-center timer-pulse">
+                <div className="absolute inset-2 rounded-full border border-white/80" />
+                <span className="relative font-mono text-4xl font-bold tabular-nums text-[var(--primary)]">
                   07:42
                 </span>
               </div>
@@ -67,17 +74,26 @@ export default function Home() {
               <Stat value="180ml" label="Biberão" />
             </div>
           </div>
-          <div className="hidden md:block absolute -z-10 -inset-4 rounded-[40px] bg-gradient-to-br from-[#ffe4ec]/60 via-transparent to-[#e9e1ff]/60 blur-2xl" />
+          <div
+            className="hidden md:block absolute -z-10 -inset-6 rounded-[44px] bg-gradient-to-br from-[#ffc8d7]/40 via-transparent to-[#c4b5ff]/35 blur-3xl"
+            aria-hidden
+          />
         </div>
       </div>
     </main>
   );
 }
 
-function Feature({ icon, label }: { icon: "drop" | "bottle" | "history" | "stats"; label: string }) {
+function Feature({
+  icon,
+  label,
+}: {
+  icon: "drop" | "bottle" | "history" | "stats";
+  label: string;
+}) {
   return (
-    <li className="flex items-center gap-2.5 text-[var(--muted)]">
-      <span className="grid place-items-center w-8 h-8 rounded-xl bg-white/70 border border-[var(--border)] text-[var(--primary)]">
+    <li className="flex items-center gap-2.5">
+      <span className="grid place-items-center w-9 h-9 rounded-xl bg-white/80 border border-[var(--border)] text-[var(--primary)] shadow-sm">
         <Icon name={icon} size={16} />
       </span>
       <span className="font-medium text-[var(--foreground)]">{label}</span>
@@ -87,11 +103,9 @@ function Feature({ icon, label }: { icon: "drop" | "bottle" | "history" | "stats
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-2xl bg-white/70 border border-[var(--border)] py-3 px-2 text-center">
+    <div className="rounded-2xl bg-white/80 border border-[var(--border)] py-3 px-2 text-center">
       <p className="text-base font-bold tabular-nums">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-[var(--muted)] mt-0.5">
-        {label}
-      </p>
+      <p className="section-label mt-1 opacity-80">{label}</p>
     </div>
   );
 }

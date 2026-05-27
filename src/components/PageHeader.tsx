@@ -39,7 +39,7 @@ export default function PageHeader({
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
+        <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--foreground)]">
           {title}
         </h1>
         {subtitle ? (
