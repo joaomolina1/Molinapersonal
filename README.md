@@ -1,125 +1,145 @@
-# Breastfeed Tracker
+# RINU
 
-Aplicacao web mobile-first para registo de amamentacao e biberoes.
+Marketplace de espaços e serviços para eventos — pesquisa, reservas, área de anfitrião e backoffice.
 
-Estado atual: Etapa 2 (gestao de filhos) concluida.
+**Produção:** [molinapersonal.vercel.app](https://molinapersonal.vercel.app)
 
 ## Stack
 
-- Next.js (App Router + TypeScript)
-- Tailwind CSS
-- Supabase (Auth + Postgres)
-- Prisma ORM
+- [Next.js 15](https://nextjs.org/) (App Router, React 19, TypeScript)
+- [Supabase](https://supabase.com/) — Auth, Postgres, Storage
+- [Vercel](https://vercel.com/) — hosting
+- Stripe — pagamentos
+- TanStack Query, React Aria, Sentry, PostHog
+
+## Funcionalidades
+
+- Pesquisa de espaços com mapa, filtros e destaques
+- Páginas de espaço, packs e reserva (`/book`)
+- Área de anfitrião (`/host`) — venues, espaços, packs, calendário, reservas
+- Onboarding de novos anfitriões
+- Admin — utilizadores, destaques, orçamentos, reservas
+- API REST em `/api/[service]/v1` (substitui o antigo api-gateway Go)
+- Migração de dados do stack legado (scripts em `scripts/migrate-data/`)
 
 ## Requisitos
 
-- Node.js 20+
-- Conta Supabase
-- Projeto criado no Vercel (opcional nesta fase)
+- Node.js 22+
+- Projeto Supabase (URL + chaves)
+- Conta Vercel (deploy)
 
 ## Como correr localmente
-
-1. Instalar dependencias:
 
 ```bash
 npm install
 ```
 
-2. Criar ficheiro de ambiente:
+Copia as variáveis de ambiente:
 
 ```bash
 cp .env.example .env
 ```
 
-No Windows PowerShell, usa:
+No PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-3. Preencher variaveis no .env com os valores do teu projeto Supabase.
+Preenche pelo menos:
 
-4. Gerar Prisma Client:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_SITE_URL` (ex.: `http://localhost:3000`)
+
+Aplica o schema na base de dados (Supabase CLI ligado ao projeto):
 
 ```bash
-npm run prisma:generate
+supabase db push
 ```
 
-5. Correr a app:
+Arranca o servidor de desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-6. Abrir no browser:
+Abre [http://localhost:3000](http://localhost:3000).
 
-http://localhost:3000
+## Variáveis de ambiente
 
-## Variaveis de ambiente
+Ver [`.env.example`](.env.example) para a lista completa.
 
-- DATABASE_URL: string de ligacao Postgres (Supabase)
-- NEXT_PUBLIC_SUPABASE_URL: URL publica do projeto Supabase
-- NEXT_PUBLIC_SUPABASE_ANON_KEY: chave anon publica do Supabase
-- SUPABASE_SERVICE_ROLE_KEY: chave service role (apenas server-side)
+| Variável | Obrigatória | Descrição |
+|----------|-------------|-----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Sim | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Sim | Chave anon (cliente) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Sim | Chave service role (API server-side) |
+| `NEXT_PUBLIC_SITE_URL` | Sim | URL pública do site |
+| `STRIPE_*` | Reservas | Pagamentos Stripe |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Mapa | Google Maps na pesquisa |
+| `BREVO_*` | Email/CRM | Brevo (opcional em dev) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Monitorização | Sentry (opcional) |
 
-## Scripts uteis
+**Não commits:** `.env`, `.env.production`, `.env.migrate` — estão no `.gitignore`.
 
-- npm run dev: arranca em desenvolvimento
-- npm run build: gera build de producao
-- npm run start: corre build de producao
-- npm run lint: valida qualidade de codigo
-- npm run prisma:generate: gera cliente Prisma
-- npm run prisma:migrate: cria/aplica migracoes locais
-- npm run prisma:studio: abre interface visual da base de dados
+## Scripts
+
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run start` | Servidor após build |
+| `npm run lint` | ESLint |
+| `npm run db:types` | Gera tipos TypeScript a partir do schema Supabase local |
+
+### Migração de dados (legado → Supabase)
+
+Documentação detalhada: [`scripts/migrate-data/README.md`](scripts/migrate-data/README.md)
+
+Exemplos:
+
+```bash
+node scripts/migrate-data/01-users.mjs
+node scripts/migrate-data/02-business.mjs
+node scripts/migrate-data/seed-highlights.mjs
+node scripts/migrate-data/fix-reregistered-owners.mjs
+```
+
+Requer `.env` (Supabase) e `.env.migrate` (`OLD_DATABASE_URL` para a BD antiga, quando aplicável).
+
+## Estrutura do projeto
+
+```
+app/              # Rotas Next.js (público, host, admin, onboarding, API)
+lib/              # API handlers, Supabase, pricing, Stripe
+supabase/         # Migrações SQL
+scripts/          # Migração de dados e utilitários
+public/           # Assets estáticos (imagens, PDFs, ícones)
+```
+
+## API
+
+Rotas autenticadas: `/api/{service}/v1/...`  
+Rotas públicas: `/api/public/{service}/v1/...`
+
+Serviços principais: `search`, `venues`, `spaces`, `packs`, `bookings`, `highlights`, `watchlist`, `photos`, `payments`, `dashboard`.
 
 ## Deploy (Vercel)
 
-1. Push do repositorio para GitHub.
-2. No Vercel, importar repositorio.
-3. Configurar variaveis de ambiente iguais ao .env.
-4. Fazer deploy.
+1. Repositório ligado a [github.com/joaomolina1/Molinapersonal](https://github.com/joaomolina1/Molinapersonal)
+2. Configurar as mesmas variáveis que em `.env.example` no painel Vercel
+3. `npm run build` (automático no deploy)
+4. Webhook Stripe: `POST /api/payments/v1/stripe/webhook`
+5. Cron iCal (se usado): configurar `CRON_SECRET` e o endpoint em `vercel.json`
 
-## Etapa 1: autenticacao (concluida)
+## Notas
 
-Implementado:
+- Fotos em produção usam o CDN `img.rinu.pt` (URLs migradas da GCP).
+- A pesquisa só mostra espaços com pack publicado e preços futuros (paridade com o backend Go antigo).
+- `profiles.id` deve coincidir com `auth.users.id`.
 
-- Registo com email/password
-- Login com email/password
-- Logout
-- Rotas protegidas com proxy (`proxy.ts`)
-- Dashboard protegido em `/dashboard`
+## Licença
 
-### Teste manual da Etapa 1
-
-1. Abre `/register` e cria conta.
-2. Vai para `/login` e faz login.
-3. Confirma que entras em `/dashboard`.
-4. Faz logout no botao da dashboard.
-5. Tenta abrir `/dashboard` sem login e confirma redirecao para `/login`.
-
-## Etapa 2: gestao de filhos (concluida)
-
-Implementado:
-
-- Criacao de filhos em `/children`
-- Suporte a multiplos filhos (inclui gemeos)
-- Campos: nome, data de nascimento opcional e notas opcionais
-- Lista de filhos do utilizador autenticado
-
-### Teste manual da Etapa 2
-
-1. Faz login e abre `/children`.
-2. Adiciona o primeiro filho.
-3. Adiciona um segundo filho.
-4. Confirma que os dois aparecem na lista.
-
-## Nota sobre base de dados
-
-Se der erro de ligacao a `localhost:5432`, atualiza o `DATABASE_URL` no `.env` para a string do teu projeto Supabase.
-
-## Proximas etapas
-
-- Etapa 3: mamada direta (timer + manual)
-- Etapa 4: biberao
-- Etapa 5: historico
-- Etapa 6: dashboard diario simples
+Projeto privado — uso interno RINU.
