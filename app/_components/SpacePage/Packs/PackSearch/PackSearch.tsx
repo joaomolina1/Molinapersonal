@@ -1,5 +1,5 @@
 import { createBEMClasses } from "@/_utils/classname";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   CalendarDate,
   today,
@@ -27,6 +27,22 @@ export const usePackSearch = () => {
   const { date, start, end, setDateStartEnd } = useDateStartEnd();
   const { numPeople, numPeopleDebounced, setNumPeople } = useNumPeople();
   const [extras, setExtras] = useSearchParamsArrayState<string>("extra");
+  const [extraParams, setExtraParamsState] = useState<
+    Record<string, { hours?: number; pax?: number }>
+  >({});
+
+  const setExtraParams = useCallback(
+    (
+      value:
+        | Record<string, { hours?: number; pax?: number }>
+        | ((
+            prev: Record<string, { hours?: number; pax?: number }>,
+          ) => Record<string, { hours?: number; pax?: number }>),
+    ) => {
+      setExtraParamsState(value);
+    },
+    [],
+  );
 
   const [dateRef, dateScrollIntoView] =
     useScrollIntoView<HTMLDivElement>(false);
@@ -64,6 +80,8 @@ export const usePackSearch = () => {
     setNumPeople,
     extras,
     setExtras,
+    extraParams,
+    setExtraParams,
     refs: {
       date: dateRef,
       startEnd: startEndRef,

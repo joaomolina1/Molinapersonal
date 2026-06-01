@@ -2,10 +2,17 @@ export type Extra = {
   id: string;
   type: ExtraPriceType;
   description: string;
+  tooltip?: string | null;
   priceHour: number; // in euros
   pricePax: number; // in euros
   fixedPrice: number; // in euros
   mandatory: boolean;
+  defaultHour?: number | null;
+  minHour?: number | null;
+  maxHour?: number | null;
+  defaultPax?: number | null;
+  minPax?: number | null;
+  maxPax?: number | null;
 };
 
 export const EXTRA_PRICE_TYPES = [
@@ -38,3 +45,6 @@ export const getExtraPriceType = (
   else if (pricePax > 0) return "per-person";
   else return "fixed";
 };
+
+export type ExtraDraft = Partial<Omit<Extra, "id" | "type" | "mandatory">> &
+  Pick<Extra, "id" | "type" | "mandatory">;

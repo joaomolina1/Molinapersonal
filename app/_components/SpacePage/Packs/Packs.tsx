@@ -14,6 +14,10 @@ import { useEffect } from "react";
 import { useQuoteRequestContext } from "@/(main)/_components/QuoteRequest";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/_services/session";
+import {
+  extraParamsFromRecord,
+  serializeExtraParamsQuery,
+} from "@lib/extras/quantities";
 
 const Packs = ({
   space,
@@ -31,7 +35,7 @@ const Packs = ({
 
   const packSearch = usePackSearch();
 
-  const { date, start, end, numPeopleDebounced, extras } = packSearch;
+  const { date, start, end, numPeopleDebounced, extras, extraParams } = packSearch;
 
   const {
     data: allPacks = [],
@@ -48,6 +52,9 @@ const Packs = ({
               end: end.string,
               num_persons: numPeopleDebounced,
               extras: extras.join(","),
+              extra_params: serializeExtraParamsQuery(
+                extraParamsFromRecord(extraParams),
+              ),
             }
           : undefined,
       // Admins need to make an authenticated request in order to fetch packs which are not in "active" status

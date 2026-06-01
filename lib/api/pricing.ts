@@ -1,4 +1,14 @@
 import { parseGoDuration } from "@lib/api/serialize";
+import {
+  computeExtraPrice,
+  eventDurationHours,
+  initialExtraSelection,
+  reconcileExtraSelection,
+  usesExtraHours,
+  usesExtraPax,
+  type ExtraSelection,
+  type ExtraQuantityConfig,
+} from "@lib/extras/quantities";
 
 // Port of the be-main pack pricing domain (packs_models.go). All durations are
 // handled in seconds. Mirrors Pack.Price() and Pack.Filter() exactly so the
@@ -25,9 +35,7 @@ type RawPriceRange = {
   schedules?: RawSchedule[];
 };
 
-type RawExtra = {
-  id?: string;
-  mandatory?: boolean;
+type RawExtra = ExtraQuantityConfig & {
   description?: string;
   price_hour?: number | null;
   priceHour?: number | null;
@@ -35,6 +43,12 @@ type RawExtra = {
   pricePax?: number | null;
   fixed_price?: number | null;
   fixedPrice?: number | null;
+  default_hour?: number | null;
+  min_hour?: number | null;
+  max_hour?: number | null;
+  default_pax?: number | null;
+  min_pax?: number | null;
+  max_pax?: number | null;
 };
 
 export type RawPack = {
@@ -53,6 +67,7 @@ export type PriceFilter = {
   end: number | null; // seconds since midnight
   pax: number | null;
   extraIDs: string[];
+  extraParams?: Record<string, { hours?: number; pax?: number }>;
 };
 
 type NormalizedSchedule = {
@@ -236,25 +251,59 @@ type CalculatedExtra = {
   value: number;
 };
 
+function normalizeExtra(raw: RawExtra): ExtraQuantityConfig {
+  return {
+    id: raw.id ?? "",
+    mandatory: raw.mandatory,
+    priceHour: raw.price_hour ?? raw.priceHour ?? null,
+    pricePax: raw.price_pax ?? raw.pricePax ?? null,
+    fixedPrice: raw.fixed_price ?? raw.fixedPrice ?? null,
+    defaultHour: raw.default_hour ?? raw.defaultHour ?? null,
+    minHour: raw.min_hour ?? raw.minHour ?? null,
+    maxHour: raw.max_hour ?? raw.maxHour ?? null,
+    defaultPax: raw.default_pax ?? raw.defaultPax ?? null,
+    minPax: raw.min_pax ?? raw.minPax ?? null,
+    maxPax: raw.max_pax ?? raw.maxPax ?? null,
+  };
+}
+
 function calculateExtras(
   pack: RawPack,
   duration: number,
   pax: number | null,
   extraIDs: string[],
+  extraParams: Record<string, { hours?: number; pax?: number }> = {},
 ): CalculatedExtra[] {
+  const eventHours = eventDurationHours(0, duration);
+  const eventPax = pax ?? 0;
   const res: CalculatedExtra[] = [];
-  for (const e of pack.extras ?? []) {
-    const id = e.id ?? "";
-    if (!e.mandatory && !extraIDs.includes(id)) continue;
-    let value = 0;
-    const fixed = e.fixed_price ?? e.fixedPrice;
-    const priceHour = e.price_hour ?? e.priceHour;
-    const pricePax = e.price_pax ?? e.pricePax;
-    if (fixed != null) value += fixed;
-    if (priceHour != null) value += (priceHour * duration) / HOUR;
-    if (pricePax != null && pax != null) value += pricePax * pax;
-    res.push({ id, description: e.description ?? "", value });
+
+  for (const raw of pack.extras ?? []) {
+    const extra = normalizeExtra(raw as RawExtra);
+    const id = extra.id;
+    if (!extra.mandatory && !extraIDs.includes(id)) continue;
+
+    const selection: ExtraSelection = reconcileExtraSelection(
+      extra,
+      extraParams[id]
+        ? { id, hours: extraParams[id].hours, pax: extraParams[id].pax }
+        : undefined,
+      eventHours,
+      eventPax,
+    );
+
+    const value = computeExtraPrice(
+      extra,
+      selection.hours ?? null,
+      selection.pax ?? null,
+    );
+    res.push({
+      id,
+      description: (raw as { description?: string }).description ?? "",
+      value,
+    });
   }
+
   return res;
 }
 
@@ -297,8 +346,9 @@ export function computePackPrice(
   const extras = calculateExtras(
     pack,
     duration,
-    effectiveFilter.pax,
+    effectiveFilter.pax ?? null,
     filter.extraIDs,
+    filter.extraParams,
   );
 
   let value = 0;

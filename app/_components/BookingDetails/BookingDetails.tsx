@@ -20,6 +20,11 @@ import { getLocalTimeZone } from "@internationalized/date";
 import { Booking } from "@/_models/booking";
 import { isNotNil } from "@/_utils/filter";
 import { Venue } from "@/_models/venue";
+import type { PackPaymentBreakdown } from "@lib/payment/upfront";
+import {
+  formatRemainingPaymentDate,
+  formatShortCancellationDate,
+} from "@/_utils/packPayment";
 
 const { element } = createBEMClasses("booking-details");
 
@@ -206,12 +211,105 @@ export const BookingPriceDetail = ({
   </BookingDetailsSection>
 );
 
-export const BookingTotalPrice = ({ amount }: { amount: number }) => (
+export const BookingTotalPrice = ({
+  amount,
+  label = "Total c/ IVA",
+}: {
+  amount: number;
+  label?: string;
+}) => (
   <Stack row justifyContent="space-between" className={element("total")}>
-    <span className={element("total__label")}>Total c/ IVA</span>
+    <span className={element("total__label")}>{label}</span>
     <span className={element("total__value")}>{formatMoney(amount)}</span>
   </Stack>
 );
+
+export const BookingPaymentSummary = ({
+  breakdown,
+  variant = "full",
+}: {
+  breakdown: PackPaymentBreakdown;
+  variant?: "full" | "compact";
+}) => {
+  if (!breakdown.isPartial) {
+    if (variant === "compact") {
+      return null;
+    }
+
+    return (
+      <BookingTotalPrice
+        amount={breakdown.totalAmount}
+        label="Total da reserva c/ IVA"
+      />
+    );
+  }
+
+  if (variant === "compact") {
+    return (
+      <Stack gap="0.5rem" className={element("payment-summary")}>
+        <div className={element("payment-summary__box")}>
+          <Stack
+            row
+            justifyContent="space-between"
+            alignItems="center"
+            className={element("payment-summary__row")}
+          >
+            <span className={element("payment-summary__label")}>
+              Hoje irá pagar
+            </span>
+            <span className={element("payment-summary__value")}>
+              {formatMoney(breakdown.todayAmount)}
+            </span>
+          </Stack>
+        </div>
+        <p className={element("payment-summary__cancellation")}>
+          Cancelamento gratuito até{" "}
+          {formatShortCancellationDate(breakdown.freeCancellationUntil)}
+        </p>
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack gap="0.5rem" className={element("payment-summary")}>
+      <BookingTotalPrice
+        amount={breakdown.totalAmount}
+        label="Total da reserva c/ IVA"
+      />
+      <div className={element("payment-summary__box")}>
+        <Stack gap="0.5rem">
+          <Stack
+            row
+            justifyContent="space-between"
+            alignItems="center"
+            className={element("payment-summary__row")}
+          >
+            <span className={element("payment-summary__label")}>
+              Hoje vai pagar
+            </span>
+            <span className={element("payment-summary__value")}>
+              {formatMoney(breakdown.todayAmount)}
+            </span>
+          </Stack>
+          <Stack
+            row
+            justifyContent="space-between"
+            alignItems="center"
+            className={element("payment-summary__row")}
+          >
+            <span className={element("payment-summary__label")}>
+              A {formatRemainingPaymentDate(breakdown.freeCancellationUntil)}{" "}
+              irá pagar
+            </span>
+            <span className={element("payment-summary__value")}>
+              {formatMoney(breakdown.laterAmount)}
+            </span>
+          </Stack>
+        </Stack>
+      </div>
+    </Stack>
+  );
+};
 
 export const BookingBillingContent = ({ booking }: { booking: Booking }) => {
   if (!booking.hasBillingData) {

@@ -79,6 +79,29 @@
     }
   }
 
+  &__payment-summary {
+    &__box {
+      background: $color-neutral-1;
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    &__label {
+      @include font-body;
+      color: $color-neutral-7;
+    }
+
+    &__value {
+      @include font-action;
+    }
+
+    &__cancellation {
+      text-align: center;
+      color: $color-neutral-8;
+      @include font-body-xs;
+    }
+  }
+
   &__pack-attributes {
     .amenities-list {
       grid-template-columns: 1fr 1fr;

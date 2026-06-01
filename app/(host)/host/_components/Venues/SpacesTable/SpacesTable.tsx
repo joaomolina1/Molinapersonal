@@ -378,7 +378,7 @@ const AddPackButton = ({ space }: { space: Space }) => {
   const addNewPack = async () => {
     const pack = await createPack({ spaceID: space.id });
 
-    routerPush(`/onboarding/pack?packID=${pack.id}`);
+    routerPush(`/onboarding/pack?packID=${pack.id}&spaceID=${space.id}`);
   };
 
   return (
@@ -404,7 +404,7 @@ const NoPacks = ({ space }: { space: Space }) => {
   const addNewPack = async () => {
     const pack = await createPack({ spaceID: space.id });
 
-    routerPush(`/onboarding/pack?packID=${pack.id}`);
+    routerPush(`/onboarding/pack?packID=${pack.id}&spaceID=${space.id}`);
   };
 
   return (

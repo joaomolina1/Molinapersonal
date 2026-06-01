@@ -39,6 +39,7 @@ import {
   ensureProfile,
   hasBookingOverlap,
   parseExtraIDs,
+  parseExtraParams,
 } from "@lib/api/bookings";
 import {
   computePackPrice,
@@ -48,6 +49,11 @@ import {
 import {
   createBookingCheckoutSession,
 } from "@lib/stripe/checkout";
+import { computePackPaymentBreakdown } from "@lib/payment/upfront";
+import {
+  extraParamsMap,
+  parseExtraParamsQuery,
+} from "@lib/extras/quantities";
 
 const PUBLISHED_STATUS = 2;
 
@@ -185,6 +191,24 @@ async function loadPackMetricsForSpaceIds(
   }
 
   return metricsBySpace;
+}
+
+async function packSpaceIds(
+  admin: ReturnType<typeof createAdminClient>,
+  packId: string,
+): Promise<string[]> {
+  const { data } = await admin
+    .from("packs_spaces")
+    .select("space_id")
+    .eq("pack_id", packId);
+  return (data ?? []).map((row) => row.space_id as string);
+}
+
+function mapPackResponse(
+  row: Record<string, unknown>,
+  spaceIDs: string[],
+) {
+  return { ...mapPack(row), spaceIDs };
 }
 
 async function loadOwnedRow(
@@ -773,12 +797,15 @@ function parsePriceFilter(ctx: ApiContext): PriceFilter | null {
   if (Number.isNaN(date.getTime())) return null;
 
   const extras = ctx.query.get("extras");
+  const extraParamsRaw = ctx.query.get("extra_params");
+  const parsedExtraParams = parseExtraParamsQuery(extraParamsRaw);
   return {
     date,
     start: parseGoDuration(startStr),
     end: parseGoDuration(endStr),
     pax: parseInt(numPersons, 10),
     extraIDs: extras ? extras.split(",").filter(Boolean) : [],
+    extraParams: extraParamsMap(parsedExtraParams),
   };
 }
 
@@ -836,9 +863,11 @@ export async function handlePacksRoute(
       .from("packs")
       .select("*")
       .eq("id", action)
+      .is("deleted_at", null)
       .maybeSingle();
     if (error || !data) return emptyResponse(404);
-    return jsonResponse(mapPack(data));
+    const spaceIDs = await packSpaceIds(admin, action);
+    return jsonResponse(mapPackResponse(data as Record<string, unknown>, spaceIDs));
   }
 
   if (ctx.request.method === "POST" && !action) {
@@ -885,7 +914,18 @@ export async function handlePacksRoute(
     if (!row || !canManageRow(ctx, row)) return emptyResponse(404);
     const body = (ctx.body ?? {}) as Record<string, unknown>;
     const update = packUpdateFromBody(body);
-    if (Object.keys(update).length === 0) return jsonResponse(mapPack(row));
+    if (
+      update.upfront_percentage !== undefined &&
+      !ctx.session?.roles.includes("admin")
+    ) {
+      delete update.upfront_percentage;
+    }
+    if (Object.keys(update).length === 0) {
+      const spaceIDs = await packSpaceIds(admin, action);
+      return jsonResponse(
+        mapPackResponse(row as Record<string, unknown>, spaceIDs),
+      );
+    }
     update.updated_at = new Date().toISOString();
     const { data, error } = await admin
       .from("packs")
@@ -897,7 +937,10 @@ export async function handlePacksRoute(
       console.error("pack update error", error);
       return emptyResponse(500);
     }
-    return jsonResponse(mapPack(data));
+    const spaceIDs = await packSpaceIds(admin, action);
+    return jsonResponse(
+      mapPackResponse(data as Record<string, unknown>, spaceIDs),
+    );
   }
 
   if (action.endsWith("/status") && ctx.request.method === "PUT") {
@@ -962,25 +1005,6 @@ export async function handleReviewsRoute(
   }
 
   return emptyResponse(501);
-}
-
-// Subtracts a Go-style cancellation period ("11d", "1w2d", "2M"...) from a date.
-function subtractCancellationPeriod(date: Date, period: string): Date {
-  if (!period) return new Date(date);
-  const m = period.match(
-    /(?:(\d+)y)?(?:(\d+)M)?(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?/,
-  );
-  const result = new Date(date);
-  if (!m) return result;
-  const [, y, mo, w, d, h, min] = m.map((x) => (x ? parseInt(x, 10) : 0));
-  if (y) result.setUTCFullYear(result.getUTCFullYear() - y);
-  if (mo) result.setUTCMonth(result.getUTCMonth() - mo);
-  const days = (w ?? 0) * 7 + (d ?? 0);
-  if (days) result.setUTCDate(result.getUTCDate() - days);
-  if (h || min) {
-    result.setTime(result.getTime() - ((h ?? 0) * 3600 + (min ?? 0) * 60) * 1000);
-  }
-  return result;
 }
 
 function goDurationToInterval(value: string): string {
@@ -1249,30 +1273,30 @@ export async function handleBookingsRoute(
 
       if (pack) {
         const extraIDs = parseExtraIDs(body);
+        const extraParams = extraParamsMap(parseExtraParams(body));
         const filter: PriceFilter = {
           date: new Date(dateStr),
           start: parseGoDuration(startStr),
           end: parseGoDuration(endStr),
           pax: body.numPeople != null ? Number(body.numPeople) : null,
           extraIDs,
+          extraParams,
         };
         const price = computePackPrice(pack as never, filter);
         totalAmount = price?.value ?? 0;
 
         const period = String(pack.cancellation_period ?? "");
-        const freeCancelDate = subtractCancellationPeriod(
-          new Date(dateStr),
-          period,
-        );
-        freeCancellation = freeCancelDate.toISOString().slice(0, 10);
-
-        upfrontPercentage = Number(pack.upfront_percentage ?? 20);
-        if (Date.now() < freeCancelDate.getTime()) {
-          upfrontAmount = (totalAmount * upfrontPercentage) / 100;
-        } else {
-          upfrontAmount = totalAmount;
-          upfrontPercentage = 100;
-        }
+        const payment = computePackPaymentBreakdown({
+          totalAmount,
+          cancellationPeriod: period,
+          upfrontPercentage: Number(pack.upfront_percentage ?? 20),
+          eventDate: new Date(dateStr),
+        });
+        freeCancellation = payment.freeCancellationUntil
+          .toISOString()
+          .slice(0, 10);
+        upfrontAmount = payment.todayAmount;
+        upfrontPercentage = payment.upfrontPercentage;
 
         commission = (totalAmount * Number(venue?.commission ?? 0)) / 100;
         currency = String(venue?.currency ?? "eur");
@@ -1283,6 +1307,7 @@ export async function handleBookingsRoute(
     }
 
     const extraIDs = parseExtraIDs(body);
+    const extraParams = parseExtraParams(body);
 
     const insert: Record<string, unknown> = {
       user_id: ctx.session.user_id,
@@ -1315,6 +1340,7 @@ export async function handleBookingsRoute(
           ? Number(body.contactPhoneNumber)
           : null,
       extra_ids: extraIDs,
+      extra_params: extraParams,
     };
 
     const { data, error } = await admin

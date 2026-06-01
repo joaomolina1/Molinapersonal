@@ -38,6 +38,7 @@ import { useDebouncedState } from "@/_utils/debounce";
 import { VenueAddress, VenueLocation } from "@/_design_system/Map";
 import TravelExpensesAddress from "./TravelExpensesAddress";
 import Adjudication from "./Adjudication";
+import UpfrontPercentage from "./UpfrontPercentage";
 
 const { block, element } = createBEMClasses("onboarding__step");
 
@@ -46,25 +47,29 @@ const Step4Wrapper = () => {
   const router = useRouter();
 
   const packID = searchParams.get("packID") ?? undefined;
+  const spaceIDFromQuery = searchParams.get("spaceID") ?? undefined;
 
   const { data: pack, isPending: isPendingPack } = usePack(packID);
-  const { data: space, isPending: isPendingSpace } = useSpace(
-    pack?.spaceIDs[0],
-  );
-  const { data: photos, isPending: isPendingPhotos } = usePhotos(
-    pack?.allPhotoIDs,
-  );
+  const spaceID = pack?.spaceIDs?.[0] ?? spaceIDFromQuery;
+  const { data: space, isPending: isPendingSpace } = useSpace(spaceID);
+  const photoIds =
+    pack?.allPhotoIDs && pack.allPhotoIDs.length > 0
+      ? pack.allPhotoIDs
+      : undefined;
+  const { data: photos, isPending: isPendingPhotos } = usePhotos(photoIds);
 
-  if (isPendingPack || isPendingSpace || isPendingPhotos) {
+  const waitingPhotos = !!photoIds?.length && isPendingPhotos;
+
+  if (isPendingPack || isPendingSpace || waitingPhotos) {
     return null;
   }
 
-  if (!packID || !pack || !space || !photos) {
+  if (!packID || !pack || !space) {
     router.replace("/");
     return null;
   }
 
-  return <Step4 pack={pack} space={space} photos={photos} />;
+  return <Step4 pack={pack} space={space} photos={photos ?? []} />;
 };
 
 const Step4 = ({
@@ -159,6 +164,11 @@ const Step4 = ({
         return true;
       }
 
+      if (isAdmin && step4State.upfrontPercentageError) {
+        step4State.upfrontPercentageScrollIntoView();
+        return true;
+      }
+
       return true;
     }
 
@@ -190,11 +200,19 @@ const Step4 = ({
           })),
         })),
         extras: step4State.extras.map((extra) => ({
+          id: extra.id,
           description: extra.description,
+          tooltip: extra.tooltip ?? null,
           fixedPrice: extra.fixedPrice,
           pricePax: extra.pricePax,
           priceHour: extra.priceHour,
           mandatory: extra.mandatory,
+          defaultHour: extra.defaultHour ?? null,
+          minHour: extra.minHour ?? null,
+          maxHour: extra.maxHour ?? null,
+          defaultPax: extra.defaultPax ?? null,
+          minPax: extra.minPax ?? null,
+          maxPax: extra.maxPax ?? null,
         })),
         travelExpenses: step4State.travelExpensesIntervals.length
           ? {
@@ -219,6 +237,7 @@ const Step4 = ({
           : undefined,
         cancellationPeriod: step4State.cancellation,
         capacities: step4State.capacities,
+        ...(isAdmin ? { upfrontPercentage: step4State.upfrontPercentage } : {}),
       },
     });
   };
@@ -232,7 +251,8 @@ const Step4 = ({
   };
 
   const goToNextStep = () => {
-    routerPush(`/onboarding/packs?spaceID=${pack.spaceIDs[0]}`);
+    const spaceId = pack.primarySpaceID ?? space.id;
+    routerPush(`/onboarding/packs?spaceID=${spaceId}`);
   };
 
   return (
@@ -293,14 +313,14 @@ const Step4 = ({
           ? {
               label: "Anterior",
               href: pack.isServicesJourney
-                ? `/onboarding/space?spaceID=${pack.spaceIDs[0]}`
-                : `/onboarding/space-details?spaceID=${pack.spaceIDs[0]}`,
+                ? `/onboarding/space?spaceID=${pack.primarySpaceID ?? space.id}`
+                : `/onboarding/space-details?spaceID=${pack.primarySpaceID ?? space.id}`,
             }
           : undefined
       }
       totalSteps={pack.isServicesJourney ? 4 : 5}
     >
-      <Step4Form step4State={step4State} pack={pack} space={space} />
+      <Step4Form step4State={step4State} pack={pack} space={space} isAdmin={isAdmin} />
     </Wrapper>
   );
 };
@@ -368,6 +388,9 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
   const [cancellation, setCancellation] = useState(
     initialPack?.cancellationPeriod,
   );
+  const [upfrontPercentage, setUpfrontPercentage] = useState<number | undefined>(
+    initialPack?.upfrontPercentage ?? 20,
+  );
   const [capacities, setCapacities] = useState<PackCapacity[]>(
     initialPack?.capacities ?? [],
   );
@@ -421,6 +444,12 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
             : undefined
     : undefined;
   const cancellationError = !cancellation ? mandatoryError : undefined;
+  const upfrontPercentageError =
+    upfrontPercentage === undefined
+      ? mandatoryError
+      : upfrontPercentage < 0 || upfrontPercentage > 100
+        ? "Indique um valor entre 0 e 100"
+        : undefined;
   const capacitiesError = initialPack?.isServicesJourney
     ? undefined
     : capacities.length === 0 ||
@@ -447,6 +476,8 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
   const [travelExpensesAddressRef, travelExpensesAddressScrollIntoView] =
     useScrollIntoView<HTMLDivElement>();
   const [cancellationRef, cancellationScrollIntoView] =
+    useScrollIntoView<HTMLDivElement>();
+  const [upfrontPercentageRef, upfrontPercentageScrollIntoView] =
     useScrollIntoView<HTMLDivElement>();
   const [capacitiesRef, capacitiesScrollIntoView] =
     useScrollIntoView<HTMLDivElement>();
@@ -523,6 +554,11 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
     cancellationError,
     cancellationRef,
     cancellationScrollIntoView,
+    upfrontPercentage,
+    setUpfrontPercentage,
+    upfrontPercentageError,
+    upfrontPercentageRef,
+    upfrontPercentageScrollIntoView,
     capacities,
     setCapacities,
     capacitiesError,
@@ -543,6 +579,7 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
       !!travelExpensesIntervalsError ||
       !!travelExpensesAddressError ||
       !!cancellationError ||
+      !!upfrontPercentageError ||
       !!capacitiesError,
   };
 };
@@ -553,10 +590,12 @@ export const Step4Form = ({
   step4State,
   pack,
   space,
+  isAdmin,
 }: {
   step4State?: Step4State;
   pack?: Pack;
   space?: Space;
+  isAdmin?: boolean;
 }) => {
   return (
     <div className={block()}>
@@ -782,7 +821,21 @@ export const Step4Form = ({
         </div>
       )}
 
-      <Adjudication />
+      {isAdmin ? (
+        <div ref={step4State?.upfrontPercentageRef}>
+          <UpfrontPercentage
+            upfrontPercentage={step4State?.upfrontPercentage}
+            setUpfrontPercentage={step4State?.setUpfrontPercentage}
+            error={
+              step4State?.showErrors
+                ? step4State.upfrontPercentageError
+                : undefined
+            }
+          />
+        </div>
+      ) : (
+        <Adjudication />
+      )}
 
       <div ref={step4State?.cancellationRef}>
         <Cancellation

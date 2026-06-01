@@ -1,5 +1,9 @@
 import Stack from "@/_design_system/Stack";
-import { Extra, EXTRA_PRICE_TYPES, ExtraPriceType } from "./utils";
+import { Extra, EXTRA_PRICE_TYPES, ExtraPriceType, ExtraDraft } from "./utils";
+import {
+  ExtraQuantityCells,
+  ExtraTooltipCell,
+} from "./ExtrasQuantityFields";
 import TextBlock from "@/_design_system/TextBlock";
 import { InputError } from "@/_design_system/_utils/InputWrapper";
 import { createBEMClasses } from "@/_utils/classname";
@@ -89,10 +93,17 @@ const ExtrasDesktop = ({
         <thead>
           <tr>
             <th>Descrição</th>
+            <th>Tooltip</th>
             <th>Tipo de preço</th>
             <th>Valor fixo</th>
             <th>Valor por pessoa</th>
             <th>Valor por hora</th>
+            <th>Hora default</th>
+            <th>Hora min</th>
+            <th>Hora max</th>
+            <th>Pax default</th>
+            <th>Pax min</th>
+            <th>Pax max</th>
             <th>Obrigatório</th>
             <th />
           </tr>
@@ -127,6 +138,9 @@ const ExtraDesktopRow = ({
         <CellDescription extra={extra} setExtra={setExtra} />
       </td>
       <td>
+        <ExtraTooltipCell extra={extra} setExtra={setExtra} />
+      </td>
+      <td>
         <CellPriceType extra={extra} setExtra={setExtra} />
       </td>
       <td>
@@ -138,6 +152,7 @@ const ExtraDesktopRow = ({
       <td>
         <CellPriceHour extra={extra} setExtra={setExtra} />
       </td>
+      <ExtraQuantityCells extra={extra} setExtra={setExtra} variant="desktop" />
       <td>
         <CellMandatory extra={extra} setExtra={setExtra} />
       </td>
@@ -194,6 +209,10 @@ const ExtraMobileRow = ({
       <div className={element("mobile__value", { first: true })}>
         <CellDescription extra={extra} setExtra={setExtra} />
       </div>
+      <div className={element("mobile__name")}>Tooltip</div>
+      <div className={element("mobile__value")}>
+        <ExtraTooltipCell extra={extra} setExtra={setExtra} />
+      </div>
       <div className={element("mobile__name")}>Tipo de Preço</div>
       <div className={element("mobile__value")}>
         <CellPriceType extra={extra} setExtra={setExtra} />
@@ -213,6 +232,9 @@ const ExtraMobileRow = ({
       <div className={element("mobile__name")}>Obrigatório</div>
       <div className={element("mobile__value")}>
         <CellMandatory extra={extra} setExtra={setExtra} />
+      </div>
+      <div className={element("mobile__quantity")}>
+        <ExtraQuantityCells extra={extra} setExtra={setExtra} variant="mobile" />
       </div>
       <Button
         type="link"
@@ -390,6 +412,8 @@ const CellMandatory = ({
   );
 };
 
+export type { ExtraDraft } from "./utils";
+
 export default Extras;
 
 const initialExtra = (): ExtraDraft => ({
@@ -421,6 +445,3 @@ export const getExtrasError = (extras: ExtraDraft[]): string | undefined => {
 
   return undefined;
 };
-
-export type ExtraDraft = Partial<Omit<Extra, "id" | "type" | "mandatory">> &
-  Pick<Extra, "id" | "type" | "mandatory">;

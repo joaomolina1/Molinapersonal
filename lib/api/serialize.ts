@@ -206,11 +206,63 @@ export function mapPack(row: DbRow) {
     minTime: row.min_time ?? row.minTime ?? null,
     maxTime: row.max_time ?? row.maxTime ?? null,
     cancellationPeriod: str(row.cancellation_period ?? row.cancellationPeriod),
-    upfrontPercentage: row.upfront_percentage ?? row.upfrontPercentage ?? null,
+    upfrontPercentage:
+      row.upfront_percentage ?? row.upfrontPercentage ?? 20,
     prices: mapPrices(row.prices),
     capacities: row.capacities ?? [],
     extras: mapExtras(row.extras),
-    travelExpenses: row.travel_expenses ?? row.travelExpenses ?? null,
+    travelExpenses: mapTravelExpenses(row.travel_expenses ?? row.travelExpenses),
+  };
+}
+
+export function mapTravelExpenses(value: unknown): unknown | null {
+  if (!value || typeof value !== "object") return null;
+  const t = value as Record<string, unknown>;
+  const intervals = Array.isArray(t.intervals) ? t.intervals : [];
+  return {
+    from_billing: Boolean(t.from_billing ?? t.fromBilling ?? false),
+    country: str(t.country),
+    street1: str(t.street1),
+    street2: str(t.street2),
+    postalCode: str(t.postal_code ?? t.postalCode),
+    city: str(t.city),
+    latitude: num(t.latitude),
+    longitude: num(t.longitude),
+    intervals: intervals.map((interval) => {
+      const i = interval as Record<string, unknown>;
+      return {
+        from: num(i.from),
+        to: num(i.to),
+        price: num(i.price),
+      };
+    }),
+  };
+}
+
+export function serializeTravelExpensesForDb(
+  value: unknown,
+): unknown | null | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== "object") return null;
+  const t = value as Record<string, unknown>;
+  const intervals = Array.isArray(t.intervals) ? t.intervals : [];
+  return {
+    from_billing: Boolean(t.from_billing ?? t.fromBilling ?? false),
+    country: t.country ?? "",
+    street1: t.street1 ?? "",
+    street2: t.street2 ?? "",
+    postal_code: t.postalCode ?? t.postal_code ?? "",
+    city: t.city ?? "",
+    latitude: t.latitude ?? 0,
+    longitude: t.longitude ?? 0,
+    intervals: intervals.map((interval) => {
+      const i = interval as Record<string, unknown>;
+      return {
+        from: i.from,
+        to: i.to,
+        price: i.price,
+      };
+    }),
   };
 }
 
@@ -372,14 +424,22 @@ export function packUpdateFromBody(
   if (body.photoIDs !== undefined) u.photos = body.photoIDs;
   if (body.attachmentIDs !== undefined) u.attachments = body.attachmentIDs;
   if (body.noticeDays !== undefined) u.notice_days = body.noticeDays;
-  if (body.minTime !== undefined) u.min_time = body.minTime;
-  if (body.maxTime !== undefined) u.max_time = body.maxTime;
+  if (body.minTime !== undefined) {
+    const v = String(body.minTime ?? "").trim();
+    u.min_time = v.length > 0 ? v : null;
+  }
+  if (body.maxTime !== undefined) {
+    const v = String(body.maxTime ?? "").trim();
+    u.max_time = v.length > 0 ? v : null;
+  }
   if (body.cancellationPeriod !== undefined)
     u.cancellation_period = body.cancellationPeriod;
   if (body.upfrontPercentage !== undefined)
     u.upfront_percentage = body.upfrontPercentage;
   if (body.capacities !== undefined) u.capacities = body.capacities;
-  if (body.travelExpenses !== undefined) u.travel_expenses = body.travelExpenses;
+  if (body.travelExpenses !== undefined) {
+    u.travel_expenses = serializeTravelExpensesForDb(body.travelExpenses);
+  }
   if (body.journey !== undefined) u.journey = parseJourneyInt(body.journey);
   if (body.prices !== undefined) u.prices = serializePricesForDb(body.prices);
   if (body.extras !== undefined) u.extras = serializeExtrasForDb(body.extras);
@@ -477,6 +537,7 @@ export function mapBooking(row: DbRow) {
     timezone: str(row.timezone),
     source: row.ical_import_id ? str(row.ical_import_id) : null,
     extraIDs: arr(row.extra_ids),
+    extraParams: Array.isArray(row.extra_params) ? row.extra_params : [],
   };
 }
 

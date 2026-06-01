@@ -16,6 +16,7 @@ export class Booking {
     this.end = data.end ? TimeDuration.fromString(data.end as string) : null;
     this.date = parseDate(data.date as string);
     this.extraIDs = Array.isArray(data.extraIDs) ? data.extraIDs : [];
+    this.extraParams = Array.isArray(data.extraParams) ? data.extraParams : [];
   }
 
   id!: string;
@@ -54,8 +55,11 @@ export class Booking {
   freeCancellationUntil!: string; // ISO Date
 
   totalAmount!: number;
+  upfrontAmount!: number;
+  upfrontPercentage!: number;
   commission!: number | null;
   extraIDs!: string[];
+  extraParams!: { id: string; hours?: number | null; pax?: number | null }[];
 
   get shortId() {
     return this.id.slice(0, 8).toUpperCase();
@@ -170,6 +174,7 @@ type CreateBookingBody = Pick<
   start: string; // TimeDuration string
   end: string; // TimeDuration string
   extras?: string[];
+  extraParams?: { id: string; hours?: number | null; pax?: number | null }[];
 };
 
 export const useCreateBooking = () => {

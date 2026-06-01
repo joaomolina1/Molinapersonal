@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { intervalToGoDuration, parseGoDuration } from "@lib/api/serialize";
+import { parseExtraParamsQuery } from "@lib/extras/quantities";
 
 const BLOCKING_STATUSES = ["inProgress", "confirmed", "cancellationRequested"];
 
@@ -104,6 +105,26 @@ export function bookingPaymentAmount(row: Record<string, unknown>): number {
   const upfront = Number(row.upfront_amount ?? 0);
   if (upfront > 0) return upfront;
   return Number(row.total_amount ?? 0);
+}
+
+export function parseExtraParams(body: Record<string, unknown>) {
+  if (Array.isArray(body.extraParams)) {
+    return body.extraParams
+      .map((item) => {
+        const row = item as Record<string, unknown>;
+        const id = row.id != null ? String(row.id) : "";
+        if (!id) return null;
+        return {
+          id,
+          hours: row.hours != null ? Number(row.hours) : null,
+          pax: row.pax != null ? Number(row.pax) : null,
+        };
+      })
+      .filter((item): item is { id: string; hours: number | null; pax: number | null } => !!item);
+  }
+  return parseExtraParamsQuery(
+    typeof body.extra_params === "string" ? body.extra_params : undefined,
+  );
 }
 
 export function parseExtraIDs(body: Record<string, unknown>): string[] {

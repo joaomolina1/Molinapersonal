@@ -38,15 +38,21 @@ export class Pack {
       ? data.primaryPhotoID
       : null;
     this.photoIDs = data.photoIDs ?? [];
+    this.spaceIDs = Array.isArray(data.spaceIDs) ? data.spaceIDs : [];
     this.journey = data.journey ?? "venues";
+    this.upfrontPercentage = data.upfrontPercentage ?? 20;
 
-    this.minTime = data.maxTime
-      ? TimeDuration.fromString((data.minTime as string | null) ?? "0h0m0s")
-      : null;
+    const minTimeStr =
+      data.minTime != null && String(data.minTime).length > 0
+        ? String(data.minTime)
+        : null;
+    this.minTime = minTimeStr ? TimeDuration.fromString(minTimeStr) : null;
 
-    this.maxTime = data.maxTime
-      ? TimeDuration.fromString(data.maxTime as string)
-      : null;
+    const maxTimeStr =
+      data.maxTime != null && String(data.maxTime).length > 0
+        ? String(data.maxTime)
+        : null;
+    this.maxTime = maxTimeStr ? TimeDuration.fromString(maxTimeStr) : null;
 
     this.prices = data.prices
       ? (data.prices as any[]).map((price) => ({
@@ -81,10 +87,17 @@ export class Pack {
             extra.priceHour as number,
           ),
           description: extra.description,
+          tooltip: extra.tooltip ?? null,
           priceHour: extra.priceHour,
           pricePax: extra.pricePax,
           fixedPrice: extra.fixedPrice,
           mandatory: extra.mandatory,
+          defaultHour: extra.defaultHour ?? null,
+          minHour: extra.minHour ?? null,
+          maxHour: extra.maxHour ?? null,
+          defaultPax: extra.defaultPax ?? null,
+          minPax: extra.minPax ?? null,
+          maxPax: extra.maxPax ?? null,
         }))
       : [];
 
@@ -152,6 +165,7 @@ export class Pack {
   maxTime!: TimeDuration | null;
   capacities!: PackCapacity[];
   cancellationPeriod!: string;
+  upfrontPercentage!: number;
   prices!: Price[];
   extras!: Extra[];
   travelExpenses!: TravelExpenses | null;
@@ -167,6 +181,10 @@ export class Pack {
   price!: null | CalculatedPrice;
 
   unavailabilityReason!: "" | "capacity" | "minTime" | "dateStartEnd";
+
+  get primarySpaceID() {
+    return this.spaceIDs[0] ?? null;
+  }
 
   get allPhotoIDs() {
     return this.primaryPhotoID ? [this.primaryPhotoID, ...this.photoIDs] : [];
@@ -295,6 +313,7 @@ type ListPacksQuery = {
   end: string;
   num_persons: number;
   extras: string;
+  extra_params?: string;
 };
 
 export const usePacks = (

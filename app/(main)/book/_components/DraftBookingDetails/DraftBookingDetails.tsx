@@ -2,10 +2,10 @@ import {
   BookingCancellation,
   BookingMainDetails,
   BookingPackAttributes,
+  BookingPaymentSummary,
   BookingPhotoName,
   BookingPriceDetail,
   BookingSpaceAttributes,
-  BookingTotalPrice,
   BookingVenueAttributes,
 } from "@/_components/BookingDetails";
 import HiddenVenueName from "@/_components/HiddenVenueName";
@@ -16,6 +16,8 @@ import { usePhoto } from "@/_models/photo";
 import { useSpace } from "@/_models/space";
 import { useVenue } from "@/_models/venue";
 import { createBEMClasses } from "@/_utils/classname";
+import { paymentBreakdownFromBooking } from "@lib/payment/upfront";
+import { serializeExtraParamsQuery } from "@lib/extras/quantities";
 
 const { block } = createBEMClasses("draft-booking-details");
 
@@ -32,12 +34,20 @@ const DraftBookingDetails = ({ booking }: { booking: Booking }) => {
       end: booking.end?.string ?? "",
       num_persons: booking.numPeople,
       extras: booking.extraIDs?.join(",") ?? "",
+      extra_params: serializeExtraParamsQuery(booking.extraParams ?? []),
     },
   });
 
   const { data: photo } = usePhoto(pack?.primaryPhotoID);
 
   const priceDetail = packs?.find(({ id }) => id === booking.packID)?.price;
+
+  const paymentBreakdown = paymentBreakdownFromBooking({
+    totalAmount: booking.totalAmount,
+    upfrontAmount: booking.upfrontAmount,
+    upfrontPercentage: booking.upfrontPercentage,
+    freeCancellationUntil: booking.freeCancellationUntil,
+  });
 
   return (
     <Stack gap="1.5rem" className={block()}>
@@ -86,7 +96,7 @@ const DraftBookingDetails = ({ booking }: { booking: Booking }) => {
         </>
       )}
       <hr />
-      <BookingTotalPrice amount={booking.totalAmount} />
+      <BookingPaymentSummary breakdown={paymentBreakdown} />
     </Stack>
   );
 };

@@ -9,6 +9,9 @@ import { Pack } from "@/_models/pack";
 import { getPhotoURLs, usePhotos } from "@/_models/photo";
 import { createBEMClasses } from "@/_utils/classname";
 import { formatMoney } from "@/_utils/number";
+import { BookingPaymentSummary } from "@/_components/BookingDetails";
+import { getPackPaymentBreakdown } from "@/_utils/packPayment";
+import { extraParamsFromRecord } from "@lib/extras/quantities";
 import { useState } from "react";
 import PackModal from "./PackModal";
 import Tooltip from "@/_design_system/Tooltip";
@@ -35,7 +38,7 @@ import { useQuoteRequestContext } from "@/(main)/_components/QuoteRequest";
 import { useMediaQuery } from "@/_utils/mediaQuery";
 import Tag from "@/_design_system/Tag";
 import CopyIconButton from "@/_components/CopyIconButton";
-import InputCheckbox from "@/_design_system/InputCheckbox";
+import PackExtras from "./PackExtras";
 
 const { block, element } = createBEMClasses("client-pack-card");
 
@@ -65,7 +68,13 @@ const PackCard = ({
   const [isOpenBookingOwnSpace, setIsOpenBookingOwnSpace] = useState(false);
   const [isOpenAlreadyBooked, setIsOpenAlreadyBooked] = useState(false);
 
-  const showCancellation = false;
+  const paymentBreakdown =
+    pack.price && packSearch.date && pack.cancellationPeriod
+      ? getPackPaymentBreakdown(
+          pack,
+          new Date(packSearch.date.toString()),
+        )
+      : null;
 
   const availableCapacities = pack.formattedCapacities.filter(
     (capacity) => capacity.people >= (packSearch.numPeople ?? 0),
@@ -95,6 +104,7 @@ const PackCard = ({
           end: packSearch.end.string,
           kind: "internal",
           extras: packSearch.extras,
+          extraParams: extraParamsFromRecord(packSearch.extraParams),
         });
 
         routerPush(`/book?bookingID=${bookingID}`);
@@ -228,58 +238,7 @@ const PackCard = ({
           <AmenitiesList items={pack.serviceTypeFeatureAttributes} />
         )}
         {!!pack.extras.length && (
-          <div className={element("extras")}>
-            <p className={element("extras__title")}>Serviços adicionais</p>
-            {pack.extras.map((extra) => {
-              const extraFixedPrice = extra.fixedPrice;
-              const extraHourPrice =
-                ((packSearch.end?.number ?? 0) -
-                  (packSearch.start?.number ?? 0)) *
-                (extra.priceHour ?? 0);
-              const extraPaxPrice =
-                (packSearch.numPeopleDebounced ?? 0) * (extra.pricePax ?? 0);
-
-              const canShowPrice =
-                !!packSearch.date &&
-                !!packSearch.start &&
-                !!packSearch.end &&
-                packSearch.numPeopleDebounced;
-
-              return (
-                <InputCheckbox
-                  key={extra.id}
-                  checked={
-                    packSearch.extras.includes(extra.id) || extra.mandatory
-                  }
-                  onChange={(checked) => {
-                    const extrasWithoutClicked = packSearch.extras.filter(
-                      (extraId) => extraId !== extra.id,
-                    );
-
-                    if (checked) {
-                      packSearch.setExtras([...extrasWithoutClicked, extra.id]);
-                    } else {
-                      packSearch.setExtras(extrasWithoutClicked);
-                    }
-                  }}
-                  disabled={extra.mandatory}
-                  label={
-                    <>
-                      {extra.description}
-                      {canShowPrice && (
-                        <span className={element("extras__item-price")}>
-                          {" +"}
-                          {formatMoney(
-                            extraFixedPrice ?? extraHourPrice + extraPaxPrice,
-                          )}
-                        </span>
-                      )}
-                    </>
-                  }
-                />
-              );
-            })}
-          </div>
+          <PackExtras extras={pack.extras} packSearch={packSearch} />
         )}
         {session?.roles.includes("admin") && (
           <Stack row alignItems="center" gap="0.5rem">
@@ -333,6 +292,12 @@ const PackCard = ({
                   {formatMoney(pack.price.value)}
                 </span>
               </Stack>
+              {paymentBreakdown?.isPartial && (
+                <BookingPaymentSummary
+                  breakdown={paymentBreakdown}
+                  variant="compact"
+                />
+              )}
               {pack.isVenuesJourney && (
                 <Button
                   type="primary"
@@ -346,11 +311,6 @@ const PackCard = ({
                     (isPendingCreateBooking || isSuccessCreateBooking)
                   }
                 />
-              )}
-              {showCancellation && (
-                <p className={element("pricing__cancellation")}>
-                  Cancelamento gratuito até 11 dez 2023
-                </p>
               )}
             </>
           ) : (

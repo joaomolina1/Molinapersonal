@@ -20,6 +20,8 @@ import Alert from "@/_design_system/Alert";
 import IconUserInterfaceActionsCancel from "@/_design_system/_icons/UserInterface/Actions/Cancel.svg";
 import { useEffect, useState } from "react";
 import AlreadyBookedModal from "@/_components/AlreadyBookedModal";
+import { formatMoney } from "@/_utils/number";
+import { paymentBreakdownFromBooking } from "@lib/payment/upfront";
 
 const { block, element } = createBEMClasses("book-page-draft");
 
@@ -130,6 +132,15 @@ const DraftOrInProgressBooking = ({ booking }: { booking: Booking }) => {
   const disableFormAndFooter =
     booking.status === "inProgress" || !!clientSecret;
 
+  const paymentBreakdown = paymentBreakdownFromBooking({
+    totalAmount: booking.totalAmount,
+    upfrontAmount: booking.upfrontAmount,
+    upfrontPercentage: booking.upfrontPercentage,
+    freeCancellationUntil: booking.freeCancellationUntil,
+  });
+
+  const checkoutAmount = paymentBreakdown.todayAmount;
+
   // Block navigation
 
   const { setBlockerData } = useNavigationBlocker();
@@ -201,7 +212,7 @@ const DraftOrInProgressBooking = ({ booking }: { booking: Booking }) => {
       <footer>
         <div>
           <Button
-            label="Pagar e Reservar"
+            label={`Pagar ${formatMoney(checkoutAmount)} e Reservar`}
             type="primary"
             onClick={handleCheckout}
             loading={isPendingCheckout}

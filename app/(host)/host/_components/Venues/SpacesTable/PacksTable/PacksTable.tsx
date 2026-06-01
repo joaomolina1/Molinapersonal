@@ -78,7 +78,7 @@ const PackRow = ({ pack, space }: { pack: Pack; space: Space }) => {
               ariaLabel={pack.isInProgress ? "Continuar" : "Editar"}
               icon={<IconUserInterfaceActionsEdit />}
               type="primary"
-              href={`/onboarding/pack?packID=${pack.id}`}
+              href={`/onboarding/pack?packID=${pack.id}&spaceID=${space.id}`}
               style={{ fontSize: "1rem" }}
             />
           )}
@@ -103,7 +103,7 @@ const PackCard = ({ pack, space }: { pack: Pack; space: Space }) => {
             <IconButton
               icon={<IconUserInterfaceActionsEdit />}
               style={{ fontSize: "1rem" }}
-              href={`/onboarding/pack?packID=${pack.id}`}
+              href={`/onboarding/pack?packID=${pack.id}&spaceID=${space.id}`}
               ariaLabel="Editar"
             />
           )}
