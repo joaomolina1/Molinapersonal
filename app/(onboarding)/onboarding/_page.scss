@@ -1,0 +1,86 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.onboarding {
+  background: $color-neutral-0;
+  min-height: 100dvh;
+
+  &__content {
+    flex: 1;
+
+    > div {
+      max-width: 79rem;
+      margin: 0 auto;
+      padding: 40px 24px;
+
+      @include mq(large) {
+        padding: 30px 24px;
+      }
+
+      * {
+        // Header height, for scrollIntoView
+
+        $header-content-padding: 16px;
+        $header-progress-bar: 0.25rem;
+        $header-bottom-padding: 16px;
+
+        scroll-margin-top: calc(
+          $header-content-padding + utils.$logo-height +
+            $header-content-padding + $header-progress-bar +
+            $header-bottom-padding
+        );
+
+        @include mq(large) {
+          $header-content-padding: 32px;
+          $header-bottom-padding: 32px;
+
+          scroll-margin-top: calc(
+            $header-content-padding + utils.$logo-height +
+              $header-content-padding + $header-progress-bar +
+              $header-bottom-padding
+          );
+        }
+      }
+    }
+  }
+}
+
+.onboarding__step {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+
+  @include mq(large) {
+    gap: 80px;
+  }
+
+  &__intro {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    align-items: center;
+
+    .text-block {
+      align-self: flex-start;
+    }
+
+    @include mq(large) {
+      min-height: 500px;
+      flex-direction: row;
+      gap: 80px;
+
+      > div {
+        flex: 1;
+      }
+
+      .text-block {
+        align-self: center;
+      }
+
+      .illustration-onboarding-step {
+        order: 2;
+        height: 17.75rem;
+      }
+    }
+  }
+}

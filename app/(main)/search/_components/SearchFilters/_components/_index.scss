@@ -1,0 +1,53 @@
+@use "app/_styles/abstract" as *;
+
+.search-filters-list {
+  &__input {
+    .input-text {
+      border-radius: 140px;
+    }
+
+    .icon-user-interface-actions-search {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.search-filter-section {
+  & + .search-filter-section {
+    border-top: 1px solid $color-neutral-4;
+    padding-top: 24px;
+  }
+}
+
+.search-filter-group {
+  h6 {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @include mq(large) {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      column-gap: 2.5rem;
+    }
+  }
+
+  &__checkbox {
+    width: 100%;
+
+    .icon-svg {
+      font-size: 1.25rem;
+    }
+  }
+
+  &__show-more {
+    align-self: flex-start;
+    padding: 0;
+    margin: 0 1rem 1rem 0;
+  }
+}

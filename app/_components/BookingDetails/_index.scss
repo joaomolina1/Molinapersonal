@@ -1,0 +1,87 @@
+@use "app/_styles/abstract" as *;
+
+.booking-details {
+  &__photo-name {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+
+    &__photo {
+      position: relative;
+      width: 6.25rem;
+      height: 4.5rem;
+      flex-shrink: 0;
+
+      img {
+        border-radius: 8px;
+        object-position: center;
+        object-fit: cover;
+      }
+    }
+
+    &__name {
+      overflow: hidden;
+    }
+
+    &__pack-name {
+      @include font-h5;
+
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    &__space-venue-name {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+  }
+
+  &__date {
+    > div:first-letter {
+      text-transform: capitalize;
+    }
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    &__title {
+      @include font-action-s;
+    }
+  }
+
+  &__cancellation {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__billing,
+  &__phone {
+    @include font-body;
+    color: $color-neutral-7;
+  }
+
+  &__price-detail {
+    color: $color-neutral-7;
+  }
+
+  &__total {
+    &__label {
+      @include font-body;
+    }
+
+    &__value {
+      @include font-action;
+    }
+  }
+
+  &__pack-attributes {
+    .amenities-list {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}

@@ -1,0 +1,49 @@
+@use "app/_styles/abstract" as *;
+
+.input-rating {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+
+  &__stars {
+    display: flex;
+    gap: 1.5rem;
+
+    button {
+      .icon-user-interface-miscellaneous-rating {
+        font-size: 2.5rem;
+        color: $color-brand-primary;
+      }
+
+      &[data-hovered],
+      &[data-focus-visible] {
+        .icon-user-interface-miscellaneous-rating {
+          color: $color-brand-primary-hover;
+        }
+      }
+
+      &[data-pressed] {
+        .icon-user-interface-miscellaneous-rating {
+          color: $color-brand-primary-active;
+        }
+      }
+    }
+  }
+
+  &__labels {
+    display: flex;
+    justify-content: space-between;
+
+    span {
+      @include font-body-xs;
+      color: $color-neutral-7;
+    }
+  }
+
+  &--invalid {
+    .icon-user-interface-miscellaneous-rating {
+      color: $color-semantic-error;
+    }
+  }
+}

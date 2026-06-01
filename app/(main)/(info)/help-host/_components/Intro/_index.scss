@@ -1,0 +1,272 @@
+@use "app/_styles/abstract" as *;
+
+.help-host-app-snippet-booking-small {
+  background: $color-neutral-1;
+  border: 1px solid $color-neutral-4;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: $elevation-2;
+  width: 430px;
+
+  &__name {
+    @include font-body;
+  }
+
+  &__hours {
+    @include font-body-s;
+  }
+
+  .icon-svg {
+    font-size: 1rem;
+  }
+}
+
+.help-host-app-snippet-booking-large {
+  background: $color-neutral-0;
+  border: 1px solid $color-neutral-4;
+  box-shadow: $elevation-2;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 555px;
+
+  &__image {
+    width: 206px;
+    flex-shrink: 0;
+    align-self: stretch;
+    background: url("/help-host-2.jpeg");
+    background-position: center;
+    background-size: cover;
+    position: relative;
+
+    .tag {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+    }
+  }
+
+  &__content {
+    padding: 24px 0;
+    padding-right: 32px;
+    white-space: nowrap;
+  }
+
+  &__title {
+    @include font-h4;
+  }
+
+  &__subtitle {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+}
+
+.help-host-app-snippet-statistics {
+  background: $color-neutral-0;
+  border: 1px solid $color-neutral-4;
+  box-shadow: $elevation-2;
+  border-radius: 8px;
+  padding: 24px;
+
+  &__icon {
+    background: $color-semantic-neutral-light;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 100%;
+
+    .icon-svg {
+      color: $color-brand-primary;
+      font-size: 1.5rem;
+    }
+  }
+
+  &__label {
+    @include font-body;
+  }
+
+  &__value {
+    @include font-h3;
+  }
+
+  &__tag {
+    padding: 4px 8px;
+    display: flex;
+    gap: 0.25rem;
+    color: $color-semantic-success;
+    border-radius: 16px;
+    background: $color-semantic-success-light;
+
+    .icon-svg {
+      font-size: 1rem;
+    }
+
+    span {
+      @include font-body-xs;
+      white-space: nowrap;
+    }
+  }
+}
+
+.help-host-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+
+  &__main {
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+
+    h2 {
+      @include font-h4;
+    }
+
+    p {
+      @include font-h5;
+      color: $color-neutral-7;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    @include mq(small) {
+      flex-direction: row;
+      gap: 1.5rem;
+    }
+  }
+
+  &__image {
+    background: url("/help-host-1.jpeg");
+    background-position: center;
+    background-size: cover;
+    border-radius: 8px;
+
+    display: none;
+
+    @include mq(small) {
+      display: block;
+      height: 14.875rem;
+    }
+  }
+
+  &__rectange {
+    position: absolute;
+    top: 0;
+    height: calc(55rem - 50dvw);
+    left: 8px;
+    right: 8px;
+    background: #eef2fe;
+    border-radius: 24px;
+    z-index: -1;
+
+    @include mq(small) {
+      height: calc(35rem - 10dvw);
+    }
+  }
+
+  &__ellipse {
+    position: absolute;
+    display: block;
+    background: #eef2fe;
+    border-radius: 50%;
+    transform: translateY(-58%);
+    z-index: -1;
+
+    top: calc(55rem - 50dvw);
+    height: 10rem;
+    left: 8px;
+    right: 8px;
+
+    @include mq(small) {
+      display: none;
+    }
+  }
+
+  &__app {
+    padding: 0 16px;
+    width: 100%;
+    max-width: 100dvw;
+    overflow: hidden;
+
+    &__content {
+      $sw: 100vw;
+
+      transform: scale(calc((var(--dvw) - 32) / 950));
+      transform-origin: top left;
+      margin-bottom: calc(((var(--dvw) - 32) / 950 - 1) * 464px); // 464
+      width: max-content;
+    }
+
+    .help-host-app-snippet-booking-small {
+      transform: translateX(168px);
+    }
+
+    .help-host-app-snippet-booking-large {
+      margin-top: 48px;
+      flex-shrink: 0;
+    }
+
+    .help-host-app-snippet-statistics {
+      margin-top: 16px;
+    }
+  }
+
+  @include mq(large) {
+    gap: 5rem;
+
+    &__main {
+      padding: 80px 64px 40px;
+      max-width: 84rem;
+      width: 100%;
+      margin: 0 auto;
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+
+      h2 {
+        @include font-h2;
+      }
+
+      p {
+        @include font-h3;
+        font-weight: 500;
+      }
+    }
+
+    &__image {
+      display: block;
+      height: unset;
+    }
+
+    &__rectange {
+      height: 45rem;
+      left: 40px;
+      right: 40px;
+    }
+
+    &__ellipse {
+      top: 45rem;
+      height: 17.5rem;
+      left: 40px;
+      right: 40px;
+      display: block;
+    }
+
+    &__app {
+      &__content {
+        transform: scale(1);
+        margin-bottom: 0;
+        margin: 0 auto;
+      }
+    }
+  }
+}

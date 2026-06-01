@@ -1,0 +1,137 @@
+@use "app/_styles/abstract" as *;
+
+.pack-extras-table {
+  &__table-wrapper {
+    max-width: 100%;
+    overflow-y: auto;
+  }
+
+  &__table {
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 0;
+      border: 1px solid $color-neutral-4;
+      text-align: left;
+    }
+
+    th {
+      padding: 12px 16px;
+      @include font-body-xs;
+      color: $color-neutral-7;
+    }
+
+    td {
+      .input-select {
+        border: none;
+
+        &__value {
+          @include font-body-s;
+        }
+      }
+
+      .input-text {
+        border: none;
+
+        input {
+          @include font-body-s;
+        }
+      }
+
+      .input-number {
+        border: none;
+        width: 8.5rem;
+
+        input {
+          @include font-body-s;
+        }
+
+        &__measure {
+          @include font-body-s;
+          padding: 6px;
+        }
+      }
+    }
+  }
+
+  &__mobile {
+    display: grid;
+    grid-template-columns: max-content 12rem;
+
+    &__name {
+      padding: 0 16px;
+      @include font-body-xs;
+      color: $color-neutral-7;
+      display: flex;
+      align-items: center;
+      min-height: 2.75rem;
+
+      border: 1px solid $color-neutral-4;
+      border-right: none;
+      border-bottom: none;
+
+      &--first {
+        border-radius: 8px 0 0 0;
+      }
+    }
+
+    &__value {
+      border: 1px solid $color-neutral-4;
+      border-left: none;
+      border-bottom: none;
+
+      &--first {
+        border-radius: 0 8px 0 0;
+      }
+
+      .input-select,
+      .input-number,
+      .input-text {
+        border: none;
+      }
+    }
+
+    &__delete {
+      grid-column: 1 / -1;
+      border: 1px solid $color-neutral-4;
+      border-radius: 0 0 8px 8px;
+    }
+  }
+
+  &__disabled {
+    background: $color-neutral-3;
+    color: $color-neutral-6;
+    @include font-body-s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  &__delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+
+    .icon-svg {
+      font-size: 1rem;
+    }
+  }
+
+  @include mq(x-large) {
+    &__price-type {
+      width: 10.75rem;
+    }
+
+    &__disabled {
+      height: 2.75rem;
+      width: 8.5rem;
+    }
+
+    &__description {
+      min-width: 20rem;
+    }
+  }
+}

@@ -1,0 +1,92 @@
+@use "app/_styles/abstract" as *;
+
+.about-us {
+  &__unir,
+  &__tech,
+  &__spaces,
+  &__all-always {
+    &__content {
+      padding: 40px 24px;
+    }
+
+    @include mq(large) {
+      &__content {
+        padding: 40px;
+        max-width: 81rem;
+        width: 100%;
+        margin: 0 auto;
+      }
+    }
+  }
+
+  &__unir {
+    h2 {
+      color: $color-neutral-7;
+    }
+  }
+
+  &__tech,
+  &__all-always {
+    background: $color-neutral-1;
+
+    &__content {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    h6 {
+      color: $color-neutral-7;
+    }
+
+    &__image {
+      position: relative;
+      height: 18.75rem;
+
+      img {
+        border-radius: 8px;
+        object-position: center;
+        object-fit: cover;
+      }
+    }
+
+    @include mq(large) {
+      &__content {
+        flex-direction: row;
+        gap: 7.5rem;
+      }
+
+      &__text {
+        flex: 1;
+      }
+
+      &__image {
+        height: unset;
+        width: 33rem;
+      }
+    }
+  }
+
+  &__spaces {
+    h2 {
+      text-align: center;
+      color: $color-neutral-7;
+    }
+
+    &__item {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.375rem;
+
+      .icon-svg {
+        font-size: 1.25rem;
+      }
+
+      > span {
+        @include font-body-s;
+      }
+    }
+  }
+}

@@ -1,0 +1,201 @@
+@use "app/_styles/abstract" as *;
+
+.host-dashboard-calendar {
+  padding: 40px 24px;
+  border-radius: 8px;
+  border: 1px solid $color-neutral-4;
+  background: $color-neutral-1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+
+  &__calendar {
+    max-width: 16rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    header {
+      align-self: stretch;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+
+      .icon-svg {
+        font-size: 1.25rem;
+      }
+
+      h2 {
+        @include font-h5;
+
+        &::first-letter {
+          text-transform: capitalize;
+        }
+      }
+    }
+
+    table {
+      border-spacing: 2px 8px;
+      margin: -16px -4px;
+      width: 100%;
+    }
+
+    th,
+    td {
+      padding: 0;
+    }
+
+    th {
+      height: 2rem;
+      width: 2rem;
+
+      @include font-body-xs;
+      color: $color-neutral-7;
+
+      text-transform: capitalize;
+    }
+
+    &__day {
+      width: 2rem;
+      height: calc(2rem);
+      margin: 0 auto 13px;
+      position: relative;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      @include font-body-s;
+
+      &--has-booking::after {
+        content: "";
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: $color-brand-primary;
+        border-radius: 32px;
+        top: calc(100% + 5px);
+        left: calc(50% - 4px);
+      }
+
+      &--today {
+        border-radius: 100px;
+        color: $color-neutral-0;
+        background: $color-brand-primary;
+      }
+
+      &[data-outside-month] {
+        display: none;
+      }
+    }
+
+    @include mq(large) {
+      max-width: 20rem;
+
+      header {
+        h2 {
+          @include font-h4;
+        }
+      }
+
+      table {
+        border-spacing: 5px 8px;
+        margin: -16px -10px;
+      }
+
+      th {
+        height: 2.5rem;
+        width: 2.5rem;
+
+        @include font-body-s;
+      }
+
+      &__day {
+        width: 2.5rem;
+        height: calc(2.5rem);
+        @include font-body;
+      }
+    }
+  }
+
+  &__next {
+    &__date {
+      background: $color-semantic-neutral-light;
+      color: $color-brand-primary;
+      width: 5.375rem;
+      height: 5.875rem;
+      border-radius: 16px;
+      flex-shrink: 0;
+
+      &__weekday {
+        @include font-h6;
+        text-transform: capitalize;
+      }
+
+      &__day {
+        @include font-h2;
+      }
+    }
+
+    &__title {
+      @include font-body;
+    }
+
+    &__pack,
+    &__space {
+      @include font-body-s;
+      color: $color-neutral-6;
+    }
+
+    &__details {
+      @include font-action-xs;
+
+      span {
+        color: $color-neutral-6;
+      }
+    }
+
+    &__more {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+  }
+
+  &__empty-state {
+    padding: 40px 0;
+
+    .illustration-no-data {
+      height: 3.5rem;
+    }
+
+    p {
+      text-wrap: wrap;
+      text-align: center;
+
+      &:first-child {
+        @include font-body;
+      }
+
+      &:last-child {
+        @include font-body-s;
+        color: $color-neutral-6;
+      }
+    }
+  }
+
+  @media screen and (min-width: 40rem) {
+    flex-direction: row;
+    gap: 2rem;
+
+    &__next {
+      flex: 1;
+    }
+  }
+
+  @include mq(x-large) {
+    flex-direction: column;
+    gap: 4rem;
+  }
+}

@@ -1,0 +1,310 @@
+@use "app/_styles/abstract" as *;
+
+.host-calendar {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+
+  &__name {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1rem;
+    align-items: flex-start;
+
+    @include mq(medium) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  &__wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid $color-neutral-4;
+    border-radius: 8px;
+    padding: calc(24px + 1.25rem) 0 0;
+  }
+
+  &__column-main {
+    width: 14rem;
+  }
+
+  &__column {
+    padding: 16px 8px;
+    border-bottom: 1px solid $color-neutral-4;
+    height: 4.375rem;
+    max-width: 4.125rem;
+    position: relative;
+
+    &__weekday {
+      @include font-body-xs;
+    }
+
+    &__day {
+      @include font-body-s;
+    }
+  }
+
+  &__month {
+    position: absolute;
+    bottom: 100%;
+    left: 4px;
+    text-transform: capitalize;
+    width: max-content;
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__next-week,
+  &__prev-week {
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 10px;
+    padding: 0 4px;
+  }
+
+  &__next-week {
+    right: 0;
+    background: linear-gradient(
+      270deg,
+      rgba(255, 255, 255, 0.95) 43.75%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  &__prev-week {
+    left: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.95) 43.75%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  td {
+    padding: 0;
+  }
+
+  tr:not(:last-of-type) td {
+    border-bottom: 1px solid $color-neutral-4;
+  }
+
+  tr {
+    position: relative;
+    outline: none;
+  }
+
+  th,
+  td {
+    &:nth-child(7n + 1):not(:first-child):not(:last-child) {
+      border-right: 1px solid $color-neutral-9;
+    }
+  }
+
+  &--withoutSpaceNameColumn {
+    th,
+    td {
+      &:nth-child(7n + 1):not(:first-child):not(:last-child) {
+        border-right: none;
+      }
+
+      &:nth-child(7n):not(:first-child):not(:last-child) {
+        border-right: 1px solid $color-neutral-9;
+      }
+    }
+  }
+
+  &__space-name {
+    padding: 0 24px;
+
+    h5 {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+  }
+
+  &__space-row {
+    cursor: pointer;
+
+    &[data-hovered] {
+      background: $color-neutral-1;
+    }
+
+    &[data-pressed] {
+      background: $color-neutral-2;
+    }
+  }
+
+  & &__day {
+    padding: 0.5rem 0;
+
+    > div:first-child {
+      height: 2.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      @include font-body-s;
+    }
+
+    &:nth-child(2) {
+      > div:first-child {
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+      }
+    }
+
+    &--withoutSpaceNameColumn {
+      vertical-align: bottom;
+      padding: 2.75rem 0 0.5rem;
+
+      &:nth-child(2) {
+        > div:first-child {
+          border-radius: 0;
+        }
+      }
+    }
+
+    &--status-pending {
+      > div:first-child {
+        background: $color-neutral-5;
+      }
+    }
+
+    &--status-free {
+      > div:first-child {
+        background: $color-calendar-available;
+      }
+    }
+
+    &--status-blocked {
+      > div:first-child {
+        background: $color-calendar-blocked;
+        color: $color-neutral-0;
+      }
+    }
+
+    &--status-booked {
+      > div:first-child {
+        background: $color-calendar-reservations;
+        color: $color-neutral-0;
+      }
+    }
+
+    &__space-name {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0.5rem;
+
+      h5 {
+        line-clamp: 1;
+        -webkit-line-clamp: 1;
+      }
+
+      > div {
+        padding: 0 16px;
+      }
+    }
+  }
+
+  &__bookings {
+    vertical-align: top;
+
+    &:not(:last-child) {
+      border-right: 1px solid $color-neutral-9;
+    }
+
+    > div {
+      padding: 40px 16px;
+    }
+  }
+}
+
+.host-calendar-day {
+  &__header {
+    h6 {
+      text-transform: capitalize;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__booking {
+    padding: 16px 24px;
+    border-radius: 8px;
+    background: $color-neutral-1;
+    border: 1px solid $color-neutral-4;
+
+    &__name {
+      @include font-body;
+    }
+
+    &__time {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+
+    &__note {
+      min-width: 9.5rem;
+
+      span {
+        @include font-microcopy;
+      }
+
+      p {
+        @include font-body-xs;
+      }
+
+      .icon-svg {
+        color: $color-neutral-0;
+      }
+    }
+  }
+}
+
+.new-host-booking-modal {
+  &__date {
+    text-transform: capitalize;
+  }
+
+  &__columns {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @include mq(medium) {
+      flex-direction: row;
+      gap: 2.5rem;
+
+      > div {
+        flex: 1;
+      }
+    }
+  }
+
+  &__label {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__sub-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+
+    @include mq-max(medium) {
+      &--desktop {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

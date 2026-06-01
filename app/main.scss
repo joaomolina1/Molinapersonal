@@ -1,0 +1,20 @@
+// Base styles
+
+@use "_styles/base/animations";
+@use "_styles/base/reset";
+@use "_styles/base/utils";
+
+// Components
+
+@use "_components";
+@use "_design_system";
+@use "_services";
+
+// Pages
+
+@use "(account)" as account;
+@use "(admin)" as admin;
+@use "(client)" as client;
+@use "(host)" as host;
+@use "(main)" as main;
+@use "(onboarding)" as onboarding;

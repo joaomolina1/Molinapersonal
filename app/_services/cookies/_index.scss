@@ -1,0 +1,105 @@
+@use "app/_styles/abstract" as *;
+
+.cookies-main {
+  .illustration-cookies {
+    display: none;
+  }
+
+  &__link {
+    @include font-h6;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  @include mq(large) {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 2.5rem;
+
+    .illustration-cookies {
+      display: block;
+      flex-shrink: 0;
+    }
+
+    &__actions {
+      flex-direction: row;
+
+      & button:first-of-type {
+        order: 1;
+      }
+    }
+  }
+}
+
+.cookies-settings {
+  &__title {
+    @include font-h6;
+    text-align: center;
+  }
+
+  &__text {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__element {
+    background: $color-neutral-2;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+
+    &[data-hovered],
+    &[data-focus-visible] {
+      background: $color-neutral-3;
+    }
+
+    .icon-user-interface-navigation-arrow-down,
+    .icon-user-interface-navigation-arrow-up {
+      font-size: 1.25rem;
+    }
+
+    &__title {
+      @include font-body;
+    }
+
+    &__content {
+      @include font-body-xs;
+      color: $color-neutral-7;
+
+      overflow: hidden;
+      transition: max-height 200ms ease-in-out;
+
+      > div {
+        height: 1rem;
+        visibility: hidden;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  @include mq(large) {
+    &__title {
+      @include font-h2;
+      text-align: left;
+    }
+
+    &__text {
+      @include font-body;
+    }
+
+    &__actions {
+      flex-direction: row-reverse;
+    }
+  }
+}

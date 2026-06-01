@@ -1,0 +1,198 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+@use "HeroSearchBudget";
+
+.hero-search--mode-hero,
+.hero-search--mode-header {
+  .input-select,
+  .input-date,
+  .input-number,
+  .event-type-select {
+    border-color: transparent;
+    background: none;
+
+    &__label,
+    span {
+      color: $color-neutral-0;
+    }
+
+    &__value,
+    input,
+    input::placeholder,
+    &__input,
+    &__input-container,
+    &__placeholder,
+    &__single-value {
+      background: none;
+      color: $color-neutral-0;
+      @include font-body;
+    }
+  }
+
+  .input-select,
+  .event-type-select {
+    .icon-user-interface-navigation-arrow-down {
+      display: none;
+    }
+  }
+
+  .input-date {
+    position: relative;
+    .icon-button {
+      opacity: 0;
+      outline: none;
+      position: absolute;
+    }
+  }
+
+  .icon-user-interface-miscellaneous-separator-bar {
+    color: $color-neutral-0;
+    font-size: 1.25rem;
+  }
+}
+
+.hero-search--mode-hero {
+  border-radius: 8px;
+  background: #ffffff38;
+  backdrop-filter: blur(4px);
+  padding: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .input-select,
+  .input-date,
+  .input-number,
+  .event-type-select {
+    &[data-focus-visible],
+    &[data-pressed],
+    &--focused {
+      border-color: $color-neutral-0;
+    }
+  }
+
+  .icon-user-interface-miscellaneous-separator-bar {
+    display: none;
+  }
+
+  @include mq(large) {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    width: max-content;
+    padding: 8px;
+
+    .icon-user-interface-miscellaneous-separator-bar {
+      display: block;
+      color: $color-neutral-0;
+    }
+
+    > button {
+      margin-left: 0.5rem;
+    }
+
+    .input-select,
+    .event-type-select {
+      min-width: 13.5rem;
+    }
+
+    .input-text {
+      width: 10rem;
+    }
+
+    .input-number,
+    .input-date {
+      width: 11.5rem;
+    }
+  }
+}
+
+.hero-search--mode-header {
+  display: none;
+  height: utils.$button-height;
+
+  @include mq(large) {
+    padding-left: 8px;
+
+    .input-select,
+    .input-date,
+    .input-number,
+    .event-type-select {
+      padding-left: 0;
+      padding-right: 0;
+
+      &__control {
+        padding-left: 0;
+        padding-right: 0;
+      }
+
+      &__value,
+      input,
+      input::placeholder,
+      &__input,
+      &__placeholder,
+      &__input-container,
+      &__single-value {
+        @include font-body-s;
+      }
+    }
+
+    &:not(.hero-search--isAdmin) {
+      .hero-search__num-people {
+        .input-number {
+          padding-right: 8px;
+        }
+      }
+    }
+
+    &.hero-search--isAdmin {
+      .hero-search-budget {
+        padding-right: 8px;
+      }
+    }
+
+    border-radius: 8px;
+    border: 1px solid $color-neutral-0;
+
+    display: flex;
+    align-self: center;
+    flex-direction: row;
+    align-items: center;
+    gap: 0rem;
+  }
+}
+
+.hero-search--mode-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+
+  .input-select,
+  .input-date,
+  .input-number,
+  .event-type-select {
+    border-color: transparent;
+
+    &[data-focus-visible],
+    &[data-pressed],
+    &--focused {
+      border-color: $color-neutral-9;
+    }
+
+    &__placeholder {
+      color: $color-neutral-9;
+    }
+  }
+
+  .icon-user-interface-miscellaneous-separator-bar {
+    display: none;
+  }
+
+  > button:last-of-type {
+    width: 100%;
+    margin-top: auto;
+  }
+}

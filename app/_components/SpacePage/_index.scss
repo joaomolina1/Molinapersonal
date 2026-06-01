@@ -1,0 +1,71 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+@use "Packs";
+@use "PhotoCarousel";
+@use "Reviews";
+
+.space-page {
+  width: 100%;
+  gap: 2.5rem;
+  padding-bottom: 5rem;
+
+  @include mq(large) {
+    gap: 5rem;
+    max-width: 76rem;
+    margin: 0 auto;
+  }
+
+  &__description {
+    @include font-body-s;
+    color: $color-neutral-7;
+    max-width: 56.25rem;
+  }
+
+  &__venue-section-title {
+    @include font-h6;
+    color: $color-neutral-7;
+  }
+
+  &__photo-grid {
+    border-radius: 24px;
+    height: 25rem;
+
+    @include mq-max(large) {
+      display: none !important;
+    }
+  }
+
+  &__other-spaces {
+    position: relative;
+    overflow-x: auto;
+    @include utils.hide-scrollbar;
+
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+
+    padding: 3px;
+    margin: -3px;
+
+    > div {
+      flex: 0 0 17.125rem;
+    }
+  }
+
+  &__map {
+    height: 13rem;
+
+    @include mq(large) {
+      height: 25rem;
+    }
+  }
+}
+
+.space-page__carousel-wrapper {
+  margin: 0 -24px;
+
+  @include mq(large) {
+    display: none;
+  }
+}

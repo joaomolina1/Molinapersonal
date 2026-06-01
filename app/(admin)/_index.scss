@@ -1,0 +1,12 @@
+@use "app/_styles/abstract" as *;
+
+@use "_components";
+@use "admin";
+
+.admin-layout {
+  padding: 0 24px 24px;
+
+  @include mq(large) {
+    padding: 0 40px 40px;
+  }
+}

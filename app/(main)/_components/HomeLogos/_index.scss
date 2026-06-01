@@ -1,0 +1,28 @@
+@use "app/_styles/abstract" as *;
+
+.home-logos {
+  &__title {
+    padding-left: 24px;
+    margin-bottom: 1.5rem;
+  }
+
+  &__logo {
+    display: block;
+    height: 2.5rem;
+    object-fit: contain;
+  }
+
+  @include mq(large) {
+    &__content {
+      width: 100%;
+      max-width: 80rem;
+      margin: 0 auto;
+    }
+
+    &__title,
+    &__all {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+}

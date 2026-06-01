@@ -1,0 +1,48 @@
+@use "app/_styles/abstract" as *;
+
+.callout-time-range {
+  outline: none;
+  border-radius: 8px;
+  background: $color-neutral-0;
+  box-shadow: $elevation-2;
+  width: 18rem;
+
+  main {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  footer {
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__label {
+    color: $color-neutral-7;
+    @include font-body-s;
+    padding-left: 1rem;
+  }
+
+  &__value {
+    @include font-body-s;
+    width: 10rem;
+  }
+
+  @include mq-max(small) {
+    &__value {
+      display: none;
+    }
+
+    &__actions {
+      flex: 1;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+}

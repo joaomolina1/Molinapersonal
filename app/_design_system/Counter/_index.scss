@@ -1,0 +1,25 @@
+@use "app/_styles/abstract" as *;
+
+.counter {
+  border-radius: 100px;
+  min-width: 1rem;
+  padding: 0 0.125rem;
+  height: 1rem;
+  display: flex;
+  justify-content: center;
+
+  span {
+    @include font-microcopy;
+    transform: translateY(0.5px);
+  }
+
+  &--variant-default {
+    background: $color-brand-primary;
+    color: $color-neutral-0;
+  }
+
+  &--variant-inverted {
+    background: $color-neutral-0;
+    color: $color-brand-primary;
+  }
+}

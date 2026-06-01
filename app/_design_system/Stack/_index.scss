@@ -1,0 +1,7 @@
+@use "app/_styles/abstract" as *;
+
+.stack-separator {
+  background: $color-neutral-4;
+  width: 1px;
+  margin: 0.5rem 0;
+}

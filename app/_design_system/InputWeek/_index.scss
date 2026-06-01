@@ -1,0 +1,167 @@
+@use "app/_styles/abstract" as *;
+
+.callout-input-week {
+  outline: none;
+  border-radius: 8px;
+  background: $color-neutral-0;
+  box-shadow: $elevation-2;
+
+  &__calendar {
+    table {
+      border-spacing: 0;
+      padding: 0 8px 8px;
+      margin: 0 auto;
+    }
+
+    th {
+      height: 1.5rem;
+      width: 2rem;
+    }
+
+    td {
+      padding: 0;
+      background: transparent;
+    }
+
+    td div {
+      height: 1.875rem;
+      width: 2rem;
+    }
+
+    th {
+      @include font-body-xs;
+      color: $color-neutral-7;
+    }
+  }
+
+  &__date {
+    $self: &;
+
+    cursor: pointer;
+
+    &[data-focused] {
+      outline: none;
+    }
+
+    &[data-outside-month] {
+      cursor: auto;
+
+      > div {
+        display: none;
+      }
+    }
+
+    div {
+      @include font-body-xs;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &--isFocusedStart {
+      border-top-left-radius: 100%;
+      border-bottom-left-radius: 100%;
+      background: $color-neutral-1;
+
+      > div {
+        border-radius: 100%;
+        color: $color-neutral-9;
+        background: $color-neutral-3;
+      }
+    }
+
+    &--isFocusedEnd {
+      border-top-right-radius: 100%;
+      border-bottom-right-radius: 100%;
+      background: $color-neutral-1;
+
+      > div {
+        border-radius: 100%;
+        color: $color-neutral-9;
+        background: $color-neutral-3;
+      }
+    }
+
+    &--isFocusedDuring {
+      border-radius: 0;
+      background: $color-neutral-1;
+
+      > div {
+        border-radius: 0%;
+        color: $color-neutral-9;
+        background: none;
+      }
+    }
+
+    &--isSelectedStart {
+      border-top-left-radius: 100%;
+      border-bottom-left-radius: 100%;
+      background: $color-semantic-neutral-light;
+
+      > div {
+        border-radius: 100%;
+        color: $color-neutral-0;
+        background: $color-brand-primary;
+      }
+
+      &#{$self}--isFocusedStart {
+        > div {
+          background: $color-brand-primary-hover;
+        }
+      }
+    }
+
+    &--isSelectedEnd {
+      border-top-right-radius: 100%;
+      border-bottom-right-radius: 100%;
+      background: $color-semantic-neutral-light;
+
+      > div {
+        border-radius: 100%;
+        color: $color-neutral-0;
+        background: $color-brand-primary;
+      }
+
+      &#{$self}--isFocusedEnd {
+        > div {
+          background: $color-brand-primary-hover;
+        }
+      }
+    }
+
+    &--isSelectedDuring {
+      border-radius: 0;
+      background: $color-semantic-neutral-light;
+
+      > div {
+        border-radius: 0;
+        color: $color-brand-primary;
+        background: none;
+      }
+
+      &#{$self}--isFocusedStart {
+        border-top-left-radius: 100%;
+        border-bottom-left-radius: 100%;
+        background: $color-neutral-1;
+
+        > div {
+          border-radius: 100%;
+          color: $color-neutral-9;
+          background: $color-neutral-3;
+        }
+      }
+
+      &#{$self}--isFocusedEnd {
+        border-top-right-radius: 100%;
+        border-bottom-right-radius: 100%;
+        background: $color-neutral-1;
+
+        > div {
+          border-radius: 100%;
+          color: $color-neutral-9;
+          background: $color-neutral-3;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.onboarding-space-preview {
+  padding: 0 24px 24px;
+
+  @include mq(large) {
+    padding: 0 40px 40px;
+  }
+}
+
+.space-page * {
+  $header-top-margin: 0px;
+  $header-content-padding: 24px;
+  $header-bottom-margin: 0px;
+
+  scroll-margin-top: calc(
+    $header-top-margin + $header-content-padding + utils.$logo-height +
+      $header-content-padding + $header-bottom-margin
+  );
+
+  @include mq(large) {
+    $header-top-margin: 40px;
+    $header-content-padding: 16px;
+    $header-bottom-margin: 24px;
+
+    scroll-margin-top: calc(
+      $header-top-margin + $header-content-padding + utils.$logo-height +
+        $header-content-padding + $header-bottom-margin
+    );
+  }
+}

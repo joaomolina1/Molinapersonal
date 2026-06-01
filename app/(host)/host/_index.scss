@@ -1,0 +1,46 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+@use "_components";
+@use "bookings";
+@use "calendar";
+
+.host-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  hr {
+    border: none;
+    border-top: 1px solid $color-neutral-4;
+  }
+
+  @include mq(x-large) {
+    display: grid;
+    grid-template-columns: 1fr 22rem;
+    grid-template-rows: min-content 1fr;
+    gap: 2.5rem;
+
+    .host-dashboard-calendar {
+      grid-column: 2 / 3;
+      grid-row: 1 / 3;
+      align-self: flex-start;
+
+      position: sticky;
+      top: utils.$primary-header-large-height;
+    }
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+
+    @include mq(small) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+}

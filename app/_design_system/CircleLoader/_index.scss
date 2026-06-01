@@ -1,0 +1,39 @@
+@use "app/_styles/abstract" as *;
+
+.circle-loader {
+  &__full {
+    stroke: $color-neutral-9;
+  }
+
+  &__part {
+    stroke: $color-brand-primary;
+    animation:
+      rotate 1.5s cubic-bezier(0.5, 0, 0.5, 1) infinite,
+      stretch 1.5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    transform-origin: 50% 50%;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(90deg);
+  }
+
+  100% {
+    transform: rotate(450deg);
+  }
+}
+
+@keyframes stretch {
+  0% {
+    stroke-dashoffset: var(--offset-base);
+  }
+
+  50% {
+    stroke-dashoffset: var(--offset-max);
+  }
+
+  100% {
+    stroke-dashoffset: var(--offset-base);
+  }
+}

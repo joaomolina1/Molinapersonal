@@ -1,0 +1,64 @@
+@use "app/_styles/abstract" as *;
+
+@use "_components";
+
+.help-host-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__partners {
+    padding-top: 40px;
+
+    h6 {
+      text-align: left;
+      color: $color-neutral-8;
+    }
+
+    svg path {
+      fill: $color-neutral-8;
+    }
+  }
+
+  &__faq-cta {
+    background: $color-neutral-1;
+
+    &__content {
+      padding: 24px;
+    }
+  }
+
+  &__floating-button {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      #ffffff 100%
+    );
+    padding: 2.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: slide-from-bottom 150ms;
+  }
+
+  @include mq(small) {
+    &__floating-button {
+      display: none;
+    }
+  }
+
+  @include mq(large) {
+    gap: 5rem;
+
+    &__faq-cta__content {
+      padding: 100px 40px;
+      max-width: 81rem;
+      width: 100%;
+      margin: 0 auto;
+    }
+  }
+}

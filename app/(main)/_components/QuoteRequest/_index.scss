@@ -1,0 +1,12 @@
+@use "app/_styles/abstract" as *;
+
+@use "QuoteRequestButton";
+@use "QuoteRequestForm";
+
+.quote-request-modal {
+  padding: 0 24px;
+
+  @include mq(large) {
+    padding: 0 32px;
+  }
+}

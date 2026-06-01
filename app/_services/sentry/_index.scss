@@ -1,0 +1,11 @@
+@use "app/_styles/abstract" as *;
+
+.error-boundary {
+  @include font-body;
+  color: $color-neutral-9;
+
+  a {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}

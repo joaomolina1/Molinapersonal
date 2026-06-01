@@ -1,0 +1,25 @@
+@use "app/_styles/abstract" as *;
+
+.password-checklist {
+  padding-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .icon-user-interface-forms-confirm-on {
+    color: $color-semantic-success;
+  }
+}
+
+.terms-conditions {
+  margin-top: 0.125rem;
+  @include font-body-s;
+
+  > a {
+    @include font-body-s;
+  }
+}
+
+.session-modal-switch {
+  @include font-body;
+}

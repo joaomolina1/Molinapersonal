@@ -1,0 +1,131 @@
+@use "./colors";
+
+* {
+  font-feature-settings:
+    "clig" off,
+    "liga" off;
+}
+
+body {
+  color: colors.$color-neutral-9;
+}
+
+@mixin font-display {
+  font-size: 2.125rem;
+  font-weight: 800;
+  line-height: 3rem;
+}
+
+@mixin font-h1 {
+  font-size: 1.875rem;
+  font-weight: 800;
+  line-height: 2.5rem;
+}
+
+@mixin font-h2 {
+  font-size: 1.625rem;
+  font-weight: 500;
+  line-height: 2.5rem;
+}
+
+@mixin font-h3 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 2.25rem;
+}
+
+@mixin font-h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.875rem;
+}
+
+@mixin font-h5 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.75rem;
+}
+
+@mixin font-h6 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.375rem;
+}
+
+@mixin font-body {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.375rem;
+}
+
+@mixin font-body-s {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+@mixin font-body-xs {
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+@mixin font-action {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.375rem;
+}
+
+@mixin font-action-s {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+}
+
+@mixin font-action-xs {
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1rem;
+}
+
+@mixin font-microcopy {
+  font-size: 0.5rem;
+  font-weight: 400;
+  line-height: 1rem;
+}
+
+@mixin font-hero-banner {
+  font-size: 3.625rem;
+  font-weight: 800;
+  line-height: 4.75rem;
+}
+
+@mixin font-hero-banner-m {
+  font-size: 3.625rem;
+  font-weight: 500;
+  line-height: 4.75rem;
+}
+
+h1 {
+  @include font-h1;
+}
+
+h2 {
+  @include font-h2;
+}
+
+h3 {
+  @include font-h3;
+}
+
+h4 {
+  @include font-h4;
+}
+
+h5 {
+  @include font-h5;
+}
+
+h6 {
+  @include font-h6;
+}

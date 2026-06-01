@@ -1,0 +1,42 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.search-page {
+  padding-bottom: 4rem;
+
+  &__middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-x: hidden;
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+
+  &__map {
+    position: fixed;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  @include mq(large) {
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid $color-neutral-4;
+
+    &__columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: calc(2.5rem - 6px);
+    }
+
+    &__middle {
+      grid-column: 1 / 4;
+    }
+
+    &__map {
+      display: none;
+    }
+  }
+}

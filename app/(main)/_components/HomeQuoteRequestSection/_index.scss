@@ -1,0 +1,95 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.home-quote-request-section {
+  padding: 40px 0;
+
+  &__text-action,
+  &__photos {
+    padding: 0 24px;
+  }
+
+  &__text-action {
+    margin-bottom: 2.5rem;
+
+    .button {
+      align-self: flex-start;
+    }
+  }
+
+  &__title__blue {
+    color: $color-brand-primary;
+  }
+
+  &__photos {
+    position: relative;
+    overflow-x: auto;
+    @include utils.hide-scrollbar;
+
+    display: flex;
+    gap: 1rem;
+
+    &__item {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+
+      &__image {
+        padding: 1rem 0.45rem;
+        padding-bottom: 0;
+
+        border-radius: 8px;
+        border: 1px solid $color-neutral-4;
+
+        > div {
+          position: relative;
+          height: 14.125rem;
+          width: 9.8rem;
+
+          > img {
+            object-fit: cover;
+            object-position: top center;
+          }
+        }
+      }
+
+      p {
+        @include font-body;
+        text-transform: uppercase;
+
+        > span {
+          color: $color-brand-primary;
+        }
+      }
+    }
+  }
+
+  @include mq(large) {
+    padding: 0 32px;
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+
+    &__text-action,
+    &__photos {
+      padding: 0;
+    }
+  }
+
+  @include mq(x-large) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+
+    &__text-action {
+      max-width: 25rem;
+      margin-bottom: 0;
+    }
+
+    &__photos {
+      overflow-x: unset;
+    }
+  }
+}

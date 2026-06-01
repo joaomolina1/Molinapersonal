@@ -1,0 +1,42 @@
+@use "app/_styles/abstract" as *;
+
+.hero-search-modal-trigger {
+  border: none;
+  background: $color-neutral-1;
+  padding: 16px;
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 8px;
+  width: 100%;
+
+  &:hover,
+  &:focus-visible {
+    background: $color-neutral-2;
+  }
+
+  &:active {
+    background: $color-neutral-3;
+  }
+
+  &__info-main {
+    text-align: left;
+    @include font-body;
+    color: $color-neutral-9;
+  }
+
+  &__info-other {
+    @include font-body-xs;
+    color: $color-neutral-7;
+
+    .icon-svg {
+      font-size: 1rem;
+    }
+  }
+}
+
+.hero-search-modal {
+  .modal__content {
+    padding: 0.5rem 0.5rem 1.5rem;
+  }
+}

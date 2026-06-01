@@ -1,0 +1,80 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+$animation-duration: 100s;
+
+.home-event-types {
+  padding: 40px 0;
+  background: $color-neutral-1;
+
+  &__title,
+  &__grid {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  &__title {
+    margin-bottom: 1.5rem;
+  }
+
+  &__grid {
+    position: relative;
+    overflow-x: auto;
+    @include utils.hide-scrollbar;
+
+    display: flex;
+    gap: 1.5rem;
+    margin-top: -3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+
+    &__item {
+      height: 22.25rem;
+      flex: 0 0 17.5rem;
+    }
+  }
+
+  &__all {
+    margin-top: 1.5rem;
+  }
+
+  @include mq(large) {
+    padding: 100px 0;
+
+    &__content {
+      width: 100%;
+      max-width: 80rem;
+      margin: 0 auto;
+    }
+
+    &__title,
+    &__grid,
+    &__all {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+
+    &__title {
+      margin-bottom: 2.5rem;
+    }
+
+    &__grid {
+      display: grid;
+      grid-template-rows: repeat(2, 18.75rem);
+      grid-template-columns: 1.5fr 1fr 1fr;
+      gap: 2.5rem;
+
+      &__item {
+        height: unset;
+
+        &:first-of-type {
+          grid-row: 1 / -1;
+        }
+      }
+    }
+
+    &__all {
+      margin-top: 2.5rem;
+    }
+  }
+}

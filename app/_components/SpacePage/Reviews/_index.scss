@@ -1,0 +1,210 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.space-reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+
+    @include mq(large) {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+
+    &__avg {
+      @include font-h1;
+
+      @include mq(large) {
+        @include font-display;
+      }
+    }
+
+    &__avg-label {
+      @include font-h2;
+    }
+
+    &__total {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+
+    &__content {
+      @include mq(large) {
+        flex: 0 0 16rem;
+      }
+
+      @include mq(x-large) {
+        flex: 0 0 20rem;
+      }
+    }
+
+    &__photos {
+      border-radius: 8px;
+      height: 10.25rem;
+
+      @include mq(large) {
+        flex: 1;
+      }
+    }
+  }
+
+  &__list {
+    display: flex;
+    gap: 1.5rem;
+
+    > div {
+      flex: 1 0 0;
+    }
+
+    @include mq-max(large) {
+      position: relative;
+      overflow-x: auto;
+      @include utils.hide-scrollbar;
+
+      display: flex;
+
+      > div {
+        flex: 0 0 min(23.5rem, 75vw);
+      }
+    }
+  }
+
+  &__creation {
+    &__name {
+      @include font-body;
+    }
+
+    &__date {
+      @include font-body;
+      color: $color-neutral-7;
+    }
+  }
+
+  &__rating {
+    @include font-h3;
+    transform: translateY(1px);
+  }
+
+  &__review {
+    position: relative;
+    border: 1px solid $color-neutral-4;
+    border-radius: 8px;
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    header,
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    &__comment {
+      @include font-h6;
+      color: $color-neutral-7;
+
+      &--clampComment {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+
+    &__photos {
+      &--layout-grid-4 {
+        border-radius: 8px;
+        height: 7.5rem;
+      }
+
+      &--layout-row-4 {
+        height: 6rem;
+      }
+    }
+
+    &__delete {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+
+    &--largeOnDesktop {
+      @include mq(large) {
+        flex: 1;
+        flex-direction: row;
+
+        header {
+          flex: 0 0 16.5rem;
+        }
+      }
+    }
+  }
+
+  &__stars {
+    .icon-user-interface-miscellaneous-rating {
+      font-size: 1.25rem;
+      color: $color-brand-primary;
+    }
+  }
+
+  &__all-reviews-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    @include mq(large) {
+      gap: 2.5rem;
+    }
+
+    > header {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      h1 {
+        @include font-h3;
+      }
+
+      @include mq(large) {
+        gap: 2.5rem;
+
+        h1 {
+          @include font-h1;
+        }
+      }
+    }
+
+    > main {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+  }
+
+  &__mobile-photos-modal {
+    &__columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: center;
+    }
+  }
+
+  @include mq-max(large) {
+    margin: 0 -24px;
+
+    > div {
+      padding: 0 24px;
+    }
+  }
+}

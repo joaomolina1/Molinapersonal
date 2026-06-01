@@ -1,0 +1,159 @@
+@use "app/_styles/abstract" as *;
+
+.footer {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  text-align: center;
+
+  .logo svg {
+    margin: 0 auto;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid $color-neutral-5;
+  }
+
+  &__map {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+
+    .logo__svg {
+      width: 6rem;
+    }
+
+    &__others {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+
+      &__section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        &__title {
+          @include font-action;
+          color: $color-neutral-9;
+        }
+
+        ul {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        & &__link {
+          @include font-body-s;
+          color: $color-neutral-9;
+        }
+      }
+    }
+  }
+
+  &__links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+
+    &__social {
+      display: flex;
+      gap: 1rem;
+
+      .icon-svg {
+        font-size: 1.25rem;
+      }
+    }
+
+    &__legal {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: center;
+
+      .icon-svg {
+        display: none;
+      }
+
+      & &__link {
+        @include font-body-s;
+        color: $color-neutral-7;
+      }
+    }
+
+    &__copyright {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+  }
+
+  @include mq(small) {
+    max-width: 79rem;
+    width: 100%;
+    margin: 0 auto;
+    text-align: left;
+
+    &__map {
+      flex-direction: row;
+      justify-content: space-between;
+
+      &__others {
+        flex-direction: row;
+        gap: 1.5rem;
+
+        &__section {
+          min-width: 10rem;
+        }
+
+        @include mq(medium) {
+          gap: 2.5rem;
+
+          &__section {
+            min-width: 11.25rem;
+          }
+        }
+      }
+    }
+
+    &__links {
+      flex-direction: row;
+      gap: 2.5rem;
+
+      &__social {
+        order: 4;
+      }
+
+      &__trad {
+        order: 3;
+        margin-left: auto;
+      }
+
+      &__legal {
+        order: 2;
+        flex-direction: row;
+        gap: 0.25rem;
+        align-items: center;
+
+        .icon-svg {
+          display: block;
+          font-size: 0.75rem;
+          color: $color-neutral-7;
+        }
+      }
+
+      &__copyright {
+        order: 1;
+      }
+    }
+  }
+
+  @include mq(large) {
+    padding: 32px;
+    max-width: 80rem;
+  }
+}

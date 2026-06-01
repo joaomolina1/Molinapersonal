@@ -1,0 +1,11 @@
+@use "app/_styles/abstract" as *;
+
+.admin-bookings-table {
+  &__details {
+    display: grid;
+    gap: 2.5rem;
+    grid-template-columns: repeat(3, minmax(15rem, 30rem));
+    align-items: flex-start;
+    justify-items: flex-start;
+  }
+}

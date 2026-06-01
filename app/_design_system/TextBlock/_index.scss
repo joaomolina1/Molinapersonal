@@ -1,0 +1,48 @@
+@use "app/_styles/abstract" as *;
+
+.text-block {
+  &__microtitle,
+  &__title,
+  &__subtitle {
+    color: $color-neutral-9;
+  }
+
+  &__microtitle {
+    @include font-action-s;
+  }
+
+  &__title {
+    @include font-h1;
+  }
+
+  &__subtitle {
+    @include font-h3;
+  }
+
+  &__label {
+    @include font-h5;
+  }
+
+  &__body {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  @include mq(large) {
+    &__microtitle {
+      @include font-h6;
+    }
+
+    &__subtitle {
+      @include font-h2;
+    }
+
+    &__label {
+      @include font-h4;
+    }
+
+    &__body {
+      @include font-h6;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+@use "app/_styles/abstract" as *;
+
+.pagination {
+  &__current-page,
+  &__page,
+  &__etc {
+    height: 2.25rem;
+    width: 2.25rem;
+    @include font-body-s;
+  }
+
+  &__current-page,
+  &__etc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__current-page {
+    color: $color-neutral-0;
+    background: $color-brand-primary;
+    border-radius: 100%;
+  }
+
+  &__etc {
+    color: $color-brand-primary;
+  }
+
+  &__page {
+    border-radius: 100%;
+  }
+}

@@ -1,0 +1,185 @@
+@use "app/_styles/abstract" as *;
+
+.event-type-select {
+  $self: &;
+
+  outline: none;
+  border: 1px solid $color-neutral-4;
+  border-radius: 8px;
+  background: $color-neutral-0;
+  width: 100%;
+  cursor: pointer;
+
+  height: 2.75rem;
+
+  &__control {
+    padding: 0 1rem;
+    height: 100%;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__label-value {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    display: grid;
+
+    > * {
+      grid-column: 1 / 2;
+      grid-row: 1 / 2;
+    }
+  }
+
+  &__label {
+    @include font-body-s;
+    color: $color-neutral-7;
+    transition: all 100ms linear;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &__value-container {
+    display: grid;
+
+    > * {
+      grid-column: 1 / 2;
+      grid-row: 1 / 2;
+    }
+  }
+
+  &__placeholder {
+    @include font-body-s;
+    color: $color-neutral-6;
+    white-space: nowrap;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &__single-value {
+    @include font-body-s;
+    color: $color-neutral-9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &__input-container {
+    @include font-body-s;
+    color: $color-neutral-9;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &--focused {
+    border-color: $color-neutral-9;
+  }
+
+  &--focused,
+  &--with-value {
+    #{$self}__label-value {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    #{$self}__label {
+      @include font-body-xs;
+    }
+
+    #{$self}__value-container {
+      position: relative;
+      opacity: 1;
+    }
+  }
+
+  &--invalid {
+    border-color: $color-semantic-error;
+  }
+
+  .icon-user-interface-navigation-arrow-down {
+    color: $color-neutral-9;
+  }
+
+  &__menu {
+    border-radius: 8px;
+    background: $color-neutral-0;
+    box-shadow: $elevation-1;
+    border: 1px solid $color-neutral-4;
+  }
+
+  &__menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__options-scroll {
+    overscroll-behavior: contain;
+  }
+
+  &__option {
+    @include font-body-s;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+
+    &:hover,
+    &--is-focused {
+      background: $color-neutral-2;
+    }
+
+    &--is-selected {
+      background: $color-neutral-4;
+    }
+  }
+
+  &__menu-notice {
+    @include font-body-s;
+    padding: 0.5rem 1rem;
+    color: $color-neutral-7;
+  }
+
+  &__tabs {
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  &__tab {
+    outline: none;
+    border: none;
+    text-decoration: none;
+    white-space: nowrap;
+    background: none;
+    cursor: pointer;
+    padding: 1rem 0;
+    border-bottom: 2px solid $color-neutral-4;
+
+    @include font-body-s;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-neutral-2;
+    }
+
+    &--selected {
+      border-color: $color-brand-primary;
+    }
+  }
+}

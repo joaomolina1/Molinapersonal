@@ -1,0 +1,47 @@
+@use "app/_styles/abstract" as *;
+
+.contact-page {
+  padding: 40px 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  &__content {
+    p {
+      @include font-h6;
+      color: $color-neutral-7;
+    }
+
+    &__image {
+      height: 18.75rem;
+      background-image: $color-gradient-image-overlay, url("/contact.jpeg");
+      background-position: center;
+      background-size: cover;
+      border-radius: 8px;
+    }
+  }
+
+  @include mq(large) {
+    padding: 0 40px 64px;
+    max-width: 81rem;
+    width: 100%;
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+
+    &__content {
+      &__image {
+        height: unset;
+        flex: 1;
+      }
+    }
+
+    &__form {
+      padding-top: 40px;
+      margin-bottom: -18px;
+    }
+  }
+}

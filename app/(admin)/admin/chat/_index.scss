@@ -1,0 +1,20 @@
+@use "sass:math";
+
+.admin-chat {
+  &__chat-container {
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  &__chatkit-wrapper {
+    width: 100%;
+    height: 600px;
+    min-height: 600px;
+
+    openai-chatkit {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  }
+}

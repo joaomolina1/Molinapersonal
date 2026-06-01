@@ -1,0 +1,248 @@
+@use "app/_styles/abstract" as *;
+
+.photo-grid {
+  gap: 0.5rem;
+  overflow: hidden;
+
+  display: grid;
+
+  > div {
+    position: relative;
+  }
+
+  > div:nth-of-type(1) {
+    grid-area: first;
+  }
+
+  > div:nth-of-type(2) {
+    grid-area: second;
+  }
+
+  > div:nth-of-type(3) {
+    grid-area: third;
+  }
+
+  > div:nth-of-type(4) {
+    grid-area: fourth;
+  }
+
+  > div:nth-of-type(5) {
+    grid-area: fifth;
+  }
+
+  &--layout-grid-4 {
+    &.photo-grid--total-1 {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "first";
+    }
+
+    &.photo-grid--total-2 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "first second";
+    }
+
+    &.photo-grid--total-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "first second third";
+    }
+
+    &.photo-grid--total-4 {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      grid-template-areas:
+        "first second third"
+        "first second fourth";
+    }
+  }
+
+  &--layout-grid-5 {
+    &.photo-grid--total-1 {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "first";
+    }
+
+    &.photo-grid--total-2 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "first second";
+    }
+
+    &.photo-grid--total-3 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      grid-template-areas:
+        "first second"
+        "first third";
+    }
+
+    &.photo-grid--total-4 {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      grid-template-areas:
+        "first first second third"
+        "first first second fourth";
+    }
+
+    &.photo-grid--total-5 {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      grid-template-areas:
+        "first first second third"
+        "first first second fourth"
+        "first first second fifth";
+    }
+  }
+
+  &--layout-row-4 {
+    grid-template-columns: auto auto auto auto 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "first second third fourth";
+
+    > div {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+  }
+
+  img {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  &__see-all {
+    border: none;
+    outline: none;
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: $color-gradient-image-overlay;
+    color: $color-neutral-0;
+    @include font-action-s;
+
+    opacity: 0;
+    transition: opacity 100ms ease-in-out;
+
+    &[data-hovered],
+    &[data-focus-visible],
+    &--visible {
+      opacity: 1;
+    }
+
+    &--visible {
+      &[data-hovered],
+      &[data-focus-visible] {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.photo-grid-modal {
+  height: 100%;
+  position: relative;
+
+  .modal__header {
+    padding: 1.5rem 2.5rem 0 !important;
+  }
+
+  .modal__content {
+    padding: 0 1.5rem 1.5rem !important;
+  }
+
+  &__content {
+    padding: 1.5rem 2.5rem;
+    height: 100%;
+  }
+
+  &__selected {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      object-fit: contain;
+      object-position: center;
+      border-radius: 8px;
+    }
+
+    &--fit-width img {
+      width: auto;
+      height: 100%;
+    }
+
+    &--fit-height img {
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  &__previous {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  &__next {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  &__list {
+    display: flex;
+    gap: 0.5rem;
+
+    &__option {
+      position: relative;
+      min-width: 6.625rem;
+      height: 3.75rem;
+      border-radius: 8px;
+      overflow: hidden;
+
+      img {
+        object-fit: cover;
+        object-position: center;
+        background: $color-neutral-9;
+      }
+
+      button {
+        border: none;
+        outline: none;
+        position: absolute;
+        inset: 0;
+        cursor: pointer;
+
+        background: $color-gradient-image-overlay;
+
+        opacity: 1;
+        transition: opacity 100ms ease-in-out;
+
+        &[data-hovered],
+        &[data-focus-visible] {
+          opacity: 0;
+        }
+      }
+
+      &--selected {
+        button {
+          opacity: 0;
+        }
+      }
+    }
+  }
+}

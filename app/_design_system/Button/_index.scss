@@ -1,0 +1,580 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.button {
+  $self: &;
+
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  text-align: left;
+
+  outline: none;
+  text-decoration: none;
+  white-space: nowrap;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+
+  position: relative;
+
+  .icon-svg {
+    font-size: 1.25rem;
+  }
+
+  &[disabled] {
+    cursor: auto;
+  }
+
+  &:focus-visible {
+    outline: 1px solid $color-brand-primary-active;
+  }
+
+  &--type-primary {
+    @include font-body-s;
+    background: $color-brand-primary;
+    border: none;
+    color: $color-neutral-0;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-brand-primary-hover;
+    }
+
+    &:active {
+      background: $color-brand-primary-active;
+    }
+
+    &#{$self}--disabled {
+      background: $color-neutral-4;
+      color: $color-neutral-6;
+    }
+  }
+
+  &--type-secondary {
+    @include font-body-s;
+    background: $color-neutral-0;
+    border: 1px solid $color-brand-primary;
+    padding: calc(0.5rem - 1px) calc(1rem - 1px);
+    color: $color-brand-primary;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-neutral-1;
+      border-color: $color-brand-primary-hover;
+      color: $color-brand-primary-hover;
+    }
+
+    &:active {
+      background: $color-neutral-2;
+      border-color: $color-brand-primary-active;
+      color: $color-brand-primary-active;
+    }
+
+    &#{$self}--disabled {
+      background: $color-neutral-0;
+      border-color: $color-neutral-4;
+      color: $color-neutral-6;
+    }
+  }
+
+  &--type-link {
+    @include font-action-s;
+    background: transparent;
+    border: none;
+    color: $color-brand-primary;
+
+    &:hover,
+    &:focus-visible {
+      color: $color-brand-primary-hover;
+      text-decoration: underline;
+    }
+
+    &:active {
+      color: $color-brand-primary-active;
+      text-decoration: underline;
+    }
+
+    &#{$self}--disabled {
+      color: $color-neutral-6;
+      text-decoration: none;
+    }
+  }
+
+  &--type-red {
+    @include font-body-s;
+    background: $color-semantic-error;
+    border: none;
+    color: $color-neutral-0;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-semantic-error-hover;
+    }
+
+    &:active {
+      background: $color-semantic-error-active;
+    }
+
+    &#{$self}--disabled {
+      background: $color-neutral-4;
+      color: $color-neutral-6;
+    }
+  }
+
+  &--type-primary-inverted {
+    @include font-body-s;
+    background: $color-neutral-0;
+    border: none;
+    color: $color-brand-primary;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-neutral-1;
+      color: $color-brand-primary-hover;
+    }
+
+    &:active {
+      background: $color-neutral-2;
+      color: $color-brand-primary-active;
+    }
+
+    &#{$self}--disabled {
+      background: $color-neutral-0;
+      color: $color-neutral-6;
+    }
+  }
+
+  &--type-secondary-inverted {
+    @include font-body-s;
+    background: transparent;
+    border: 1px solid $color-neutral-0;
+    padding: calc(0.5rem - 1px) calc(1rem - 1px);
+    color: $color-neutral-0;
+
+    &:hover,
+    &:focus-visible {
+      border-color: $color-neutral-1;
+      color: $color-neutral-1;
+    }
+
+    &:active {
+      border-color: $color-neutral-2;
+      color: $color-neutral-2;
+    }
+
+    &#{$self}--disabled {
+      border-color: $color-neutral-0;
+      color: $color-neutral-6;
+    }
+  }
+
+  &--type-link-inverted {
+    @include font-action-s;
+    background: transparent;
+    border: 1px solid transparent;
+    padding: calc(0.5rem - 1px) calc(1rem - 1px);
+    color: $color-neutral-0;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-brand-primary-hover;
+      color: $color-neutral-1;
+    }
+
+    &:active {
+      border-color: $color-brand-primary-active;
+      color: $color-neutral-2;
+    }
+
+    &#{$self}--disabled {
+      color: $color-neutral-6;
+    }
+  }
+
+  &--type-red-inverted {
+    @include font-body-s;
+    background: transparent;
+    border: 1px solid $color-semantic-error;
+    padding: calc(0.5rem - 1px) calc(1rem - 1px);
+    color: $color-neutral-0;
+
+    &:hover,
+    &:focus-visible {
+      border-color: $color-semantic-error-hover;
+      color: $color-neutral-1;
+    }
+
+    &:active {
+      border-color: $color-semantic-error-active;
+      color: $color-neutral-2;
+    }
+
+    &#{$self}--disabled {
+      border-color: $color-neutral-0;
+      color: $color-neutral-6;
+    }
+  }
+
+  // To check with design
+  &--type-dark {
+    @include font-body-s;
+    background: $color-neutral-0;
+    border: 1px solid $color-neutral-9;
+    padding: calc(0.5rem - 1px) calc(1rem - 1px);
+    color: $color-neutral-9;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-neutral-1;
+      border-color: $color-neutral-8;
+      color: $color-neutral-8;
+    }
+
+    &:active {
+      background: $color-neutral-2;
+      border-color: $color-neutral-10;
+      color: $color-neutral-10;
+    }
+
+    &#{$self}--disabled {
+      background: $color-neutral-0;
+      border-color: $color-neutral-4;
+      color: $color-neutral-6;
+    }
+  }
+
+  .icon-user-interface-miscellaneous-loading {
+    color: transparent;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -48%);
+    font-size: 2rem;
+  }
+
+  @include utils.loading-animation;
+
+  &--loading {
+    color: transparent !important;
+
+    &#{$self}--type-primary,
+    &#{$self}--type-red,
+    &#{$self}--type-secondary-inverted,
+    &#{$self}--type-link-inverted {
+      .icon-user-interface-miscellaneous-loading {
+        color: $color-neutral-0;
+      }
+    }
+
+    &#{$self}--type-secondary,
+    &#{$self}--type-link,
+    &#{$self}--type-primary-inverted,
+    &#{$self}--type-red-inverted {
+      .icon-user-interface-miscellaneous-loading {
+        color: $color-brand-primary;
+      }
+    }
+
+    &#{$self}--type-dark {
+      .icon-user-interface-miscellaneous-loading {
+        color: $color-neutral-9;
+      }
+    }
+  }
+}
+
+.icon-button {
+  background: none;
+  width: max-content;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+
+  &[data-focus-visible] {
+    outline: 2px solid $color-neutral-9;
+  }
+
+  &[disabled] {
+    cursor: auto;
+    color: $color-neutral-6;
+  }
+
+  &--type-neutral {
+    color: $color-neutral-9;
+
+    &:hover,
+    &:focus-visible {
+      color: $color-neutral-8;
+    }
+
+    &:active {
+      color: $color-neutral-7;
+    }
+  }
+
+  &--type-primary {
+    color: $color-brand-primary;
+
+    &:hover,
+    &:focus-visible {
+      color: $color-brand-primary-hover;
+    }
+
+    &:active {
+      color: $color-brand-primary-active;
+    }
+  }
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: $color-neutral-0;
+  cursor: pointer;
+
+  outline: none;
+  border: none;
+
+  &--shape-round {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 100%;
+  }
+
+  &--shape-square {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+  }
+
+  &:hover {
+    background: $color-neutral-1;
+  }
+
+  &:focus-visible {
+    background: $color-neutral-1;
+    border: 1px solid $color-neutral-9;
+  }
+
+  &:active {
+    background: $color-neutral-2;
+  }
+
+  .icon-svg {
+    font-size: 1rem;
+  }
+
+  &--type-neutral {
+    .icon-svg {
+      color: $color-neutral-9;
+    }
+  }
+
+  &--type-primary {
+    .icon-svg {
+      color: $color-brand-primary;
+    }
+  }
+
+  &[data-disabled] {
+    .icon-svg {
+      color: $color-neutral-6;
+    }
+  }
+}
+
+.text-button {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+
+  @include font-action;
+  color: $color-brand-primary;
+
+  &--size-small {
+    @include font-action-s;
+  }
+
+  &--size-x-small {
+    @include font-action-xs;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $color-brand-primary-hover;
+  }
+
+  &:focus-visible {
+    text-decoration: underline;
+  }
+
+  &:active {
+    color: $color-brand-primary-active;
+  }
+}
+
+.styleless-button {
+  background: none;
+  border: none;
+  outline: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  text-align: left;
+
+  &[disabled] {
+    cursor: auto;
+  }
+}
+
+.float-button {
+  $self: &;
+
+  border-radius: 100px;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  text-align: left;
+
+  border: none;
+  outline: none;
+  text-decoration: none;
+  white-space: nowrap;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+
+  @include font-body-s;
+  box-shadow: $elevation-2;
+
+  .icon-svg {
+    font-size: 1.25rem;
+  }
+
+  &[disabled] {
+    cursor: auto;
+  }
+
+  &--iconOnly {
+    padding: 0.5rem 1rem;
+  }
+
+  &--type-primary {
+    background: $color-brand-primary;
+    color: $color-neutral-0;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-brand-primary-hover;
+    }
+
+    &:active {
+      background: $color-brand-primary-active;
+    }
+
+    &#{$self}--disabled {
+      background: $color-neutral-4;
+      color: $color-neutral-6;
+    }
+  }
+
+  &--type-inverted {
+    background: $color-neutral-0;
+    color: $color-brand-primary;
+
+    &:hover,
+    &:focus-visible {
+      background: $color-neutral-1;
+      color: $color-brand-primary-hover;
+    }
+
+    &:active {
+      background: $color-neutral-2;
+      color: $color-brand-primary-active;
+    }
+
+    &#{$self}--disabled {
+      background: $color-neutral-0;
+      color: $color-neutral-6;
+    }
+  }
+}
+
+.square-button {
+  $self: &;
+
+  border-radius: 8px;
+  cursor: pointer;
+
+  border: 1px solid $color-neutral-4;
+  background: $color-neutral-0;
+  outline: none;
+
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+
+  > .icon-svg {
+    font-size: 1rem;
+    color: $color-neutral-9;
+  }
+
+  &[disabled] {
+    cursor: auto;
+  }
+
+  &__counter {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: $color-neutral-1;
+    border-color: $color-neutral-5;
+
+    > .icon-svg {
+      color: $color-brand-primary-hover;
+    }
+  }
+
+  &:active {
+    background: $color-neutral-2;
+    border-color: $color-neutral-6;
+
+    > .icon-svg {
+      color: $color-brand-primary-active;
+    }
+  }
+
+  &#{$self}--disabled {
+    background: $color-neutral-4;
+    border-color: $color-neutral-4;
+
+    > .icon-svg {
+      color: $color-neutral-6;
+    }
+  }
+}

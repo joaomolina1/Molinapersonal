@@ -1,0 +1,121 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.card {
+  position: relative;
+
+  input {
+    cursor: pointer;
+    height: 0;
+    width: 0;
+    position: absolute;
+    opacity: 0;
+
+    &:focus-visible + .card__content {
+      outline: 1px solid $color-neutral-9;
+    }
+  }
+
+  &--type-radio,
+  &--type-checkbox {
+    cursor: pointer;
+  }
+
+  &--type-button {
+    background: none;
+    outline: none;
+    border: none;
+    text-decoration: none;
+    padding: 0;
+
+    @include utils.loading-animation;
+
+    &:not([data-disabled]) {
+      cursor: pointer;
+    }
+  }
+
+  &--disabled {
+    cursor: default;
+  }
+
+  &__content {
+    $content: &;
+
+    background: $color-neutral-0;
+    border: 1px solid $color-neutral-4;
+    border-radius: 8px;
+    color: $color-neutral-9;
+    padding: 16px;
+    height: 100%;
+
+    &--variant-large-icon {
+      .user-interface-miscellaneous-loading,
+      .icon-user-interface-navigation-arrow-right,
+      .icon-user-interface-forms-radio,
+      .icon-user-interface-forms-checkbox {
+        margin-left: auto;
+      }
+    }
+
+    .icon-svg {
+      font-size: 1.25rem;
+    }
+
+    .icon-large {
+      height: 2.5rem;
+      min-width: 4.375rem;
+      max-width: 4.375rem;
+    }
+
+    &__microcopy {
+      color: $color-neutral-7;
+    }
+
+    &--checked {
+      border-color: $color-neutral-9;
+    }
+
+    &--disabled {
+      border-color: $color-neutral-4;
+      background: $color-neutral-3;
+      color: $color-neutral-6;
+    }
+
+    &--size-default {
+      #{$content}__text {
+        @include font-h6;
+      }
+
+      #{$content}__microcopy {
+        @include font-body-s;
+      }
+    }
+
+    &--size-large {
+      #{$content}__text {
+        @include font-h4;
+      }
+
+      #{$content}__microcopy {
+        @include font-h6;
+      }
+    }
+  }
+}
+
+.card-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+
+  @include mq(large) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+
+    &--three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}

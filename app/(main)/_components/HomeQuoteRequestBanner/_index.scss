@@ -1,0 +1,14 @@
+@use "app/_styles/abstract" as *;
+
+.home-quote-request-banner {
+  padding: 0 24px;
+
+  @include mq(large) {
+    display: none;
+
+    padding: 0 40px;
+    width: 100%;
+    max-width: 81rem;
+    margin: 0 auto;
+  }
+}

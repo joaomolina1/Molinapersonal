@@ -1,0 +1,76 @@
+@use "app/_styles/abstract" as *;
+
+.chip {
+  display: inline-flex;
+  position: relative;
+  width: max-content;
+  cursor: pointer;
+  border-radius: 24px;
+
+  input {
+    cursor: pointer;
+    height: 0;
+    width: 0;
+    position: absolute;
+    opacity: 0;
+
+    &:focus-visible + .chip__content {
+      outline: 1px solid $color-neutral-9;
+    }
+
+    &:disabled + .chip__content:not(.chip__content--checked) {
+      border-color: $color-neutral-4;
+      background: $color-neutral-3;
+      color: $color-neutral-6;
+      cursor: default;
+    }
+  }
+
+  &__content {
+    background: $color-neutral-0;
+    border: 1px solid $color-neutral-4;
+    border-radius: 24px;
+    color: $color-neutral-9;
+    white-space: nowrap;
+
+    span {
+      @include font-body-s;
+    }
+
+    &:hover {
+      border-color: $color-neutral-9;
+    }
+
+    &--checked {
+      border-color: $color-neutral-9;
+      background: $color-neutral-9;
+      color: $color-neutral-0;
+    }
+
+    &--size-medium {
+      padding: 12px 16px;
+      height: 2.75rem;
+
+      .icon-svg {
+        font-size: 1.25rem;
+      }
+    }
+
+    &--size-small {
+      padding: 4px 12px;
+      height: 1.75rem;
+
+      .icon-svg {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  &--type-button {
+    &[data-focus-visible] {
+      .chip__content {
+        outline: 1px solid $color-neutral-9;
+      }
+    }
+  }
+}

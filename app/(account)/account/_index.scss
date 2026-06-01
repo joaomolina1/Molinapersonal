@@ -1,0 +1,15 @@
+@use "app/_styles/abstract" as *;
+
+@use "_components";
+
+.account-tabs {
+  margin-bottom: 2.25rem;
+
+  .tabs__tab {
+    flex: 0;
+  }
+
+  @include mq(large) {
+    margin-bottom: 2.5rem;
+  }
+}

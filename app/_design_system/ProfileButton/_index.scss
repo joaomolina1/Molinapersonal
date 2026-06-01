@@ -1,0 +1,49 @@
+@use "app/_styles/abstract" as *;
+
+.profile-button {
+  background: none;
+  outline: none;
+  border: none;
+  cursor: pointer;
+
+  background: transparent;
+  border-radius: 8px;
+  padding: 5px 16px;
+
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+
+  &__name {
+    @include font-action-s;
+    color: $color-neutral-0;
+    white-space: nowrap;
+  }
+
+  .icon-svg {
+    color: $color-neutral-0;
+    font-size: 1rem;
+  }
+
+  .icon-user-interface-navigation-arrow-up {
+    display: none;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: #00000010;
+  }
+
+  &[data-pressed] {
+    background: #00000014;
+
+    .icon-user-interface-navigation-arrow-up {
+      display: unset;
+    }
+
+    .icon-user-interface-navigation-arrow-down {
+      display: none;
+    }
+  }
+}

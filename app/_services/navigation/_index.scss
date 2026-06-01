@@ -1,0 +1,10 @@
+@use "app/_styles/abstract" as *;
+
+.navigation-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: $color-brand-primary;
+  height: 3px;
+  z-index: 10;
+}

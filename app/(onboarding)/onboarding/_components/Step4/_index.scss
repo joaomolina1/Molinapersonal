@@ -1,0 +1,72 @@
+@use "app/_styles/abstract" as *;
+
+@use "Extras";
+@use "Prices";
+@use "TravelExpensesIntervals";
+
+.pack-help-modal__button {
+  align-self: flex-start;
+  padding-left: 0;
+  padding-right: 0;
+
+  &__label {
+    @include font-body-s;
+  }
+}
+
+.pack-help-modal {
+  &__example {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    &__image {
+      position: relative;
+      height: 14.5rem;
+
+      > img {
+        object-fit: cover;
+        object-position: center;
+        border-radius: 8px;
+      }
+    }
+
+    &__content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      p {
+        @include font-body-s;
+        color: $color-neutral-7;
+      }
+
+      a {
+        margin-top: 0.5rem;
+        align-self: flex-start;
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
+  }
+
+  @include mq(medium) {
+    &__example {
+      $self: &;
+
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+
+      &:nth-child(odd) {
+        & #{$self}__content {
+          order: -1;
+        }
+      }
+
+      &__content {
+        justify-content: center;
+      }
+    }
+  }
+}

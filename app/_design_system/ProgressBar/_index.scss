@@ -1,0 +1,17 @@
+@use "app/_styles/abstract" as *;
+
+.progress-bar {
+  background: $color-neutral-4;
+  height: 0.25rem;
+  position: relative;
+  width: 100%;
+
+  &__progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    background: $color-neutral-9;
+  }
+}

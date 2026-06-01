@@ -1,0 +1,91 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.animated-scrolling-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  &__row {
+    $self: &;
+
+    display: flex;
+    position: relative;
+    overflow: hidden;
+
+    mask-image: linear-gradient(
+      90deg,
+      transparent,
+      white 20%,
+      white 80%,
+      transparent
+    );
+
+    &__repeat {
+      display: flex;
+      white-space: nowrap;
+
+      &--index-0 {
+        animation: scroll-horizontal-0 var(--animation-duration) linear infinite;
+        animation-delay: calc(var(--animation-duration) * -1);
+      }
+
+      &--index-1 {
+        animation: scroll-horizontal-1 var(--animation-duration) linear infinite;
+        animation-delay: calc(var(--animation-duration) / -2);
+      }
+    }
+
+    &--index-1 {
+      & #{$self}__repeat {
+        &--index-0 {
+          animation-direction: reverse;
+        }
+
+        &--index-1 {
+          animation-direction: reverse;
+        }
+      }
+    }
+
+    &:hover {
+      > div {
+        animation-play-state: paused;
+      }
+    }
+  }
+}
+
+@keyframes scroll-horizontal-0 {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes scroll-horizontal-1 {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-200%);
+  }
+}
+
+.animated-scrolling-list-tag-button {
+  &:hover {
+    .tag {
+      background-color: $color-neutral-1;
+    }
+  }
+
+  &:active {
+    .tag {
+      background-color: $color-neutral-2;
+    }
+  }
+}

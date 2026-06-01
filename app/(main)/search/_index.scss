@@ -1,0 +1,11 @@
+@use "app/_styles/abstract" as *;
+
+@use "components";
+
+.search-layout {
+  padding: 0 24px 0;
+
+  @include mq(large) {
+    padding: 0 40px 0;
+  }
+}

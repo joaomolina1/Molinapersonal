@@ -1,0 +1,12 @@
+@use "app/_styles/abstract" as *;
+
+.host-venue-name {
+  &__id {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__name {
+    @include font-h2;
+  }
+}

@@ -1,0 +1,103 @@
+@use "app/_styles/abstract" as *;
+
+.callout {
+  border-radius: 8px;
+  background: $color-neutral-0;
+  padding: 1px;
+  max-height: 22rem;
+  overflow-y: auto;
+
+  &--elevation-small {
+    box-shadow: $elevation-1;
+  }
+
+  &--elevation-large {
+    box-shadow: $elevation-2;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &__option {
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    height: 4.25rem;
+
+    &__wrapper {
+      display: block;
+      border: none;
+      background: none;
+      padding: 0 16px;
+      width: 100%;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    &[data-hovered] {
+      .callout__option__wrapper {
+        background: $color-neutral-1;
+      }
+    }
+
+    &[data-focused] {
+      outline: none;
+      border: none;
+    }
+
+    &[data-focus-visible] {
+      outline: none;
+
+      .callout__option__wrapper {
+        background: $color-neutral-1;
+        outline: 1px solid $color-neutral-9;
+      }
+    }
+
+    &[data-selected] {
+      .callout__option__wrapper {
+        outline: 1px solid $color-neutral-9;
+      }
+    }
+
+    &__content {
+      padding: 8px 0;
+      height: 100%;
+      border-bottom: 1px solid $color-neutral-4;
+    }
+
+    &:last-of-type {
+      .callout__option__content {
+        border-bottom: none;
+      }
+    }
+
+    .icon-svg {
+      color: $color-neutral-9;
+      font-size: 1.25rem;
+    }
+
+    &__text {
+      color: $color-neutral-9;
+      @include font-body-s;
+      text-align: left;
+
+      @include mq(large) {
+        @include font-body;
+      }
+    }
+
+    &__sub-text {
+      color: $color-neutral-9;
+      @include font-body-xs;
+      text-align: left;
+    }
+
+    &__action-text {
+      color: $color-neutral-9;
+      @include font-action-s;
+      text-align: left;
+    }
+  }
+}

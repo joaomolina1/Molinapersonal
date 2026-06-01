@@ -1,0 +1,23 @@
+@use "app/_styles/abstract" as *;
+
+.booking-full-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  hr {
+    border: none;
+    border-top: 1px solid $color-neutral-4;
+  }
+
+  @include mq(large) {
+    display: grid;
+    row-gap: 2rem;
+    column-gap: 3rem;
+    grid-template-columns: repeat(3, 1fr);
+
+    &__main-details {
+      grid-column: 2 / -1;
+    }
+  }
+}

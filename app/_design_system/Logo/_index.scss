@@ -1,0 +1,23 @@
+@use "app/_styles/abstract" as *;
+
+.logo {
+  outline: none;
+  border-radius: 8px;
+
+  &:focus-visible {
+    outline: 1px solid $color-neutral-0;
+    outline-offset: 5px;
+  }
+
+  &__svg {
+    min-width: 4.875rem;
+
+    &--type-default {
+      fill: $color-brand-primary;
+    }
+
+    &--type-inverted {
+      fill: $color-neutral-0;
+    }
+  }
+}

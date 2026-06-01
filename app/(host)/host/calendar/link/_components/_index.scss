@@ -1,0 +1,39 @@
+@use "app/_styles/abstract" as *;
+
+.calendar-link {
+  padding: 16px;
+  border: 1px solid $color-neutral-4;
+  border-radius: 8px;
+  width: 100%;
+
+  &__export,
+  &__import {
+    > p {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+  }
+
+  &__export {
+    &__toggle {
+      padding: 10px 16px;
+      background: $color-neutral-2;
+      border-radius: 8px;
+
+      > span {
+        color: $color-neutral-9;
+        @include font-body-s;
+      }
+    }
+
+    &__link {
+      flex: 1;
+      max-width: 37.5rem;
+    }
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid $color-neutral-5;
+  }
+}

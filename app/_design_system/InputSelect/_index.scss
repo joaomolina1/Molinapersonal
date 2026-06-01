@@ -1,0 +1,126 @@
+@use "app/_styles/abstract" as *;
+
+.input-select {
+  $self: &;
+
+  outline: none;
+  border: 1px solid $color-neutral-4;
+  border-radius: 8px;
+  background: $color-neutral-0;
+  width: 100%;
+  cursor: pointer;
+
+  height: 2.75rem;
+  padding: 0rem 1rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+
+  > div {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  &__label {
+    @include font-body-s;
+    color: $color-neutral-7;
+    transition: all 100ms linear;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &__value {
+    @include font-body-s;
+    color: $color-neutral-9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &__placeholder {
+    @include font-body-s;
+    color: $color-neutral-6;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &[data-focus-visible],
+  &[data-pressed] {
+    border-color: $color-neutral-9;
+  }
+
+  &--with-value,
+  &--with-placeholder {
+    #{$self}__label {
+      @include font-body-xs;
+    }
+  }
+
+  &--error,
+  &--error[data-focus-visible] {
+    border-color: $color-semantic-error;
+  }
+
+  &--disabled {
+    border-color: $color-neutral-4;
+    background: $color-neutral-3;
+    cursor: not-allowed;
+
+    #{$self}__label,
+    #{$self}__value {
+      color: $color-neutral-6;
+    }
+  }
+
+  .icon-user-interface-navigation-arrow-down {
+    color: $color-neutral-9;
+  }
+}
+
+.dropdown {
+  border-radius: 8px;
+  background: $color-neutral-0;
+  box-shadow: $elevation-1;
+  border: 1px solid $color-neutral-4;
+  padding: 0.5rem 0;
+  max-height: 16rem;
+  overflow-y: auto;
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &__option {
+    @include font-body-s;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border: none;
+    outline: none;
+
+    &[data-hovered],
+    &[data-focus-visible] {
+      background: $color-neutral-2;
+    }
+
+    &[data-selected] {
+      background: $color-neutral-4;
+    }
+
+    &[data-disabled] {
+      color: $color-neutral-6;
+      text-decoration: line-through;
+      cursor: auto;
+    }
+  }
+}

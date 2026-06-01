@@ -1,0 +1,27 @@
+@use "app/_design_system/_utils/InputGroup" as *;
+@use "app/_styles/abstract" as *;
+
+.client-pack-search {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 0;
+
+  @include mq-max(large) {
+    &__inputs {
+      @include input-group();
+    }
+  }
+
+  @include mq(large) {
+    flex-direction: row;
+
+    &__inputs {
+      @include input-group-row();
+
+      > div {
+        width: 12.5rem;
+      }
+    }
+  }
+}

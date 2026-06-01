@@ -1,0 +1,117 @@
+@mixin input-group {
+  .input-wrapper:first-of-type {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range,
+    .input-select {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+
+  .input-wrapper:not(:first-of-type):not(:last-of-type) {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range,
+    .input-select {
+      border-radius: 0;
+      margin-top: -1px;
+    }
+  }
+
+  .input-wrapper:last-of-type {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range,
+    .input-select {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      margin-top: -1px;
+    }
+  }
+
+  .input-wrapper {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range {
+      &--focused {
+        z-index: 1;
+        position: relative;
+      }
+    }
+
+    .input-select {
+      &[data-focus-visible],
+      &[data-pressed] {
+        z-index: 1;
+        position: relative;
+      }
+    }
+  }
+}
+
+.input-group {
+  @include input-group();
+}
+
+@mixin input-group-row {
+  display: flex;
+
+  .input-wrapper:first-of-type {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range,
+    .input-select {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+
+  .input-wrapper:not(:first-of-type):not(:last-of-type) {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range,
+    .input-select {
+      border-radius: 0;
+      margin-left: -1px;
+    }
+  }
+
+  .input-wrapper:last-of-type {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range,
+    .input-select {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      margin-left: -1px;
+    }
+  }
+
+  .input-wrapper {
+    .input-text,
+    .input-number,
+    .input-date,
+    .input-date-range {
+      &--focused {
+        z-index: 1;
+        position: relative;
+      }
+    }
+
+    .input-select {
+      &[data-focus-visible],
+      &[data-pressed] {
+        z-index: 1;
+        position: relative;
+      }
+    }
+  }
+}

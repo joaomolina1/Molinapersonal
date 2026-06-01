@@ -1,0 +1,11 @@
+@use "app/_styles/abstract" as *;
+
+.account-security-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @include mq(large) {
+    gap: 2.5rem;
+  }
+}

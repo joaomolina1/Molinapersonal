@@ -1,0 +1,40 @@
+@use "_components";
+
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.search-map-modal {
+  .modal__content {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+
+    .search-map-content {
+      flex: 1;
+    }
+  }
+
+  &__header {
+    display: grid;
+    grid-template-columns: 1fr max-content 1fr;
+    padding: 1rem 1.5rem;
+
+    .icon-svg {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+.search-map-sidebar {
+  border-radius: 24px;
+  overflow: hidden;
+
+  position: sticky;
+  top: calc(utils.$primary-header-large-height);
+  height: calc(100dvh - utils.$primary-header-large-height - 40px);
+
+  .search-map-content {
+    width: 100%;
+    height: 100%;
+  }
+}

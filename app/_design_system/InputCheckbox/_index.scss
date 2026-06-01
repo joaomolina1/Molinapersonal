@@ -1,0 +1,79 @@
+@use "app/_styles/abstract" as *;
+
+.input-checkbox {
+  $self: &;
+
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  cursor: pointer;
+
+  &__label {
+    @include font-body-s;
+    margin-top: 0.125rem;
+  }
+
+  &__checkbox {
+    width: 1.5rem;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid $color-neutral-9;
+    border-radius: 3px;
+    transition: background-color 200ms;
+
+    svg {
+      fill: none;
+      stroke: $color-neutral-0;
+      stroke-width: 2px;
+      stroke-dasharray: 22px;
+      stroke-dashoffset: 66;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 200ms;
+    }
+  }
+
+  &[data-hovered] {
+    #{$self}__checkbox {
+      background-color: $color-neutral-3;
+    }
+  }
+
+  &[data-focus-visible] {
+    #{$self}__checkbox {
+      outline: 1px solid $color-neutral-9;
+      outline-offset: 2px;
+    }
+  }
+
+  &[data-selected] {
+    #{$self}__checkbox {
+      background-color: $color-neutral-9;
+
+      svg {
+        stroke-dashoffset: 44;
+      }
+    }
+  }
+
+  &[data-disabled] {
+    cursor: auto;
+
+    #{$self}__checkbox {
+      border-color: $color-neutral-5;
+    }
+
+    &[data-selected] {
+      #{$self}__checkbox {
+        background-color: $color-neutral-5;
+      }
+    }
+  }
+
+  &--position-right {
+    #{$self}__checkbox {
+      order: 2;
+      margin-left: auto;
+    }
+  }
+}

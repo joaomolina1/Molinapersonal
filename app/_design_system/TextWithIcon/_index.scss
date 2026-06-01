@@ -1,0 +1,34 @@
+@use "app/_styles/abstract" as *;
+
+.text-with-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+
+  $self: &;
+
+  &__text {
+    padding-top: 0.125rem;
+  }
+
+  &--size-small {
+    .icon-svg {
+      font-size: 1rem;
+    }
+
+    #{$self}__text {
+      @include font-body-s;
+    }
+  }
+
+  &--size-large {
+    .icon-svg {
+      font-size: 1.5rem;
+    }
+
+    #{$self}__text {
+      @include font-body;
+    }
+  }
+}

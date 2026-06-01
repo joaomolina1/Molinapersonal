@@ -1,0 +1,58 @@
+@use "app/_styles/abstract" as *;
+
+@use "MenuDrawer";
+@use "RegisterModal";
+@use "Session";
+
+.main-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+
+  @include mq(large) {
+    padding: 16px 0;
+    justify-content: unset;
+    gap: 2.5rem;
+
+    nav {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+  }
+
+  .icon-user-interface-navigation-menu-hamburguer {
+    font-size: 1.25rem;
+    color: $color-neutral-0;
+  }
+
+  &--variant-default {
+    .icon-user-interface-navigation-menu-hamburguer {
+      color: $color-neutral-9;
+    }
+  }
+}
+
+.primary-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #ffffffe5;
+  backdrop-filter: blur(5px);
+  padding: 0 24px;
+
+  @include mq(large) {
+    padding: 40px 40px 24px;
+    background: $color-neutral-0;
+
+    &__content {
+      padding: 0 24px;
+      background: $color-brand-primary;
+      border-radius: 24px;
+    }
+  }
+}

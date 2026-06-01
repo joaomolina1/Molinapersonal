@@ -1,0 +1,11 @@
+@use "app/_styles/abstract" as *;
+
+.header-session {
+  &__greeting {
+    @include font-action;
+  }
+
+  &__name {
+    @include font-body;
+  }
+}

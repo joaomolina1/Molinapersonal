@@ -1,0 +1,48 @@
+@use "app/_styles/abstract" as *;
+
+.alert-box {
+  border-radius: 8px;
+  padding: 16px;
+
+  .icon-svg {
+    font-size: 1.25rem;
+  }
+
+  &__title {
+    @include font-action-xs;
+    color: $color-neutral-9;
+  }
+
+  &__text {
+    @include font-body-xs;
+    color: $color-neutral-9;
+  }
+
+  &__label {
+    @include font-action-xs;
+    color: $color-brand-primary;
+  }
+
+  &--variant-neutral {
+    background: $color-semantic-neutral-light;
+  }
+
+  &--variant-error {
+    background: $color-semantic-error-light;
+  }
+
+  &--variant-neutral-2 {
+    background: $color-neutral-1;
+  }
+
+  @include mq(large) {
+    &__title,
+    &__label {
+      @include font-action-s;
+    }
+
+    &__text {
+      @include font-body-s;
+    }
+  }
+}

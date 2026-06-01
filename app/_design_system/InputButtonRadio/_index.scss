@@ -1,0 +1,52 @@
+@use "app/_styles/abstract" as *;
+
+.input-button-radio-group {
+  display: flex;
+
+  &__option {
+    flex: 1;
+    border: 1px solid $color-brand-primary;
+    background: $color-neutral-0;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 100ms;
+
+    @include font-body-s;
+    color: $color-brand-primary;
+
+    &:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    &:not(:last-child) {
+      border-right: none;
+    }
+
+    &[data-hovered],
+    &[data-focus-visible] {
+      background: $color-neutral-1;
+      border-color: $color-brand-primary-hover;
+      color: $color-brand-primary-hover;
+    }
+
+    &[data-pressed] {
+      background: $color-neutral-2;
+      border-color: $color-brand-primary-active;
+      color: $color-brand-primary-active;
+    }
+
+    &[data-selected] {
+      background: $color-brand-primary;
+      color: $color-neutral-0;
+    }
+  }
+}

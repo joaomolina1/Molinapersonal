@@ -1,0 +1,21 @@
+@use "app/_styles/abstract" as *;
+
+.input-wrapper {
+  &__info {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__error {
+    color: $color-semantic-error;
+
+    .icon-svg {
+      font-size: 1rem;
+      margin-top: 0.125rem;
+    }
+
+    span {
+      @include font-body-s;
+    }
+  }
+}

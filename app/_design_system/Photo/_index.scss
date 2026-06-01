@@ -1,0 +1,21 @@
+@use "app/_styles/abstract" as *;
+
+.photo {
+  position: relative;
+  height: 100%;
+  width: 100%;
+
+  img {
+    object-fit: cover;
+    object-position: center;
+
+    border-radius: 8px;
+    border: 1px solid $color-neutral-4;
+  }
+
+  &__overlay {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+}

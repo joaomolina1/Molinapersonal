@@ -1,0 +1,46 @@
+@use "app/_styles/abstract" as *;
+
+.callout-date-time-range {
+  outline: none;
+  border-radius: 8px;
+  background: $color-neutral-0;
+  box-shadow: $elevation-2;
+  width: 30rem;
+
+  main {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    border-bottom: 1px solid $color-neutral-4;
+  }
+
+  &__left {
+    border-right: 1px solid $color-neutral-4;
+    padding-bottom: 8px;
+  }
+
+  &__right {
+    &__title {
+      padding: 16px;
+      @include font-body-s;
+      text-align: center;
+      border-bottom: 1px solid $color-neutral-4;
+
+      &:first-letter {
+        text-transform: capitalize;
+      }
+    }
+
+    &__start-end {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px;
+  }
+}

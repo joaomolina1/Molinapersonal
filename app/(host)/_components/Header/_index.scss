@@ -1,0 +1,33 @@
+@use "app/_styles/abstract" as *;
+
+.host-header {
+  @include mq(large) {
+    &__nav-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      a {
+        @include font-body-s;
+      }
+
+      &--active {
+        a {
+          @include font-action-s;
+        }
+
+        &::after {
+          position: absolute;
+          content: "";
+          height: 0.5rem;
+          background: $color-neutral-0;
+          left: 1rem;
+          right: 1rem;
+          bottom: -16px;
+          border-top-left-radius: 16px;
+          border-top-right-radius: 16px;
+        }
+      }
+    }
+  }
+}

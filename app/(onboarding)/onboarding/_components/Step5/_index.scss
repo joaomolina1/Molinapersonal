@@ -1,0 +1,98 @@
+@use "app/_styles/abstract" as *;
+
+.onboarding-recap {
+  gap: 1rem;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__tabs {
+    margin-bottom: 1rem;
+  }
+
+  &__item {
+    padding: 24px 0;
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    column-gap: 1.5rem;
+    row-gap: 1rem;
+
+    &:not(:last-of-type) {
+      border-bottom: 1px solid $color-neutral-4;
+    }
+
+    &__edit {
+      height: 1.75rem;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    &__content {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    &__text {
+      color: $color-neutral-7;
+      @include font-body-s;
+      max-width: 56.25rem;
+    }
+
+    &__label {
+      color: $color-neutral-7;
+      @include font-h6;
+    }
+
+    &__value {
+      color: $color-neutral-7;
+      @include font-body;
+    }
+
+    &__photos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+      gap: 0.5rem;
+
+      &__photo {
+        height: 5rem;
+      }
+    }
+  }
+
+  @include mq(large) {
+    gap: 2.5rem;
+
+    &__header {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    &__tabs {
+      margin-bottom: 2.5rem;
+    }
+
+    &__item {
+      padding: 40px 0;
+      row-gap: 1.5rem;
+
+      &__content {
+        grid-column: 1 / 2;
+        gap: 1.5rem;
+      }
+
+      &__photos {
+        grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr));
+
+        &__photo {
+          height: 7.5rem;
+        }
+      }
+    }
+  }
+}

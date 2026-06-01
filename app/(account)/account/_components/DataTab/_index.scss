@@ -1,0 +1,23 @@
+@use "app/_styles/abstract" as *;
+
+.account-data-tab {
+  max-width: 37.5rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  @include mq(large) {
+    gap: 5rem;
+
+    &__content {
+      gap: 5rem;
+    }
+  }
+}

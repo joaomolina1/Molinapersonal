@@ -1,0 +1,38 @@
+@use "app/_styles/abstract" as *;
+
+.input-capacity {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1rem;
+
+  padding: 16px;
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    @include mq(medium) {
+      flex-direction: row;
+      justify-content: space-between;
+      flex: 1;
+    }
+  }
+
+  .icon-large {
+    height: 2.5rem;
+    min-width: 4.375rem;
+    max-width: 4.375rem;
+  }
+
+  &__text {
+    @include font-body;
+    color: $color-neutral-9;
+  }
+
+  &__microcopy {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+}

@@ -1,0 +1,64 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.home-categories {
+  padding: 40px 0;
+
+  &__title {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  &__title,
+  &__scroll,
+  &__see-all {
+    padding: 0 24px;
+  }
+
+  &__scroll {
+    position: relative;
+    overflow-x: auto;
+    @include utils.hide-scrollbar;
+
+    display: flex;
+    gap: 1.5rem;
+
+    &__item {
+      height: 22.25rem;
+      flex: 0 0 17.5rem;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    row-gap: 1.5rem;
+    column-gap: 2.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  }
+
+  &__see-all {
+    margin-top: 1rem;
+    width: max-content;
+
+    a {
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  @include mq(large) {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+
+    &__title,
+    &__grid,
+    &__see-all {
+      padding: 0 32px;
+    }
+
+    &__title {
+      margin-bottom: 2.5rem;
+    }
+  }
+}

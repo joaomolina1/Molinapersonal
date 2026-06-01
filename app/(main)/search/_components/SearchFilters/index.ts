@@ -1,0 +1,1 @@
+export { ModalSearchFilters } from "./SearchFilters";

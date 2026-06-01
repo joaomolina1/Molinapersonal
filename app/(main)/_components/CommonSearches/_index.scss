@@ -1,0 +1,32 @@
+@use "app/_styles/abstract" as *;
+
+.landing-common-searches {
+  padding: 40px 0;
+  background: $color-neutral-1;
+
+  &__title {
+    padding-left: 24px;
+    padding-right: 24px;
+    margin-bottom: 1.5rem;
+  }
+
+  @include mq(large) {
+    padding: 100px 0;
+
+    &__content {
+      width: 100%;
+      max-width: 80rem;
+      margin: 0 auto;
+    }
+
+    &__title,
+    &__scroll {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+
+    &__title {
+      margin-bottom: 2.5rem;
+    }
+  }
+}

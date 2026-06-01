@@ -1,0 +1,11 @@
+@use "app/_styles/base/_utils" as utils;
+
+.status-table {
+  &__pagination-select {
+    .input-select {
+      height: 2.25rem;
+    }
+  }
+
+  @include utils.loading-animation;
+}

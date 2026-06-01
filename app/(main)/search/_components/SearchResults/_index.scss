@@ -1,0 +1,31 @@
+@use "_components";
+@use "app/_styles/abstract" as *;
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__empty-message {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+
+    @include mq-max(x-large) {
+      grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+    }
+
+    &__quote-request-banner {
+      > p {
+        padding-top: 16px;
+        @include font-action;
+      }
+    }
+  }
+}

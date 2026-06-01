@@ -1,0 +1,12 @@
+@use "app/_styles/abstract" as *;
+
+.host-value-with-label {
+  &__label {
+    @include font-body-xs;
+    color: $color-neutral-7;
+  }
+
+  &__value {
+    @include font-body;
+  }
+}

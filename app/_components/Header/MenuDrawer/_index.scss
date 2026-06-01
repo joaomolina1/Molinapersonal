@@ -1,0 +1,83 @@
+@use "app/_styles/abstract" as *;
+
+.menu-drawer__overlay {
+  position: fixed;
+  inset: 0;
+  background: $color-gradient-image-overlay;
+  backdrop-filter: blur(1px);
+  z-index: 1;
+
+  @include mq(large) {
+    display: none;
+  }
+
+  &[data-entering] {
+    animation: reveal 150ms;
+  }
+
+  &[data-exiting] {
+    animation: reveal 150ms reverse ease-in;
+  }
+
+  .menu-drawer__dialog {
+    outline: none;
+  }
+
+  .menu-drawer {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 20rem;
+    max-width: 100dvw;
+    background: $color-neutral-0;
+    padding: 1.5rem;
+    overflow-y: auto;
+
+    &[data-entering] {
+      animation: slide-from-right 150ms;
+    }
+
+    &[data-exiting] {
+      animation: slide-from-right 150ms reverse;
+    }
+
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    &__item {
+      padding: 8px 0;
+      height: 3.25rem;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+
+      background: none;
+      outline: none;
+      border: none;
+      text-decoration: none;
+      cursor: pointer;
+
+      color: $color-neutral-9;
+
+      .icon-svg {
+        font-size: 1.25rem;
+      }
+
+      > span {
+        @include font-body-s;
+      }
+
+      &:focus-visible,
+      &:hover {
+        > span {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}

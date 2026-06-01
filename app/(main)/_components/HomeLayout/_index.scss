@@ -1,0 +1,11 @@
+@use "app/_styles/abstract" as *;
+
+.home-page-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+
+  @include mq(large) {
+    gap: 6rem;
+  }
+}

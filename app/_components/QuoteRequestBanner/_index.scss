@@ -1,0 +1,246 @@
+@use "app/_styles/abstract" as *;
+
+.quote-request-banner {
+  $self: &;
+
+  container-type: inline-size;
+
+  &__content {
+    border-radius: 8px;
+    border: 1px solid $color-neutral-4;
+    display: grid;
+    grid-template-columns: minmax(5rem, 8rem) 1fr;
+
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position-x: -100px;
+  }
+
+  &__photo {
+    align-self: stretch;
+    position: relative;
+
+    > div {
+      position: absolute;
+      inset: 0;
+      top: 20px;
+
+      > img {
+        object-position: top right;
+        object-fit: cover;
+        border-radius: 8px;
+      }
+    }
+  }
+
+  &__text-action {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 24px;
+    padding-left: 8px;
+  }
+
+  &__text {
+    h4 {
+      white-space: nowrap;
+      @include font-action;
+    }
+
+    p {
+      @include font-body-xs;
+    }
+
+    &--color-white {
+      h4,
+      p {
+        color: $color-neutral-0;
+      }
+    }
+
+    &--color-dark {
+      h4,
+      p {
+        color: $color-neutral-9;
+      }
+    }
+  }
+
+  &__action {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    &__text {
+      @include font-body-xs;
+      text-align: center;
+
+      &--color-white {
+        color: $color-neutral-2;
+      }
+
+      &--color-dark {
+        color: $color-neutral-9;
+      }
+    }
+  }
+
+  @container (max-width: 16rem) {
+    &__text-action {
+      padding: 24px 8px 24px 0px;
+
+      .button {
+        padding-left: 4px;
+        padding-right: 4px;
+      }
+    }
+  }
+
+  @container (min-width: 27rem) {
+    &__text {
+      br:first-of-type {
+        display: none;
+      }
+    }
+
+    &__action {
+      align-items: center;
+      flex-direction: row;
+      gap: 1rem;
+    }
+  }
+
+  @mixin medium-styles {
+    &__content {
+      display: flex;
+      background-position-x: -50px;
+    }
+
+    &__photo {
+      flex: 0 0 8rem;
+    }
+
+    &__text-action {
+      padding-left: 12px;
+    }
+
+    &__text {
+      br:first-of-type {
+        display: none;
+      }
+
+      h4 {
+        @include font-h4;
+      }
+
+      p {
+        @include font-body-s;
+      }
+    }
+
+    &__action {
+      align-items: center;
+      flex-direction: row;
+      gap: 1rem;
+
+      &__text {
+        @include font-body-s;
+      }
+    }
+  }
+
+  @container (min-width: 35rem) {
+    @include medium-styles;
+  }
+
+  @container (min-width: 53rem) {
+    &__content {
+      padding-left: 5rem;
+      padding-right: 2rem;
+    }
+
+    &__photo {
+      order: 2;
+
+      > div {
+        > img {
+          object-position: top center;
+        }
+      }
+    }
+
+    &__text-action {
+      order: 1;
+      flex: 1;
+
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    &__action {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+
+  @container (min-width: 65rem) {
+    &__content {
+      background-position-x: left;
+      padding-left: 10rem;
+      padding-right: 2.5rem;
+    }
+
+    &__text {
+      br:last-of-type {
+        display: none;
+      }
+    }
+
+    &__photo {
+      flex-basis: 9.5rem;
+
+      > div {
+        top: -22px;
+      }
+    }
+  }
+
+  @supports not (container-type: inline-size) {
+    @include mq(medium) {
+      @include medium-styles;
+    }
+  }
+
+  &--mode-search {
+    #{$self}__content {
+      height: 15rem;
+      background-position-x: -120px;
+    }
+
+    #{$self}__photo {
+      > div {
+        top: 33px;
+      }
+    }
+  }
+}
+
+.quote-request-banner-carousel {
+  display: grid;
+  grid-template-columns: auto;
+
+  &__item {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+
+    &--visible {
+      opacity: 1;
+    }
+  }
+}

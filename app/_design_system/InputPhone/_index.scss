@@ -1,0 +1,17 @@
+.input-phone {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+
+  &__select {
+    img {
+      border-radius: 4px;
+      width: auto;
+      height: 0.875rem;
+    }
+  }
+
+  &__input {
+    flex: 1;
+  }
+}

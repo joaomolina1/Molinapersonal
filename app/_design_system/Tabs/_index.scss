@@ -1,0 +1,137 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+
+  &__tab {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    border-bottom: 2px solid $color-neutral-4;
+    cursor: pointer;
+    outline: none;
+
+    .icon-svg {
+      font-size: 1.25rem;
+    }
+
+    p {
+      width: max-content;
+      @include font-body-s;
+    }
+
+    &[data-hovered],
+    &[data-focus-visible] {
+      background: $color-neutral-2;
+    }
+
+    &[data-selected] {
+      border-color: $color-brand-primary;
+    }
+
+    &[data-disabled] {
+      cursor: auto;
+      color: $color-neutral-5;
+    }
+  }
+
+  &__panel {
+    outline: none;
+  }
+}
+
+.tabs-radio-group {
+  display: flex;
+  flex-direction: row;
+
+  &__option {
+    &__content {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.375rem;
+      border-bottom: 2px solid $color-neutral-4;
+      cursor: pointer;
+      outline: none;
+
+      .icon-svg {
+        font-size: 1.25rem;
+      }
+
+      p {
+        width: max-content;
+        @include font-body-s;
+      }
+    }
+
+    input {
+      cursor: pointer;
+      height: 0;
+      width: 0;
+      position: absolute;
+      opacity: 0;
+
+      &:hover + .tabs-radio-group__option__content,
+      &:focus-visible + .tabs-radio-group__option__content {
+        background: $color-neutral-2;
+      }
+
+      &:checked + .tabs-radio-group__option__content {
+        border-color: $color-brand-primary;
+      }
+    }
+  }
+}
+
+.scrollable-tabs-radio-group {
+  position: relative;
+
+  &__content {
+    overflow-x: auto;
+    @include utils.hide-scrollbar;
+  }
+
+  &__arrow {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: none;
+    align-items: center;
+
+    animation-duration: 500ms;
+    animation-name: animate-fade;
+    animation-fill-mode: backwards;
+
+    &--visible {
+      display: flex;
+    }
+
+    &--direction-right {
+      right: 0;
+      padding-left: 2rem;
+      background: linear-gradient(90deg, #ffffff00 0%, #ffffff 33%);
+    }
+
+    &--direction-left {
+      left: 0;
+      padding-right: 2rem;
+      background: linear-gradient(270deg, #ffffff00 0%, #ffffff 33%);
+    }
+  }
+}
+
+@keyframes animate-fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

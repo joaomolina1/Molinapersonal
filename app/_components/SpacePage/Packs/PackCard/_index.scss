@@ -1,0 +1,376 @@
+@use "app/_styles/abstract" as *;
+
+.client-pack-card {
+  padding: 16px;
+  border: 1px solid $color-neutral-4;
+  border-radius: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__photos {
+    height: 6.25rem;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  &__name button {
+    @include font-h5;
+    text-align: left;
+
+    @include mq(large) {
+      @include font-h4;
+    }
+  }
+
+  &__maxtime-capacity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .icon-user-interface-miscellaneous-separator-dot {
+      display: none;
+    }
+
+    @include mq(large) {
+      align-items: center;
+    }
+  }
+
+  &__short-duration {
+    background: $color-semantic-warning-light;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    @include font-action-s;
+    gap: 0.375rem;
+
+    .icon-svg {
+      font-size: 1.25rem;
+    }
+  }
+
+  &__description {
+    @include font-body-s;
+    color: $color-neutral-7;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &__extras {
+    padding: 16px;
+    background: $color-neutral-1;
+    border-radius: 16px;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 0.5rem;
+
+    &__title {
+      @include font-body;
+      grid-column: 1 / -1;
+    }
+
+    &__item-price {
+      @include font-action-s;
+    }
+  }
+
+  &__pricing {
+    &__amount {
+      &__label {
+        @include font-body-s;
+        white-space: nowrap;
+      }
+
+      .icon-svg {
+        font-size: 1.25rem;
+      }
+
+      &__value {
+        @include font-h5;
+      }
+    }
+
+    button {
+      width: 100%;
+    }
+
+    &__cancellation {
+      text-align: center;
+      color: $color-neutral-8;
+      @include font-body-xs;
+    }
+  }
+
+  &__no-availability {
+    &__message {
+      color: $color-semantic-error;
+      @include font-body-s;
+      display: flex;
+      gap: 0.25rem;
+      align-items: center;
+    }
+  }
+
+  &__admin-id {
+    @include font-body-s;
+
+    span {
+      user-select: all;
+    }
+  }
+
+  @include mq(large) {
+    flex-direction: row;
+    gap: 1.5rem;
+    padding: 2.5rem;
+
+    &__photos {
+      height: 12.5rem;
+      width: 12.5rem;
+      flex-shrink: 0;
+    }
+
+    &__details {
+      flex: 1;
+      padding-right: 2.5rem;
+    }
+
+    &__maxtime-capacity {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+
+      .icon-user-interface-miscellaneous-separator-dot {
+        display: block;
+      }
+    }
+
+    &__pricing {
+      display: flex;
+      min-width: 9.5rem;
+      flex: 0;
+
+      &__show,
+      .skeleton-loader {
+        margin-top: 4.375rem;
+      }
+
+      &__cancellation {
+        text-align: end;
+      }
+    }
+
+    &__no-availability {
+      align-self: center;
+      width: 9.5rem;
+
+      &__message {
+        text-align: center;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .icon-svg {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}
+
+.client-pack-modal {
+  .modal__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .amenities-list {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @include mq(large) {
+      display: flex;
+      flex-direction: row;
+      gap: 2.5rem;
+    }
+  }
+
+  &__photo-grid {
+    &__selected {
+      position: relative;
+      width: 100%;
+      height: 21rem;
+      min-height: 21rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        object-fit: contain;
+        object-position: center;
+        border-radius: 8px;
+      }
+
+      &--fit-width img {
+        width: auto;
+        height: 100%;
+      }
+
+      &--fit-height img {
+        width: 100%;
+        height: auto;
+      }
+    }
+
+    &__list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(6.625rem, 1fr));
+      flex-wrap: wrap;
+      gap: 0.5rem;
+
+      &__option {
+        position: relative;
+        width: 100%;
+        height: 3.75rem;
+        border-radius: 8px;
+        overflow: hidden;
+
+        img {
+          object-fit: cover;
+          object-position: center;
+          background: $color-neutral-9;
+        }
+
+        button {
+          border: none;
+          outline: none;
+          position: absolute;
+          inset: 0;
+          cursor: pointer;
+
+          background: $color-gradient-image-overlay;
+
+          opacity: 1;
+          transition: opacity 100ms ease-in-out;
+
+          &[data-hovered],
+          &[data-focus-visible] {
+            opacity: 0;
+          }
+        }
+
+        &--selected {
+          button {
+            opacity: 0;
+          }
+        }
+      }
+    }
+
+    &__item {
+      position: relative;
+      height: 3.75rem;
+
+      img {
+        object-fit: cover;
+        object-position: center;
+        background-color: $color-neutral-9;
+        border-radius: 8px;
+      }
+
+      &--main {
+        grid-column: 1 / -1;
+        height: 21rem;
+
+        img {
+          object-fit: contain;
+        }
+      }
+    }
+  }
+
+  &__infos {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 0 1.5rem 1.5rem;
+
+    @include mq(large) {
+      padding: 0;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid $color-neutral-4;
+    }
+  }
+
+  &__description {
+    @include font-body-s;
+    color: $color-neutral-7;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  & &__capacity {
+    padding: 0;
+  }
+
+  &__cancellation {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+}
+
+.client-pack-price-detail {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  row-gap: 1rem;
+  column-gap: 1rem;
+  flex: 1;
+  overflow-y: auto;
+
+  &__title {
+    @include font-action-s;
+    grid-column: 1 / -1;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid $color-neutral-0;
+    grid-column: 1 / -1;
+  }
+
+  &__label,
+  &__value {
+    @include font-body;
+  }
+
+  &__value {
+    text-align: right;
+
+    &--inactive {
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+  }
+
+  &__detail {
+    @include font-body-xs;
+    margin-top: -0.5rem;
+    grid-column: 1 / -1;
+  }
+
+  &__total {
+    @include font-action;
+  }
+}

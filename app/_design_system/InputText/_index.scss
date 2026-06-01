@@ -1,0 +1,89 @@
+@use "app/_styles/abstract" as *;
+
+.input-text {
+  border: 1px solid $color-neutral-4;
+  border-radius: 8px;
+  background: $color-neutral-0;
+
+  height: 2.75rem;
+  padding: 0rem 1rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+
+  span {
+    @include font-body-s;
+    color: $color-neutral-7;
+    transition: all 100ms linear;
+
+    @include mq(large) {
+      @include font-body;
+    }
+
+    > span {
+      @include font-body-xs;
+    }
+  }
+
+  input {
+    @include font-body-s;
+    color: $color-neutral-9;
+    height: 0;
+    border: none;
+    padding: 0;
+    width: 100%;
+
+    @include mq(large) {
+      @include font-body;
+    }
+
+    &::placeholder {
+      color: $color-neutral-6;
+    }
+  }
+
+  &__measure {
+    @include font-body;
+    padding: 8px 16px;
+    background: $color-neutral-2;
+    border-radius: 4px;
+    color: $color-neutral-9;
+  }
+
+  &--with-measure {
+    padding-right: 0.5rem;
+  }
+
+  &--focused {
+    border-color: $color-neutral-9;
+  }
+
+  &--focused,
+  &--with-value,
+  &--with-placeholder {
+    span {
+      @include font-body-xs;
+    }
+
+    input {
+      height: auto;
+      outline: none;
+    }
+  }
+
+  &--error {
+    border-color: $color-semantic-error;
+  }
+
+  &--disabled {
+    border-color: $color-neutral-4;
+    background: $color-neutral-3;
+
+    span,
+    input {
+      color: $color-neutral-6;
+    }
+  }
+}

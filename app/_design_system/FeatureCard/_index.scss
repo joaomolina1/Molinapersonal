@@ -1,0 +1,104 @@
+@use "app/_styles/abstract" as *;
+
+.feature-card {
+  $self: &;
+  padding-top: 2rem;
+  position: relative;
+
+  &__image {
+    border-radius: 8px;
+    background-position: center;
+    background-size: cover;
+    height: 11.5rem;
+    position: relative;
+
+    &--with-description {
+      height: 14.5rem;
+    }
+  }
+
+  &__content {
+    position: absolute;
+    inset: 0;
+
+    border-radius: 8px;
+    padding: 40px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+
+    z-index: 1;
+
+    &::before,
+    &::after {
+      position: absolute;
+      content: "";
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      border-radius: 8px;
+      z-index: -1;
+      transition: opacity 200ms ease-in-out;
+    }
+
+    &::before {
+      background-image: $color-gradient-card-overlay;
+      opacity: 1;
+    }
+
+    &::after {
+      background-image: $color-gradient-image-overlay;
+      opacity: 0;
+    }
+
+    h3,
+    p {
+      color: $color-neutral-0;
+      position: relative;
+    }
+
+    p {
+      @include font-body-s;
+      margin-top: 0.5rem;
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    top: 0;
+    left: 40px;
+
+    border: 1px solid $color-neutral-4;
+    border-radius: 40px;
+    background: $color-neutral-0;
+    padding: 1rem;
+
+    z-index: 1;
+
+    .icon-svg {
+      font-size: 2rem;
+    }
+  }
+
+  &:hover,
+  &:focus-visible {
+    & #{$self}__content {
+      &::before {
+        opacity: 0;
+      }
+
+      &::after {
+        opacity: 1;
+      }
+    }
+  }
+
+  &:focus-visible {
+    & #{$self}__content {
+      outline: 1px solid $color-neutral-9;
+      outline-offset: 2px;
+    }
+  }
+}

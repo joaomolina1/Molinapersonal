@@ -1,0 +1,19 @@
+@use "app/_design_system/_utils/InputGroup" as *;
+@use "app/_styles/abstract" as *;
+
+.admin-highlights-header {
+  @include mq-max(medium) {
+    @include input-group();
+  }
+
+  @include mq(medium) {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+
+    > .input-wrapper {
+      width: 15rem;
+    }
+  }
+}

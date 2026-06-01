@@ -1,0 +1,66 @@
+@use "app/_styles/abstract" as *;
+
+.avatar {
+  border-radius: 100%;
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  &--imagePosition-top {
+    img {
+      object-position: top;
+    }
+  }
+
+  span {
+    color: $color-brand-primary;
+    text-transform: uppercase;
+  }
+
+  &--color-white {
+    border: 1px solid $color-neutral-1;
+    background: $color-neutral-0;
+  }
+
+  &--color-grey {
+    background: $color-neutral-1;
+  }
+
+  &--size-small {
+    height: 2rem;
+    width: 2rem;
+    min-width: 2rem;
+
+    span {
+      @include font-action;
+    }
+  }
+
+  &--size-medium {
+    height: 2.5rem;
+    width: 2.5rem;
+    min-width: 2.5rem;
+
+    span {
+      @include font-action;
+    }
+  }
+
+  &--size-large {
+    height: 4.75rem;
+    width: 4.75rem;
+    min-width: 4.75rem;
+
+    span {
+      @include font-h3;
+    }
+  }
+}

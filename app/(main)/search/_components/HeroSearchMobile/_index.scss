@@ -1,0 +1,83 @@
+@use "app/_styles/abstract" as *;
+
+.hero-search-mobile-trigger {
+  $self: &;
+
+  border: 1px solid $color-neutral-4;
+  background: $color-neutral-1;
+  padding: 4px;
+  padding-left: 16px;
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 8px;
+  width: 100%;
+
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+
+  color: $color-neutral-9;
+
+  &__content {
+    min-width: 0;
+  }
+
+  &__event-city {
+    @include font-body-s;
+    font-weight: 600;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__date-start-end-num-people {
+    @include font-body-xs;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__icon {
+    background-color: $color-brand-primary;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+
+    .icon-user-interface-actions-search {
+      color: $color-neutral-0;
+      font-size: 1rem;
+    }
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: $color-neutral-2;
+    border-color: $color-neutral-5;
+
+    & #{$self}__icon {
+      background-color: $color-brand-primary-hover;
+    }
+  }
+
+  &:active {
+    background: $color-neutral-3;
+    border-color: $color-neutral-6;
+
+    & #{$self}__icon {
+      background-color: $color-brand-primary-active;
+    }
+  }
+}
+
+.hero-search-mobile-modal {
+  .modal__content {
+    padding: 0.5rem 0.5rem 1.5rem;
+  }
+}

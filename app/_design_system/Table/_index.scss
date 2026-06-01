@@ -1,0 +1,78 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.table {
+  $self: &;
+
+  border-collapse: collapse;
+  width: 100%;
+
+  &__wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+
+    &--showTableBorder {
+      border: 1px solid $color-neutral-4;
+      border-radius: 8px;
+    }
+  }
+
+  > thead {
+    th {
+      @include font-body-s;
+      padding: 16px 24px;
+      text-align: left;
+      border-bottom: 1px solid $color-neutral-4;
+      white-space: nowrap;
+    }
+  }
+
+  > tbody {
+    tr {
+      outline: none;
+    }
+
+    & #{$self}__cell--applyDefaultStyle {
+      height: 3.75rem;
+      @include font-body;
+      padding: 0 24px;
+
+      > div {
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+      }
+    }
+
+    & #{$self}__row--odd {
+      background: $color-neutral-1;
+    }
+
+    & #{$self}__row--clickable {
+      cursor: pointer;
+
+      &[data-hovered] {
+        background: $color-neutral-2;
+      }
+
+      &[data-pressed] {
+        background: $color-neutral-3;
+      }
+    }
+
+    & #{$self}__expanded-row {
+      &__main-cell {
+        height: unset;
+        padding: 16px 24px 24px;
+      }
+    }
+  }
+
+  &--variant-borders {
+    > tbody {
+      tr {
+        border-bottom: 1px solid $color-neutral-4;
+      }
+    }
+  }
+}

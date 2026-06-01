@@ -1,0 +1,40 @@
+@use "app/_styles/abstract" as *;
+
+.amenities-item {
+  > div {
+    padding-top: 0.125rem;
+  }
+
+  &--icon-size-small {
+    align-items: center;
+
+    > .icon-svg {
+      font-size: 1rem;
+    }
+  }
+
+  &--text-size-small {
+    > div {
+      @include font-body-s;
+    }
+  }
+
+  &--icon-size-large {
+    > .icon-svg {
+      font-size: 1.5rem;
+    }
+  }
+
+  &--text-size-large {
+    > div {
+      @include font-body;
+    }
+  }
+}
+
+.amenities-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 0.5rem;
+}

@@ -1,0 +1,97 @@
+// Autogrowing textarea: https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas/
+
+@use "app/_styles/abstract" as *;
+
+.input-text-area {
+  $self: &;
+
+  display: grid;
+  grid-template-columns: 100%;
+
+  position: relative;
+
+  &__label {
+    @include font-body-s;
+    color: $color-neutral-7;
+    transition: all 100ms linear;
+
+    pointer-events: none;
+    position: absolute;
+    top: 0.5rem;
+    left: 1rem;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  &::after {
+    content: attr(data-replicated-value) " ";
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    visibility: hidden;
+  }
+
+  textarea {
+    resize: none;
+    overflow: hidden;
+  }
+
+  &--height-small {
+    &::after,
+    textarea {
+      min-height: 5rem;
+    }
+  }
+
+  &--height-large {
+    &::after,
+    textarea {
+      min-height: 11.375rem;
+    }
+  }
+
+  &::after,
+  textarea {
+    grid-area: 1 / 1 / 2 / 2;
+
+    border: 1px solid $color-neutral-4;
+    border-radius: 8px;
+    background: $color-neutral-0;
+    padding: 0.5rem 1rem;
+
+    color: $color-neutral-9;
+    @include font-body-s;
+
+    @include mq(large) {
+      @include font-body;
+    }
+  }
+
+  textarea:focus {
+    border-color: $color-neutral-9;
+    outline: none;
+  }
+
+  &--error textarea {
+    border-color: $color-semantic-error;
+  }
+
+  &--disabled textarea {
+    border-color: $color-neutral-4;
+    background: $color-neutral-3;
+    color: $color-neutral-6;
+  }
+
+  &--focused,
+  &--with-value {
+    #{$self}__label {
+      @include font-body-xs;
+    }
+
+    &::after,
+    textarea {
+      padding-top: 1.5rem;
+    }
+  }
+}

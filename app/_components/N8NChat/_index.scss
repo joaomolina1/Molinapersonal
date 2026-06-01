@@ -1,0 +1,48 @@
+#n8n-chat {
+  --chat--color--primary: #5cb7f3;
+  --chat--color--primary-shade-50: #3fa8f1;
+  --chat--color--primary--shade-100: #1f98ee;
+
+  --chat--header--background: #5cb7f3f0;
+  --chat--header--color: #ffffff;
+
+  --chat--window--width: 420px;
+  --chat--window--height: 640px;
+  --chat--window--border-radius: 1.25rem;
+
+  --chat--message--font-size: 0.875rem;
+  --chat--message--padding: 0.75rem 0.9rem;
+  --chat--message--border-radius: 1rem;
+  --chat--message--user--background: var(--chat--color--primary);
+
+  --chat--toggle--background: var(--chat--color--primary);
+  --chat--toggle--hover--background: var(--chat--color--primary-shade-50);
+  --chat--toggle--active--background: var(--chat--color--primary--shade-100);
+
+  --chat--input--send--button--background: var(--chat--color--primary);
+  --chat--input--send--button--background-hover: var(
+    --chat--color--primary-shade-50
+  );
+  --chat--input--send--button--color: var(--chat--color-white);
+  --chat--input--send--button--color-hover: var(--chat--color-white);
+  --chat--input--file--button--color: var(--chat--color--primary);
+  --chat--input--file--button--color-hover: var(
+    --chat--color--primary-shade-50
+  );
+
+  --chat--files-spacing: 0.5rem;
+
+  * {
+    font-family: "Poppins", "Poppins Fallback";
+  }
+
+  .chat-message {
+    max-width: min(90%, 36rem);
+    box-shadow: 0px 8px 12px 0px rgba(124, 124, 124, 0.25);
+  }
+
+  .chat-window,
+  .chat-widget {
+    box-shadow: 0px 8px 12px 0px rgba(124, 124, 124, 0.25);
+  }
+}

@@ -1,0 +1,45 @@
+$color-brand-primary: #5cb7f3;
+$color-brand-primary-hover: #4e9ccf;
+$color-brand-primary-active: #4080aa;
+
+$color-brand-secondary: #5475f9;
+$color-brand-tertiary: #9a70ff;
+
+$color-neutral-0: #ffffff;
+$color-neutral-1: #f8f9fa;
+$color-neutral-2: #f1f3f5;
+$color-neutral-3: #e9ecef;
+$color-neutral-4: #dee2e6;
+$color-neutral-5: #ced4da;
+$color-neutral-6: #adb5bd;
+$color-neutral-7: #6a7178;
+$color-neutral-8: #54606b;
+$color-neutral-9: #272b30;
+$color-neutral-10: #101213;
+
+$color-semantic-info: #0065cb;
+$color-semantic-info-light: #e5eff9;
+$color-semantic-success: #007d3e;
+$color-semantic-success-light: #e6f2ec;
+$color-semantic-warning: #ffb52b;
+$color-semantic-warning-light: #fff6e6;
+$color-semantic-error: #cc071e;
+$color-semantic-error-light: #f9e6e8;
+$color-semantic-error-hover: #ae2017;
+$color-semantic-error-active: #8e1d16;
+$color-semantic-neutral: #5cb7f3;
+$color-semantic-neutral-light: #5cb7f314;
+
+$color-calendar-available: #5da899;
+$color-calendar-reservations: #94cbec;
+$color-calendar-blocked: #c26a77;
+
+$color-gradient-card-overlay: linear-gradient(
+  0deg,
+  rgba(39, 43, 48, 0.58) 33.83%,
+  rgba(51, 51, 51, 0) 99.86%
+);
+$color-gradient-image-overlay: linear-gradient(
+  rgba(39, 43, 48, 0.5),
+  rgba(39, 43, 48, 0.5)
+);

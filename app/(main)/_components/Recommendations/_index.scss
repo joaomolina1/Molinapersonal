@@ -1,0 +1,81 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.home-recommendations {
+  &__title,
+  &__tabs,
+  &__spaces {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  &__title {
+    &__blue {
+      color: $color-brand-primary;
+    }
+  }
+
+  &__tabs,
+  &__spaces {
+    position: relative;
+    overflow-x: auto;
+    @include utils.hide-scrollbar;
+  }
+
+  &__tabs {
+    margin-top: 0.5rem;
+  }
+
+  &__spaces {
+    margin-top: 1.5rem;
+    padding-top: 3px;
+    padding-bottom: 3px;
+
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+
+    > div {
+      flex: 0 0 17.125rem;
+    }
+  }
+
+  &__see-all {
+    margin: 1.5rem auto 0;
+    width: max-content;
+  }
+
+  @include mq(large) {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    padding-left: 32px;
+    padding-right: 32px;
+
+    &__title,
+    &__spaces {
+      padding: 0;
+    }
+
+    &__tabs-scrollable {
+      position: relative;
+    }
+
+    &__spaces {
+      margin-top: 1rem;
+
+      display: grid;
+      gap: 2.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    }
+
+    &__see-all {
+      margin-top: 1rem;
+    }
+  }
+}

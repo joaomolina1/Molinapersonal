@@ -1,0 +1,69 @@
+@use "app/_styles/abstract" as *;
+
+.onboarding__step-01 {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  align-items: center;
+
+  &__content {
+    gap: 2.5rem;
+
+    &__steps {
+      gap: 1.5rem;
+
+      &__card-custom {
+        @include font-body-xs;
+        color: $color-neutral-7;
+      }
+    }
+  }
+
+  @include mq(large) {
+    flex-direction: row;
+    gap: 48px;
+    justify-content: space-between;
+
+    .illustration-onboarding-step-01 {
+      order: 2;
+      height: 17.75rem;
+      flex-shrink: 0;
+    }
+
+    &__content {
+      gap: 5rem;
+
+      &__steps {
+        gap: 2.5rem;
+        max-width: 37.5rem;
+      }
+    }
+  }
+}
+
+.onboarding__step-02 {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  align-items: center;
+
+  &__content {
+    gap: 1rem;
+  }
+
+  @include mq(large) {
+    flex-direction: row;
+    gap: 80px;
+    justify-content: space-between;
+
+    .illustration-onboarding-step-02 {
+      order: 2;
+      height: 17.75rem;
+      flex-shrink: 0;
+    }
+
+    &__content {
+      gap: 2.5rem;
+    }
+  }
+}

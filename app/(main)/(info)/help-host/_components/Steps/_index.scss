@@ -1,0 +1,39 @@
+@use "app/_styles/abstract" as *;
+
+.help-host-steps {
+  padding: 40px 24px;
+
+  &__steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: 2.5rem;
+
+    @include mq(small) {
+      grid-template-columns: 1fr 1fr;
+      column-gap: 5rem;
+    }
+  }
+
+  &__step {
+    &__title {
+      @include font-h4;
+    }
+
+    &__text {
+      @include font-h6;
+      color: $color-neutral-7;
+    }
+  }
+
+  @include mq(large) {
+    padding: 40px;
+    width: 100%;
+    max-width: 81rem;
+    margin: 0 auto;
+
+    &__steps {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      column-gap: 5rem;
+    }
+  }
+}

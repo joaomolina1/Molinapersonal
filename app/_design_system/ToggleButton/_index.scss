@@ -1,0 +1,88 @@
+@use "app/_styles/abstract" as *;
+
+.toggle-button {
+  $self: &;
+
+  position: relative;
+
+  outline: none;
+  background: none;
+  border: none;
+
+  &__slider {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background-color: $color-neutral-5;
+    border-radius: 100px;
+    transition: background-color 200ms ease-in-out;
+
+    &::before {
+      position: absolute;
+      content: "";
+      border-radius: 100%;
+      background: $color-neutral-0;
+      transform: translateX(0);
+      transition: transform 200ms ease-in-out;
+    }
+  }
+
+  &--size-medium {
+    width: 2.8125rem;
+    min-width: 2.8125rem;
+    height: 1.5rem;
+
+    & #{$self}__slider {
+      &::before {
+        width: 1.125rem;
+        height: 1.125rem;
+        top: 0.1875rem;
+        left: 0.1875rem;
+      }
+    }
+
+    &#{$self}[data-selected] {
+      & #{$self}__slider {
+        &::before {
+          transform: translateX(1.3125rem);
+        }
+      }
+    }
+  }
+
+  &--size-large {
+    width: 3.75rem;
+    min-width: 3.75rem;
+    height: 2rem;
+
+    & #{$self}__slider {
+      &::before {
+        width: 1.5rem;
+        height: 1.5rem;
+        top: 0.25rem;
+        left: 0.25rem;
+      }
+    }
+
+    &#{$self}[data-selected] {
+      & #{$self}__slider {
+        &::before {
+          transform: translateX(1.75rem);
+        }
+      }
+    }
+  }
+
+  &[data-selected] {
+    & #{$self}__slider {
+      background: $color-brand-primary;
+    }
+  }
+
+  &[data-disabled] {
+    & #{$self}__slider {
+      background: $color-neutral-7;
+      cursor: auto;
+    }
+  }
+}

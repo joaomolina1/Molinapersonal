@@ -1,0 +1,58 @@
+@use "app/_styles/abstract" as *;
+
+.help-customer-page {
+  &__steps {
+    padding: 40px 24px;
+
+    h6 {
+      color: $color-neutral-7;
+    }
+  }
+
+  &__faq-cta {
+    background: $color-neutral-1;
+
+    &__content {
+      padding: 24px;
+    }
+  }
+
+  &__step {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  @include mq(large) {
+    &__steps,
+    &__faq-cta__content {
+      max-width: 81rem;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    &__steps {
+      padding: 40px;
+    }
+
+    &__faq-cta__content {
+      padding: 100px 40px;
+    }
+
+    &__step {
+      flex-direction: row;
+      gap: 9.75rem;
+
+      .illustration-help-customer {
+        width: 25rem;
+        flex-shrink: 0;
+      }
+
+      &:nth-child(odd) {
+        .illustration-help-customer {
+          order: 1;
+        }
+      }
+    }
+  }
+}

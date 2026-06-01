@@ -1,0 +1,69 @@
+@use "app/_styles/abstract" as *;
+
+.tooltip {
+  @include font-body-xs;
+  background: $color-neutral-7;
+  color: $color-neutral-0;
+  border-radius: 16px;
+  padding: 1rem;
+  max-width: 15rem;
+  display: flex;
+  flex-direction: column;
+
+  .tooltip__arrow svg {
+    fill: $color-neutral-7;
+    display: block;
+  }
+
+  &[data-placement="top"] {
+    margin-bottom: 8px;
+
+    &[data-entering] {
+      animation: 0.2s tooltip-slide-from-top;
+    }
+
+    &[data-exiting] {
+      animation: 0.2s ease-in reverse tooltip-slide-from-top;
+    }
+  }
+
+  &[data-placement="bottom"] {
+    margin-top: 8px;
+
+    .tooltip__arrow svg {
+      transform: rotate(180deg);
+    }
+
+    &[data-entering] {
+      animation: 0.2s tooltip-slide-from-bottom;
+    }
+
+    &[data-exiting] {
+      animation: 0.2s ease-in reverse tooltip-slide-from-bottom;
+    }
+  }
+}
+
+@keyframes tooltip-slide-from-top {
+  0% {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tooltip-slide-from-bottom {
+  0% {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,67 @@
+@use "app/_styles/abstract" as *;
+
+.map-with-pin {
+  height: 100%;
+  background: $color-neutral-3;
+  border-radius: 8px;
+}
+
+.input-address {
+  position: relative;
+
+  &__map {
+    height: 17.5rem;
+    background: $color-neutral-3;
+    border-radius: 8px;
+  }
+
+  &__reset {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+  }
+
+  &__search {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+  }
+
+  @include mq(large) {
+    &__search {
+      top: 32px;
+      left: 32px;
+      right: 32px;
+    }
+  }
+}
+
+.map-location {
+  height: 96px;
+  width: 96px;
+  border-radius: 100%;
+  background: $color-semantic-neutral-light;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translate(0, 50%);
+
+  &__icon {
+    height: 52px;
+    width: 52px;
+    border-radius: 100%;
+    background: $color-brand-primary;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .icon-user-interface-miscellaneous-pin {
+      color: $color-neutral-0;
+      font-size: 20px;
+    }
+  }
+}

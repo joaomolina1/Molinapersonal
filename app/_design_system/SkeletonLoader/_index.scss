@@ -1,0 +1,40 @@
+@use "app/_styles/abstract" as *;
+@use "app/_styles/base/_utils" as utils;
+
+.skeleton-loader {
+  border-radius: 8px;
+  background: $color-neutral-4;
+  animation: pulse 2s ease-in-out infinite;
+
+  &--type-default {
+    height: 100%;
+    width: 100%;
+  }
+
+  &--type-text {
+    width: 100%;
+
+    p {
+      visibility: hidden;
+    }
+  }
+
+  &--type-button {
+    width: 100%;
+    height: utils.$button-height;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    background: $color-neutral-4;
+  }
+
+  50% {
+    background: $color-neutral-3;
+  }
+
+  100% {
+    background: $color-neutral-4;
+  }
+}

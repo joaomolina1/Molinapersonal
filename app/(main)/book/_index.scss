@@ -1,0 +1,54 @@
+@use "app/_styles/abstract" as *;
+
+@use "components";
+
+.book-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+
+  main,
+  footer > div {
+    padding: 24px;
+  }
+
+  main {
+    padding-top: 0;
+    flex: 1;
+  }
+
+  footer {
+    border-top: 1px solid $color-neutral-4;
+    position: sticky;
+    bottom: 0;
+
+    background: $color-neutral-0;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: stretch;
+    }
+  }
+
+  @include mq(large) {
+    main,
+    footer > div {
+      padding: 40px;
+      max-width: 81rem;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    main {
+      padding-top: 0;
+    }
+
+    footer > div {
+      flex-direction: row-reverse;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+}

@@ -1,0 +1,24 @@
+@use "sass:map";
+
+$breakpoints: (
+  small: 36rem,
+  medium: 48rem,
+  large: 62rem,
+  x-large: 75rem,
+);
+
+@mixin mq($key) {
+  $size: map.get($breakpoints, $key);
+
+  @media screen and (min-width: $size) {
+    @content;
+  }
+}
+
+@mixin mq-max($key) {
+  $size: map.get($breakpoints, $key);
+
+  @media screen and (max-width: $size) {
+    @content;
+  }
+}

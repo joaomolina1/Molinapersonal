@@ -1,0 +1,95 @@
+@use "app/_styles/abstract" as *;
+
+.client-booking-card {
+  $self: &;
+
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid $color-neutral-4;
+
+  &__image-status {
+    position: relative;
+    background: $color-neutral-4;
+
+    img {
+      object-position: center;
+      object-fit: cover;
+    }
+  }
+
+  &--variant-future {
+    & #{$self}__image-status {
+      height: 15rem;
+    }
+  }
+
+  &--variant-past {
+    & #{$self}__image-status {
+      height: 7.5rem;
+    }
+  }
+
+  &__status {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+
+  &__content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  &__pack-name {
+    @include font-h4;
+  }
+
+  &__space-name,
+  &__venue-name {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__cancellation {
+    @include font-body-xs;
+    color: $color-neutral-8;
+    text-align: center;
+  }
+
+  @include mq(large) {
+    display: flex;
+
+    &--variant-future {
+      & #{$self}__image-status {
+        height: auto;
+        width: 20rem;
+      }
+    }
+
+    &--variant-past {
+      & #{$self}__image-status {
+        height: auto;
+        width: 16rem;
+      }
+    }
+
+    &__content {
+      flex: 1;
+      padding: 24px 32px;
+      flex-direction: row;
+      gap: 1.5rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  @include mq(x-large) {
+    &--variant-future {
+      & #{$self}__image-status {
+        width: 23rem;
+      }
+    }
+  }
+}

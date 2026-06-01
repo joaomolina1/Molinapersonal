@@ -1,0 +1,60 @@
+@use "app/_styles/abstract" as *;
+
+.onboarding-pack-card {
+  background: $color-neutral-1;
+  border-radius: 8px;
+  padding: 24px;
+
+  &__notice-price {
+    @include font-body-s;
+  }
+
+  &__description {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
+  &__extras {
+    padding: 16px;
+    background: $color-neutral-0;
+    border-radius: 16px;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 0.5rem;
+
+    &__item {
+      @include font-body-s;
+    }
+
+    &__title {
+      @include font-body;
+      grid-column: 1 / -1;
+    }
+  }
+
+  @include mq(large) {
+    padding: 40px;
+
+    &__hr {
+      background: $color-neutral-4;
+      height: 1px;
+      width: 100%;
+    }
+
+    &__notice-price {
+      display: flex;
+      align-items: center;
+    }
+
+    &__photo {
+      height: 12.5rem;
+      width: 12.5rem;
+    }
+  }
+
+  &__admin {
+    align-self: flex-start;
+  }
+}
