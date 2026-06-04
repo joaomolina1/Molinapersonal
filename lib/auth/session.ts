@@ -12,6 +12,7 @@ export type ApiSession = {
   roles: Role[];
   token: string;
   expiry: string;
+  profileComplete: boolean;
 };
 
 export async function getProfile(userId: string) {
@@ -33,6 +34,11 @@ export async function buildApiSession(
   const profile = await getProfile(session.user.id);
   const roles = (profile?.roles ?? ["customer"]) as Role[];
 
+  // OAuth sign-ups may have an empty kind until complete-profile runs.
+  // Admins are exempt — they are granted server-side and must not be forced
+  // through the registration modal (which would overwrite roles).
+  const profileComplete = isProfileComplete(profile, roles);
+
   return {
     id: session.user.id,
     user_id: session.user.id,
@@ -41,6 +47,7 @@ export async function buildApiSession(
     roles,
     token: session.access_token,
     expiry: new Date(session.expires_at! * 1000).toISOString(),
+    profileComplete,
   };
 }
 
@@ -57,4 +64,23 @@ export function hasRole(roles: Role[] | string[] | null | undefined, role: Role)
 
 export function isAdmin(roles: Role[] | string[] | null | undefined) {
   return hasRole(roles, "admin");
+}
+
+export function isProfileComplete(
+  profile: { kind?: string | null } | null | undefined,
+  roles: Role[] | string[] | null | undefined,
+): boolean {
+  return !!profile?.kind || isAdmin(roles);
+}
+
+/** Set customer/vendor from kind; never drop privileged roles (e.g. admin). */
+export function mergeProfileRoles(
+  currentRoles: Role[] | string[] | null | undefined,
+  kind: string,
+): Role[] {
+  const base: Role = kind === "vendor" ? "vendor" : "customer";
+  const preserved = (currentRoles ?? []).filter(
+    (r): r is Role => r === "admin",
+  );
+  return [...new Set<Role>([base, ...preserved])];
 }

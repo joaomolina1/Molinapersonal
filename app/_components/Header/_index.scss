@@ -4,6 +4,23 @@
 @use "RegisterModal";
 @use "Session";
 
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__line {
+    flex: 1;
+    height: 1px;
+    background: $color-neutral-4;
+  }
+
+  &__text {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+}
+
 .main-header {
   display: flex;
   flex-direction: row;

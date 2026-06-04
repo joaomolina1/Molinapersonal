@@ -31,6 +31,7 @@ import { ErrorBoundary } from "@/_services/sentry";
 import IconUserInterfaceActionsSave from "@/_design_system/_icons/UserInterface/Actions/Save.svg";
 import { useWatchlist } from "@/_models/watchlist";
 import Counter from "@/_design_system/Counter";
+import CompleteProfileModal from "./CompleteProfileModal";
 
 const { block } = createBEMClasses("main-header");
 
@@ -275,6 +276,7 @@ const Header = ({
           otp={otp}
         />
       )}
+      <CompleteProfileModal />
     </>
   );
 };

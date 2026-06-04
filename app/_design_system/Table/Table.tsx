@@ -129,6 +129,7 @@ type CellProps = PropsWithChildren<{
   className?: string;
   style?: CSSProperties;
   applyDefaultStyle?: boolean;
+  colSpan?: number;
 }>;
 
 export const Cell = ({
@@ -136,12 +137,14 @@ export const Cell = ({
   style,
   children,
   applyDefaultStyle = true,
+  colSpan,
   ref,
 }: CellProps & { ref?: Ref<HTMLTableCellElement> }) => {
   return (
     <AriaCell
       className={element("cell", { applyDefaultStyle }, className)}
       style={style}
+      colSpan={colSpan}
       ref={ref}
     >
       {children}
@@ -162,7 +165,7 @@ export const CellWithColspan = ({
     [colspan],
   );
 
-  return <Cell ref={ref} {...props} />;
+  return <Cell ref={ref} colSpan={colspan} {...props} />;
 };
 
 const ExpandableRowContext = createContext<{

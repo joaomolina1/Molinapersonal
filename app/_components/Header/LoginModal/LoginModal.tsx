@@ -9,6 +9,8 @@ import Stack from "@/_design_system/Stack";
 import TextBlock from "@/_design_system/TextBlock";
 import IconUserInterfaceActionsClose from "@/_design_system/_icons/UserInterface/Actions/Close.svg";
 import { useLogin } from "@/_services/session";
+import GoogleSignInButton from "../GoogleSignInButton";
+import AuthDivider from "../AuthDivider";
 import { sendGAEvent } from "@next/third-parties/google";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { FormEvent, useRef, useState } from "react";
@@ -154,6 +156,10 @@ const LoginModal = ({
             />
           </Stack>
         </form>
+        <Stack gap="1rem">
+          <AuthDivider />
+          <GoogleSignInButton label="Entrar com Google" />
+        </Stack>
         <Stack
           row
           alignItems="center"

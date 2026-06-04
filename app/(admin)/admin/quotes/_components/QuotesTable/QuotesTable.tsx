@@ -21,6 +21,8 @@ import { formatMoney } from "@/_utils/number";
 import { TextButton } from "@/_design_system/Button";
 import Pagination from "@/_design_system/Pagination";
 import CopyIconButton from "@/_components/CopyIconButton";
+import Tag from "@/_design_system/Tag";
+import QuotePacksSection from "../QuotePacksSection";
 
 const QuotesTable = ({ quotesList }: { quotesList: QuotesList }) => {
   const { quotes } = quotesList;
@@ -37,6 +39,7 @@ const QuotesTable = ({ quotesList }: { quotesList: QuotesList }) => {
             <Column>Budget total</Column>
             <Column>Nº de pessoas</Column>
             <Column>Tipo de evento</Column>
+            <Column>Estado</Column>
             <Column />
           </TableHeader>
           <TableBody>
@@ -85,13 +88,26 @@ const QuoteRow = ({ odd, quote }: { odd: boolean; quote: Quote }) => {
           {SPACE_EVENT_TYPES_FLAT.find(({ id }) => id === quote.event_kind)
             ?.label || "-"}
         </Cell>
+        <Cell>
+          {quote.statusWording ? (
+            <Tag
+              size="small"
+              text={quote.statusWording.label}
+              type={quote.statusWording.tagType}
+            />
+          ) : (
+            "-"
+          )}
+        </Cell>
         <ExpandIconCell />
       </ExpandableRow>
       <ExpandedRow>
         <Cell />
-        <ExpandedRowMainCell colspan={7} applyDefaultStyle={false}>
+        <ExpandedRowMainCell colspan={8} applyDefaultStyle={false}>
           <div>
-            <Stack gap="0.5rem" alignItems="flex-start">
+            <Stack gap="1.5rem" alignItems="flex-start">
+              <QuotePacksSection quote={quote} />
+              <Stack gap="0.5rem" alignItems="flex-start">
               <ValueWithLabel label="Email" value={quote.email || "-"} />
               <ValueWithLabel
                 label="Evento empresarial"
@@ -139,6 +155,7 @@ const QuoteRow = ({ odd, quote }: { odd: boolean; quote: Quote }) => {
                 <ValueWithLabel label="Notas" value={quote.notes || "-"} />
               </div>
               <ValueWithLabel label="ID" value={quote.id} />
+              </Stack>
             </Stack>
           </div>
         </ExpandedRowMainCell>

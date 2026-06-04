@@ -1,0 +1,41 @@
+@use "app/_styles/abstract" as *;
+
+.lead-packs-manager {
+  width: 100%;
+
+  &__hint {
+    @include font-body-xs;
+    color: $color-neutral-7;
+    max-width: 32rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid $color-neutral-4;
+    border-radius: 8px;
+
+    &--winner {
+      border-color: $color-semantic-success;
+      background: $color-semantic-success-light;
+    }
+
+    &__name {
+      @include font-action-s;
+    }
+
+    &__meta {
+      @include font-body-xs;
+      color: $color-neutral-7;
+    }
+
+    @include mq-max(medium) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}

@@ -1,14 +1,104 @@
 import { PackFeature } from "@/_constants/pack/features";
+import {
+  LeadQualityScore,
+  parseLeadQualityScore,
+} from "@/_constants/lead/qualityScore";
+import {
+  QUOTE_STATUSES,
+  QuoteStatus,
+} from "@/_constants/quote/statuses";
 import { SpaceEventType } from "@/_constants/space/eventTypes";
 import { useFetch } from "@/_services/api";
 import { TimeDuration } from "@/_utils/number";
 import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+export type LeadPackExtraParam = {
+  id: string;
+  hours?: number | null;
+  pax?: number | null;
+};
+
+export type QuotePackAssociation = {
+  id: string;
+  quoteID: string;
+  packID: string;
+  createdAt: string | null;
+  createdBy: string | null;
+  status: string;
+  extraIDs: string[];
+  extraParams: LeadPackExtraParam[];
+  packName: string;
+  packReference: string;
+  spaceID: string;
+  spaceName: string;
+  venueID: string;
+  venueName: string;
+};
+
+export type CalculatedPackPrice = {
+  value: number;
+  timeOverflow: boolean;
+  schedules: { value: number }[];
+  extras: { id: string; description: string; value: number }[];
+};
+
+export type AdminPackPreviewExtra = {
+  id: string;
+  type: "fixed" | "per-hour" | "per-person" | "per-hour-and-person";
+  description: string;
+  tooltip: string | null;
+  priceHour: number;
+  pricePax: number;
+  fixedPrice: number;
+  mandatory: boolean;
+  defaultHour?: number | null;
+  minHour?: number | null;
+  maxHour?: number | null;
+  defaultPax?: number | null;
+  minPax?: number | null;
+  maxPax?: number | null;
+};
+
+export type AdminLeadPackPreview = {
+  lookup: QuotePackLookup;
+  pack: {
+    id: string;
+    name: string;
+    reference: string;
+    extras: AdminPackPreviewExtra[];
+  };
+  price: CalculatedPackPrice | null;
+  priceReason: string | null;
+};
+
+export type QuotePackLookup = {
+  packID: string;
+  packName: string;
+  packReference: string;
+  spaceID: string;
+  spaceName: string;
+  venueID: string;
+  venueName: string;
+  isDeleted: boolean;
+};
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const isPackUuid = (value: string) => UUID_RE.test(value.trim());
+
 export class Quote {
   constructor(data: any) {
     Object.assign(this, data);
 
+    this.status = data.status ?? "new";
+    this.qualityScore =
+      data.qualityScore != null
+        ? (data.qualityScore as LeadQualityScore)
+        : data.quality_score != null
+          ? (data.quality_score as LeadQualityScore)
+          : null;
     this.event_date = parseDate(data.event_date as string);
     this.start_at = TimeDuration.fromString(data.start_at as string);
     this.end_at = TimeDuration.fromString(data.end_at as string);
@@ -39,7 +129,163 @@ export class Quote {
   venue_id?: string;
   space_id?: string;
   pack_id?: string;
+  status!: QuoteStatus;
+  qualityScore!: LeadQualityScore | null;
+
+  get statusWording() {
+    return QUOTE_STATUSES.find((s) => s.id === this.status);
+  }
 }
+
+export const useQuotePackLookup = (packId?: string) => {
+  const fetchApi = useFetch();
+
+  return useQuery<QuotePackLookup>({
+    queryKey: ["quote-pack-lookup", packId],
+    queryFn: () => fetchApi("quote", `pack-lookup/${packId}`),
+    enabled: !!packId && isPackUuid(packId),
+    retry: false,
+  });
+};
+
+export const useQuotePacks = (quoteId?: string) => {
+  const fetchApi = useFetch();
+
+  return useQuery<QuotePackAssociation[]>({
+    queryKey: ["quote-packs", quoteId],
+    queryFn: () => fetchApi("quote", `${quoteId}/packs`),
+    enabled: !!quoteId,
+  });
+};
+
+export const useAdminLeadPackPreview = () => {
+  const fetchApi = useFetch();
+
+  return useMutation<
+    AdminLeadPackPreview,
+    unknown,
+    {
+      packID: string;
+      leadType: "quote" | "contact";
+      leadId: string;
+      extraIDs: string[];
+      extraParams: LeadPackExtraParam[];
+    }
+  >({
+    mutationFn: (body) =>
+      fetchApi("quote", "pack-preview", { method: "POST", body }),
+  });
+};
+
+export const useAssociateQuotePack = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    QuotePackAssociation,
+    unknown,
+    {
+      quoteId: string;
+      packID: string;
+      extraIDs?: string[];
+      extraParams?: LeadPackExtraParam[];
+    }
+  >({
+    mutationFn: ({ quoteId, packID, extraIDs, extraParams }) =>
+      fetchApi("quote", `${quoteId}/packs`, {
+        method: "POST",
+        body: { packID, extraIDs, extraParams },
+      }),
+    onSettled: (_data, _err, { quoteId }) => {
+      queryClient.invalidateQueries({ queryKey: ["quote-packs", quoteId] });
+    },
+  });
+};
+
+export const useRemoveQuotePack = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation<unknown, unknown, { quoteId: string; packId: string }>({
+    mutationFn: ({ quoteId, packId }) =>
+      fetchApi("quote", `${quoteId}/packs/${packId}`, { method: "DELETE" }),
+    onSettled: (_data, _err, { quoteId }) => {
+      queryClient.invalidateQueries({ queryKey: ["quote-packs", quoteId] });
+    },
+  });
+};
+
+export const useUpdateQuotePackStatus = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    QuotePackAssociation,
+    unknown,
+    {
+      quoteId: string;
+      packId: string;
+      status?: "suggested" | "won";
+      extraIDs?: string[];
+      extraParams?: LeadPackExtraParam[];
+    }
+  >({
+    mutationFn: ({ quoteId, packId, status, extraIDs, extraParams }) =>
+      fetchApi("quote", `${quoteId}/packs/${packId}`, {
+        method: "PATCH",
+        body: {
+          ...(status !== undefined ? { status } : {}),
+          ...(extraIDs !== undefined ? { extraIDs } : {}),
+          ...(extraParams !== undefined ? { extraParams } : {}),
+        },
+      }),
+    onSettled: (_data, _err, { quoteId }) => {
+      queryClient.invalidateQueries({ queryKey: ["quote-packs", quoteId] });
+    },
+  });
+};
+
+export const useUpdateQuoteStatus = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation<unknown, unknown, { quoteId: string; status: QuoteStatus }>({
+    mutationFn: ({ quoteId, status }) =>
+      fetchApi("quote", quoteId, { method: "PATCH", body: { status } }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote"] });
+    },
+  });
+};
+
+export const useUpdateQuoteLead = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    unknown,
+    unknown,
+    {
+      quoteId: string;
+      status?: QuoteStatus;
+      qualityScore?: LeadQualityScore | null;
+    }
+  >({
+    mutationFn: ({ quoteId, status, qualityScore }) =>
+      fetchApi("quote", quoteId, {
+        method: "PATCH",
+        body: {
+          ...(status !== undefined ? { status } : {}),
+          ...(qualityScore !== undefined ? { qualityScore } : {}),
+        },
+      }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["quote"] });
+    },
+  });
+};
+
+export { parseLeadQualityScore };
 
 export const useQuotes = () => {
   const fetchApi = useFetch();

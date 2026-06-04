@@ -3,6 +3,18 @@
 .search-space-card {
   position: relative;
 
+  &--recommended {
+    .search-space-card__photo {
+      box-shadow:
+        0 0 0 1.5px $color-brand-primary,
+        0 10px 24px -12px rgba(0, 0, 0, 0.3);
+    }
+
+    .search-space-card__content__title {
+      color: $color-brand-primary;
+    }
+  }
+
   a {
     background: none;
     border: none;

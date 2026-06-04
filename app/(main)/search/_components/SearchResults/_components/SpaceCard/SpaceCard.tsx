@@ -104,7 +104,7 @@ const SpaceCard = ({
 
   return (
     <div
-      className={block()}
+      className={block({ recommended: searchResult.recommended })}
       onMouseEnter={() => handleHover(true)}
       onMouseLeave={() => handleHover(false)}
       onFocus={() => handleFocus(true)}

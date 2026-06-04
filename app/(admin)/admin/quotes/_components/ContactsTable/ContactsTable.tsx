@@ -19,6 +19,7 @@ import { ContactsList } from "../useContactsList";
 import { Contact } from "@/_models/contact";
 import { CONTACT_METHODS } from "@/(main)/_components/QuoteRequest/QuoteRequestForm/QuoteRequestForm";
 import CopyIconButton from "@/_components/CopyIconButton";
+import ContactPacksSection from "../ContactPacksSection";
 
 const ContactsTable = ({ contactsList }: { contactsList: ContactsList }) => {
   const { contacts } = contactsList;
@@ -110,6 +111,7 @@ const ContactRow = ({ odd, contact }: { odd: boolean; contact: Contact }) => {
                   )
                 }
               />
+              <ContactPacksSection contact={contact} />
             </Stack>
           </div>
         </ExpandedRowMainCell>

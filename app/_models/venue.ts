@@ -31,6 +31,7 @@ export class Venue {
   status!: Status;
 
   ownerID!: string;
+  accessRole?: "owner" | "collaborator";
 
   name!: string;
   description!: string;
@@ -127,7 +128,7 @@ export class Venue {
   }
 }
 
-export type Subscription = "basic" | "pro";
+export type Subscription = "basic" | "premium" | "expert";
 export type Journey = "services" | "venues";
 
 export const useVenues = (options?: { enabled: boolean }) => {

@@ -6,7 +6,12 @@ import {
   jsonResponse,
   unauthorized,
 } from "@lib/api/context";
-import { buildApiSession, isAdmin } from "@lib/auth/session";
+import {
+  buildApiSession,
+  getProfile,
+  isAdmin,
+  mergeProfileRoles,
+} from "@lib/auth/session";
 import { createSupabaseServerClient } from "@lib/supabase/server";
 import { createAdminClient } from "@lib/db";
 import { optionalEnvValue } from "@lib/env";
@@ -124,6 +129,47 @@ export async function handleAuthRoute(
       }
 
       return emptyResponse(201);
+    }
+
+    case "complete-profile": {
+      if (ctx.request.method !== "POST") return emptyResponse(405);
+      if (!ctx.session) return unauthorized();
+
+      const name = formGet(ctx.form, "name");
+      const kind = formGet(ctx.form, "kind");
+      const birthMonth = formGet(ctx.form, "month_of_birth");
+      if (!name || !kind) return emptyResponse(400);
+
+      const existing = await getProfile(ctx.session.user_id);
+      const roles = mergeProfileRoles(existing?.roles, kind);
+
+      let dateOfBirth: string | null = null;
+      if (birthMonth) {
+        const month = parseInt(birthMonth, 10);
+        if (month >= 1 && month <= 12) {
+          dateOfBirth = `2000-${String(month).padStart(2, "0")}-01`;
+        }
+      }
+
+      const { error } = await admin
+        .from("profiles")
+        .update({
+          name,
+          kind,
+          roles,
+          date_of_birth: dateOfBirth,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ctx.session.user_id);
+      if (error) {
+        console.error("complete-profile update error", error);
+        return emptyResponse(500);
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return unauthorized();
+      const apiSession = await buildApiSession(data.session);
+      return jsonResponse(apiSession);
     }
 
     case "confirm": {

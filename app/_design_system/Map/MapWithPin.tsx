@@ -9,6 +9,7 @@ const loadMap = async (
   ref: HTMLDivElement,
   latitude: number,
   longitude: number,
+  zoom: number,
 ) => {
   if (!config.googleMapsApiKey) {
     throw new Error("Please set the google maps api key");
@@ -26,8 +27,8 @@ const loadMap = async (
   const map = new Map(ref, {
     mapId: config.googleMapsMapId,
     center: { lat: latitude, lng: longitude },
-    zoom: 12,
-    maxZoom: 14,
+    zoom,
+    maxZoom: Math.max(14, zoom),
     minZoom: 8,
     disableDefaultUI: true,
     gestureHandling: "greedy",
@@ -55,17 +56,19 @@ const { block } = createBEMClasses("map-with-pin");
 const MapWithPin = ({
   latitude,
   longitude,
+  zoom = 12,
 }: {
   latitude: number;
   longitude: number;
+  zoom?: number;
 }) => {
   const mapRef = useCallback(
     (node: HTMLDivElement) => {
       if (node) {
-        loadMap(node, latitude, longitude);
+        loadMap(node, latitude, longitude, zoom);
       }
     },
-    [latitude, longitude],
+    [latitude, longitude, zoom],
   );
 
   return <div ref={mapRef} className={block()} />;

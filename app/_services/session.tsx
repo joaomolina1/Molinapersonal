@@ -26,6 +26,7 @@ export type Session = {
   email: string;
   token: string;
   roles: Role[];
+  profileComplete?: boolean;
 };
 
 const fetchApi = getFetchApiForSession(undefined);
@@ -131,6 +132,34 @@ export const useLogin = () => {
         setSession(session);
         queryClient.invalidateQueries();
 
+        return session;
+      }),
+  });
+};
+
+export const useCompleteProfile = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+  const [, setSession] = useSession();
+
+  return useMutation<
+    Session,
+    unknown,
+    { name: string; kind: UserKind; month_of_birth?: string }
+  >({
+    mutationFn: (body) =>
+      fetchApi(
+        "auth",
+        "complete-profile",
+        { method: "POST", body },
+        {
+          contentType: "form",
+          tokenAuthenticated: true,
+          cookieAuthenticated: true,
+        },
+      ).then((session: Session) => {
+        setSession(session);
+        queryClient.invalidateQueries();
         return session;
       }),
   });

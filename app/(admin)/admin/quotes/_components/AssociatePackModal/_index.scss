@@ -1,0 +1,29 @@
+@use "app/_styles/abstract" as *;
+
+.associate-pack-modal {
+  &__preview {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid $color-neutral-4;
+    border-radius: 8px;
+    background: $color-neutral-1;
+    width: 100%;
+  }
+
+  &__hint {
+    @include font-body-s;
+    color: $color-neutral-7;
+
+    &--error {
+      color: $color-semantic-error;
+    }
+  }
+
+  &__total {
+    @include font-body-s;
+    margin: 0;
+    font-weight: 600;
+  }
+}

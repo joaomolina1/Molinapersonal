@@ -1,0 +1,113 @@
+.leads-kanban {
+  &__hint {
+    color: var(--color-text-secondary, #5c5c5c);
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  &__board {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    align-items: flex-start;
+  }
+
+  &__column {
+    flex: 0 0 260px;
+    min-width: 260px;
+    background: var(--color-surface-secondary, #f4f4f5);
+    border-radius: 8px;
+    padding: 0.75rem;
+    min-height: 200px;
+
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+
+      h3 {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+    }
+
+    &__count {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary, #5c5c5c);
+      background: #fff;
+      border-radius: 999px;
+      padding: 0.1rem 0.5rem;
+    }
+
+    &__list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+
+  &__card {
+    width: 100%;
+    text-align: left;
+    border: 1px solid var(--color-border, #e4e4e7);
+    border-radius: 8px;
+    padding: 0.65rem 0.75rem;
+    background: #fff;
+    cursor: grab;
+    transition: box-shadow 0.15s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &--quote {
+      border-left: 3px solid var(--color-info, #2563eb);
+    }
+
+    &--contact {
+      border-left: 3px solid var(--color-neutral-strong, #71717a);
+    }
+
+    &__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      margin-bottom: 0.35rem;
+    }
+
+    &__score {
+      font-size: 0.7rem;
+      color: var(--color-text-secondary, #5c5c5c);
+    }
+
+    &__name {
+      margin: 0 0 0.2rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    &__meta,
+    &__phone {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--color-text-secondary, #5c5c5c);
+      line-height: 1.35;
+    }
+  }
+}
+
+.lead-detail-modal {
+  &__fields {
+    width: 100%;
+    border-top: 1px solid var(--color-border, #e4e4e7);
+    padding-top: 1rem;
+  }
+}

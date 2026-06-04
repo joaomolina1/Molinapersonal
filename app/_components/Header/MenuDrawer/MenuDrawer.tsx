@@ -27,6 +27,8 @@ import Counter from "@/_design_system/Counter";
 import { useWatchlist } from "@/_models/watchlist";
 import IconUserInterfaceMiscellaneousPromote from "@/_design_system/_icons/UserInterface/Miscellaneous/Promote.svg";
 import IconUserInterfaceMiscellaneousChat from "@/_design_system/_icons/UserInterface/Miscellaneous/Chat.svg";
+import IconUserInterfaceMiscellaneousUsers from "@/_design_system/_icons/UserInterface/Miscellaneous/Users.svg";
+import { useVenues } from "@/_models/venue";
 
 export type MenuDrawerProps = {
   isOpen: boolean;
@@ -42,6 +44,12 @@ const MenuDrawer = ({ isOpen, onOpenChange, loginHref }: MenuDrawerProps) => {
 
   const hostStatus = useHostStatus();
   const { data: watchlist } = useWatchlist();
+  const { data: venues = [] } = useVenues({
+    enabled: !!session && !session.roles.includes("admin"),
+  });
+  const hasPaidTier = venues.some(
+    (v) => v.subscription === "premium" || v.subscription === "expert",
+  );
 
   return (
     <AriaModalOverlay
@@ -129,6 +137,14 @@ const MenuDrawer = ({ isOpen, onOpenChange, loginHref }: MenuDrawerProps) => {
                       href="/host/calendar"
                       close={() => onOpenChange(false)}
                     />
+                    {hasPaidTier && (
+                      <MenuItem
+                        icon={<IconUserInterfaceMiscellaneousUsers />}
+                        text="Event Hub"
+                        href="/host/event-hub"
+                        close={() => onOpenChange(false)}
+                      />
+                    )}
                   </div>
                 ) : (
                   <MenuItem

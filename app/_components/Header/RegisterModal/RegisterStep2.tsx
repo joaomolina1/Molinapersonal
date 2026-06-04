@@ -15,6 +15,8 @@ import InputWrapper, { InputError } from "@/_design_system/_utils/InputWrapper";
 import { useRegister } from "@/_services/session";
 import config from "@/_utils/config";
 import { FormEvent, useRef, useState } from "react";
+import GoogleSignInButton from "../GoogleSignInButton";
+import AuthDivider from "../AuthDivider";
 
 const RegisterStep2 = ({
   email,
@@ -140,6 +142,10 @@ const RegisterStep2 = ({
   return (
     <Stack gap="1.5rem">
       <TextBlock subtitle="Complete o registo" />
+      <Stack gap="1rem">
+        <GoogleSignInButton label="Registar com Google" />
+        <AuthDivider />
+      </Stack>
       <form
         onSubmit={(e) => {
           handleRegister(e);

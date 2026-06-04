@@ -1,0 +1,79 @@
+@use "app/_styles/abstract" as *;
+
+.event-hub-leads {
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__row {
+    border: 1px solid $color-neutral-4;
+    border-radius: 12px;
+    background: $color-neutral-0;
+    overflow: hidden;
+
+    &--expanded {
+      border-color: $color-neutral-6;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      width: 100%;
+      padding: 1rem;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+
+      &:hover {
+        background: $color-neutral-1;
+      }
+    }
+
+    &__title {
+      @include font-action-s;
+    }
+
+    &__meta {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+
+    &__chevron {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      color: $color-neutral-7;
+    }
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0 1rem 1rem;
+    border-top: 1px solid $color-neutral-3;
+    padding-top: 1rem;
+
+    &__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem 1.5rem;
+
+      @include mq-max(medium) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &__section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+}

@@ -38,6 +38,7 @@ const HighlightsTable = ({
           <Column>Data fim</Column>
           <Column>Prioridade</Column>
           <Column>Recomendado</Column>
+          <Column>Plano</Column>
           <Column>Estado</Column>
           <Column />
         </TableHeader>
@@ -115,6 +116,19 @@ const HighlightRow = ({
               <IconUserInterfaceActionsCheck />
             ) : (
               <IconUserInterfaceActionsClose />
+            )}
+          </div>
+        </Cell>
+        <Cell>
+          <div>
+            {highlight.plan ? (
+              <Tag
+                size="small"
+                text={highlight.plan === "expert" ? "Expert" : "Premium"}
+                type={highlight.plan === "expert" ? "success" : "info"}
+              />
+            ) : (
+              "-"
             )}
           </div>
         </Cell>

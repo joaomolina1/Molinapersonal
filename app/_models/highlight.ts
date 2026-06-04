@@ -26,6 +26,7 @@ export class Highlight {
   mode!: HighlightMode;
   priority!: number;
   recommended!: boolean;
+  plan!: "premium" | "expert" | null;
 
   get status() {
     const isActive =

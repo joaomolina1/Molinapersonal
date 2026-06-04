@@ -1,0 +1,45 @@
+@use "app/_styles/abstract" as *;
+
+.venue-collaborators {
+  width: 100%;
+  padding: 1rem 0;
+  border-top: 1px solid $color-neutral-4;
+
+  &__hint {
+    @include font-body-s;
+    color: $color-neutral-7;
+    margin: 0;
+    max-width: 42rem;
+  }
+
+  &__add {
+    width: 100%;
+    max-width: 32rem;
+  }
+
+  &__list {
+    width: 100%;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid $color-neutral-4;
+    border-radius: 8px;
+    background: $color-neutral-1;
+    width: 100%;
+    max-width: 28rem;
+
+    &__email {
+      font-weight: 600;
+    }
+
+    &__name {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+  }
+}
