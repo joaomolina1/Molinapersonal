@@ -6,7 +6,6 @@ import IconUserInterfaceMiscellaneousCapacity from "@/_design_system/_icons/User
 import IconUserInterfaceMiscellaneousClock from "@/_design_system/_icons/UserInterface/Miscellaneous/Clock.svg";
 import IconUserInterfaceMiscellaneousSeparatorDot from "@/_design_system/_icons/UserInterface/Miscellaneous/SeparatorDot.svg";
 import { Pack } from "@/_models/pack";
-import { getPhotoURLs, usePhotos } from "@/_models/photo";
 import { createBEMClasses } from "@/_utils/classname";
 import { formatMoney } from "@/_utils/number";
 import { BookingPaymentSummary } from "@/_components/BookingDetails";
@@ -32,13 +31,13 @@ import { sendGAEvent } from "@next/third-parties/google";
 import { getGaPackSearchData } from "../PackSearch/PackSearch";
 import { Space } from "@/_models/space";
 import { Venue } from "@/_models/venue";
-import PhotoCarousel from "../../PhotoCarousel";
 import { PackPricesModal } from "./PackPricesModal";
 import { useQuoteRequestContext } from "@/(main)/_components/QuoteRequest";
 import { useMediaQuery } from "@/_utils/mediaQuery";
 import Tag from "@/_design_system/Tag";
 import CopyIconButton from "@/_components/CopyIconButton";
 import PackExtras from "./PackExtras";
+import PackAttachments from "./PackAttachments";
 
 const { block, element } = createBEMClasses("client-pack-card");
 
@@ -62,7 +61,6 @@ const PackCard = ({
   const [session] = useSession();
   const routerPush = useRouterPush();
 
-  const { data: photos = [] } = usePhotos(pack.allPhotoIDs);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenChooseLayout, setIsOpenChooseLayout] = useState(false);
   const [isOpenBookingOwnSpace, setIsOpenBookingOwnSpace] = useState(false);
@@ -173,9 +171,6 @@ const PackCard = ({
 
   return (
     <div className={block()}>
-      <div className={element("photos")}>
-        <PhotoCarousel photoURLs={getPhotoURLs(photos, "medium")} />
-      </div>
       <Stack gap="1rem" className={element("details")}>
         <div className={element("name")}>
           <TextButton
@@ -237,6 +232,7 @@ const PackCard = ({
         {pack.serviceTypeFeatureAttributes.length > 0 && (
           <AmenitiesList items={pack.serviceTypeFeatureAttributes} />
         )}
+        <PackAttachments pack={pack} />
         {!!pack.extras.length && (
           <PackExtras extras={pack.extras} packSearch={packSearch} />
         )}
@@ -258,40 +254,40 @@ const PackCard = ({
         <Stack gap="0.5rem" className={element("pricing")}>
           {pack.price && !!session ? (
             <>
-              <Stack
-                gap="0.25rem"
-                className={element("pricing__amount")}
-                alignItems="flex-end"
-              >
-                <Stack row gap="0.25rem">
-                  <span className={element("pricing__amount__label")}>
-                    Total c/ IVA
-                  </span>
-                  <Tooltip
-                    content={
-                      <PackPriceDetail
-                        price={pack.price}
-                        start={packSearch.start ?? undefined}
-                        showLabel
-                        showTotal
+              <div className={element("pricing__amount")}>
+                <div className={element("pricing__amount__top")}>
+                  <Stack row gap="0.25rem" alignItems="center">
+                    <span className={element("pricing__amount__label")}>
+                      Total c/ IVA
+                    </span>
+                    <Tooltip
+                      content={
+                        <PackPriceDetail
+                          price={pack.price}
+                          start={packSearch.start ?? undefined}
+                          showLabel
+                          showTotal
+                        />
+                      }
+                      style={{
+                        maxWidth: "min(23.25rem, calc(100dvw - 2rem))",
+                      }}
+                      visibleOnTouchDevice
+                    >
+                      <IconButton
+                        showTooltip={false}
+                        ariaLabel="Cálculo do preço"
+                        icon={<IconUserInterfaceMiscellaneousTooltip />}
+                        onClick={() => handlePackInfo("calculated_price")}
+                        onHover={() => handlePackInfo("calculated_price")}
                       />
-                    }
-                    style={{ maxWidth: "min(23.25rem, calc(100dvw - 2rem))" }}
-                    visibleOnTouchDevice
-                  >
-                    <IconButton
-                      showTooltip={false}
-                      ariaLabel="Cálculo do preço"
-                      icon={<IconUserInterfaceMiscellaneousTooltip />}
-                      onClick={() => handlePackInfo("calculated_price")}
-                      onHover={() => handlePackInfo("calculated_price")}
-                    />
-                  </Tooltip>
-                </Stack>
-                <span className={element("pricing__amount__value")}>
-                  {formatMoney(pack.price.value)}
-                </span>
-              </Stack>
+                    </Tooltip>
+                  </Stack>
+                  <span className={element("pricing__amount__value")}>
+                    {formatMoney(pack.price.value)}
+                  </span>
+                </div>
+              </div>
               {paymentBreakdown?.isPartial && (
                 <BookingPaymentSummary
                   breakdown={paymentBreakdown}
@@ -374,9 +370,6 @@ const PackCard = ({
 export const PackCardSkeleton = () => {
   return (
     <div className={block()}>
-      <div className={element("photo")}>
-        <SkeletonLoader />
-      </div>
       <Stack gap="1rem" className={element("details")}>
         <div className={element("name")}>
           <SkeletonLoader type="text" />

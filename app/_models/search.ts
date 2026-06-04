@@ -55,6 +55,7 @@ export class SearchResult {
 
   capacity!: number;
   recommended!: boolean;
+  highlighted!: boolean;
 
   photoURLs!: string[];
 
@@ -94,6 +95,7 @@ type SearchQuery = {
   right?: number;
   bottom?: number;
   left?: number;
+  venueID?: string;
   mode?: HighlightMode;
   budgetMin?: number;
   budgetMax?: number;

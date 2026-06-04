@@ -11,14 +11,15 @@ import Features from "./Features";
 import Prices, { getPricesError, PriceDraft } from "./Prices";
 import { Pack, usePack, useUpdatePack } from "@/_models/pack";
 import { useScrollIntoView } from "@/_utils/scrollIntoView";
-import Photos from "../_shared/Photos";
+import Attachments from "../_shared/Attachments";
 import NoticeDays from "./NoticeDays";
 import { useRouter, useSearchParams } from "next/navigation";
 import Wrapper from "../Wrapper";
 import Duration, { isValidDuration } from "./Duration";
 import Cancellation from "./Cancellation";
 import { PackFeature } from "@/_constants/pack/features";
-import { Photo, usePhotos } from "@/_models/photo";
+import { Attachment, useAttachments } from "@/_models/attachment";
+import { useDeletePhoto } from "@/_models/photo";
 import { PackCapacity } from "@/_constants/pack/capacities";
 import Capacity from "./Capacity";
 import { Space, useSpace } from "@/_models/space";
@@ -52,15 +53,17 @@ const Step4Wrapper = () => {
   const { data: pack, isPending: isPendingPack } = usePack(packID);
   const spaceID = pack?.spaceIDs?.[0] ?? spaceIDFromQuery;
   const { data: space, isPending: isPendingSpace } = useSpace(spaceID);
-  const photoIds =
-    pack?.allPhotoIDs && pack.allPhotoIDs.length > 0
-      ? pack.allPhotoIDs
+  const attachmentIds =
+    pack?.attachmentIDs && pack.attachmentIDs.length > 0
+      ? pack.attachmentIDs
       : undefined;
-  const { data: photos, isPending: isPendingPhotos } = usePhotos(photoIds);
+  const { data: attachments, isPending: isPendingAttachments } =
+    useAttachments(attachmentIds);
 
-  const waitingPhotos = !!photoIds?.length && isPendingPhotos;
+  const waitingAttachments =
+    !!attachmentIds?.length && isPendingAttachments;
 
-  if (isPendingPack || isPendingSpace || waitingPhotos) {
+  if (isPendingPack || isPendingSpace || waitingAttachments) {
     return null;
   }
 
@@ -69,23 +72,24 @@ const Step4Wrapper = () => {
     return null;
   }
 
-  return <Step4 pack={pack} space={space} photos={photos ?? []} />;
+  return <Step4 pack={pack} space={space} attachments={attachments ?? []} />;
 };
 
 const Step4 = ({
   pack,
   space,
-  photos,
+  attachments,
 }: {
   pack: Pack;
   space: Space;
-  photos: Photo[];
+  attachments: Attachment[];
 }) => {
   const [session] = useSession();
   const isAdmin = session?.roles.includes("admin");
 
   const routerPush = useRouterPush();
-  const step4State = useStep4State(pack, photos);
+  const step4State = useStep4State(pack, attachments);
+  const { mutateAsync: deletePhoto } = useDeletePhoto();
 
   const {
     mutateAsync: updatePack,
@@ -119,8 +123,8 @@ const Step4 = ({
         return true;
       }
 
-      if (step4State.photosError) {
-        step4State.photosScrollIntoView();
+      if (step4State.attachmentsError) {
+        step4State.attachmentsScrollIntoView();
         return true;
       }
 
@@ -176,14 +180,17 @@ const Step4 = ({
   };
 
   const savePack = async () => {
+    const previousPhotoIDs = pack.allPhotoIDs;
+
     await updatePack({
       id: pack.id,
       body: {
         name: step4State.name,
         description: step4State.description,
         attributes: [...step4State.features, ...step4State.serviceTypeFeatures],
-        primaryPhotoID: step4State.photos[0]?.id ?? "",
-        photoIDs: step4State.photos.slice(1).map(({ id }) => id),
+        primaryPhotoID: "",
+        photoIDs: [],
+        attachmentIDs: step4State.attachments.map(({ id }) => id),
         noticeDays: step4State.noticeDays,
         minTime: step4State.minTime?.string ?? "",
         maxTime: step4State.maxTime?.string ?? "",
@@ -240,6 +247,12 @@ const Step4 = ({
         ...(isAdmin ? { upfrontPercentage: step4State.upfrontPercentage } : {}),
       },
     });
+
+    if (previousPhotoIDs.length) {
+      await Promise.allSettled(
+        previousPhotoIDs.map((photoID) => deletePhoto(photoID)),
+      );
+    }
   };
 
   const exit = () => {
@@ -325,7 +338,7 @@ const Step4 = ({
   );
 };
 
-const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
+const useStep4State = (initialPack?: Pack, initialAttachments?: Attachment[]) => {
   const [name, setName] = useState(initialPack?.name ?? "");
   const [hasFeatures, setHasFeatures] = useState<boolean>(
     !!initialPack?.featureAttributes?.length,
@@ -339,7 +352,9 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
   const [description, setDescription] = useState(
     initialPack?.description ?? "",
   );
-  const [photos, setPhotos] = useState<Photo[]>(initialPhotos ?? []);
+  const [attachments, setAttachments] = useState<Attachment[]>(
+    initialAttachments ?? [],
+  );
   const [noticeDays, setNoticeDays] = useState(initialPack?.noticeDays);
   const [hasDuration, setHasDuration] = useState<boolean>(
     !!initialPack?.minTime?.number || !!initialPack?.maxTime?.number,
@@ -417,7 +432,8 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
     : description.length < 100
       ? "A descrição deve ter pelo menos 100 caracteres"
       : undefined;
-  const photosError = photos.length === 0 ? mandatoryError : undefined;
+  const attachmentsError =
+    attachments.length > 10 ? "Pode incluir no máximo 10 ficheiros" : undefined;
   const noticeDaysError = noticeDays === undefined ? mandatoryError : undefined;
   const durationError =
     hasDuration === undefined
@@ -464,7 +480,8 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
     useScrollIntoView<HTMLDivElement>();
   const [descriptionRef, descriptionScrollIntoView] =
     useScrollIntoView<HTMLDivElement>();
-  const [photosRef, photosScrollIntoView] = useScrollIntoView<HTMLDivElement>();
+  const [attachmentsRef, attachmentsScrollIntoView] =
+    useScrollIntoView<HTMLDivElement>();
   const [noticeDaysRef, noticeDaysScrollIntoView] =
     useScrollIntoView<HTMLDivElement>();
   const [durationRef, durationScrollIntoView] =
@@ -505,11 +522,11 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
     descriptionError,
     descriptionRef,
     descriptionScrollIntoView,
-    photos,
-    setPhotos,
-    photosError,
-    photosRef,
-    photosScrollIntoView,
+    attachments,
+    setAttachments,
+    attachmentsError,
+    attachmentsRef,
+    attachmentsScrollIntoView,
     noticeDays,
     setNoticeDays,
     noticeDaysError,
@@ -571,7 +588,7 @@ const useStep4State = (initialPack?: Pack, initialPhotos?: Photo[]) => {
       !!featuresError ||
       !!serviceTypeFeaturesError ||
       !!descriptionError ||
-      !!photosError ||
+      !!attachmentsError ||
       !!noticeDaysError ||
       !!durationError ||
       !!pricesError ||
@@ -710,20 +727,21 @@ export const Step4Form = ({
         />
       </div>
 
-      <div ref={step4State?.photosRef}>
-        <Photos
-          photos={step4State?.photos}
-          setPhotos={step4State?.setPhotos}
-          max={3}
-          minDimensions={{ width: 680, height: 480 }}
-          subtitle="Adicione algumas fotografias deste pack."
-          body="Escolha até 3 fotografias e no mínimo 1. Mais tarde poderá adicionar outras e fazer alterações."
+      <div ref={step4State?.attachmentsRef}>
+        <Attachments
+          attachments={step4State?.attachments}
+          setAttachments={step4State?.setAttachments}
+          max={10}
+          subtitle="Adicione anexos a este pack."
+          body="Pode incluir até 10 ficheiros (por ex. menus, propostas ou apresentações). Este campo é opcional."
           tip={
             pack?.isServicesJourney
-              ? "Se estiver a alugar apenas um serviço, pode incluir aqui uma fotografia ilustrativa do mesmo tipo de serviço usado no passo anterior. No entanto, se estiver a criar um pack com alguma especificidade adicional, inclua fotografias que representem claramente essas particularidades. Por exemplo, para um pack que inclua serviço de catering, coloque aqui as fotografias correspondentes ao serviço de refeição."
-              : "Se estiver a alugar apenas o espaço pode incluir uma fotografia que já usou no passo anterior. Mas se estiver a criar um pack com alguma particularidade coloque fotografias que façam essa referência. Por exemplo, para um pack que tem a refeição incluída coloque aqui as fotografias da refeição."
+              ? "Use anexos para partilhar documentos que ajudem o cliente a perceber o que está incluído no pack — por exemplo, propostas de catering, listas de equipamentos ou condições específicas do serviço."
+              : "Use anexos para partilhar documentos úteis ao cliente — por exemplo, menus, plantas do espaço ou condições específicas deste pack."
           }
-          error={step4State?.showErrors ? step4State.photosError : undefined}
+          error={
+            step4State?.showErrors ? step4State.attachmentsError : undefined
+          }
         />
       </div>
 

@@ -38,6 +38,7 @@ export class Pack {
       ? data.primaryPhotoID
       : null;
     this.photoIDs = data.photoIDs ?? [];
+    this.attachmentIDs = data.attachmentIDs ?? [];
     this.spaceIDs = Array.isArray(data.spaceIDs) ? data.spaceIDs : [];
     this.journey = data.journey ?? "venues";
     this.upfrontPercentage = data.upfrontPercentage ?? 20;
@@ -175,6 +176,7 @@ export class Pack {
 
   primaryPhotoID!: string | null;
   photoIDs!: string[];
+  attachmentIDs!: string[];
 
   spaceIDs!: string[];
 
@@ -222,7 +224,6 @@ export class Pack {
     return (
       !!this.name &&
       !!this.description &&
-      this.allPhotoIDs.length > 0 &&
       !getPricesError(this.prices) &&
       !getExtrasError(this.extras) &&
       (this.isServicesJourney

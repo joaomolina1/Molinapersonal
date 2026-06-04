@@ -9,15 +9,14 @@
   flex-direction: column;
   gap: 1.5rem;
 
-  &__photos {
-    height: 6.25rem;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
   &__name button {
     @include font-h5;
     text-align: left;
+
+    @include mq-max(large) {
+      @include font-h4;
+      color: $color-brand-primary;
+    }
 
     @include mq(large) {
       @include font-h4;
@@ -61,24 +60,57 @@
     }
   }
 
-  &__extras {
-    padding: 16px;
-    background: $color-neutral-1;
-    border-radius: 16px;
-
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-    column-gap: 1.5rem;
-    row-gap: 0.5rem;
+  &__attachments {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 
     &__title {
       @include font-body;
-      grid-column: 1 / -1;
+    }
+
+    &__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
     &__item {
-      grid-column: 1 / -1;
-      padding: 12px;
+      @include font-body-s;
+
+      button {
+        text-align: left;
+        word-break: break-word;
+      }
+    }
+  }
+
+  &__extras {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    &__separator {
+      border: none;
+      border-top: 1px solid $color-neutral-4;
+      margin: 0;
+    }
+
+    &__title {
+      @include font-body;
+    }
+
+    &__list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    &__item {
+      padding: 12px 16px 12px 12px;
       border: 1px solid $color-neutral-4;
       border-radius: 8px;
       background: $color-neutral-0;
@@ -86,9 +118,80 @@
       flex-direction: column;
       gap: 0.75rem;
 
+      &--selected {
+        background: $color-neutral-1;
+      }
+
+      &-header {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      &-checkbox {
+        flex-shrink: 0;
+      }
+
+      &-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding-top: 0.125rem;
+
+        @include mq(large) {
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.5rem;
+        }
+      }
+
+      &-title {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.25rem;
+        min-width: 0;
+      }
+
+      &-name {
+        @include font-body-s;
+      }
+
       &-price {
         @include font-action-s;
         white-space: nowrap;
+        align-self: flex-end;
+
+        @include mq(large) {
+          align-self: center;
+        }
+      }
+
+      &-divider {
+        border: none;
+        border-top: 1px solid $color-neutral-4;
+        margin: 0;
+      }
+
+      &-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+
+        @include mq(large) {
+          flex-direction: row;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+      }
+
+      &-field {
+        flex: 1;
+        min-width: 0;
       }
     }
 
@@ -101,15 +204,31 @@
       @include font-body-xs;
       color: $color-neutral-7;
     }
-
-    &__item-fields {
-      padding-top: 0.25rem;
-      border-top: 1px solid $color-neutral-4;
-    }
   }
 
   &__pricing {
+    @include mq-max(large) {
+      border-top: 1px solid $color-neutral-4;
+      padding-top: 1.5rem;
+      width: 100%;
+
+      .booking-details__payment-summary__cancellation {
+        text-align: center;
+      }
+    }
+
     &__amount {
+      width: 100%;
+
+      &__top {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        width: 100%;
+      }
+
       &__label {
         @include font-body-s;
         white-space: nowrap;
@@ -120,7 +239,8 @@
       }
 
       &__value {
-        @include font-h5;
+        @include font-h3;
+        white-space: nowrap;
       }
     }
 
@@ -158,12 +278,6 @@
     gap: 1.5rem;
     padding: 2.5rem;
 
-    &__photos {
-      height: 12.5rem;
-      width: 12.5rem;
-      flex-shrink: 0;
-    }
-
     &__details {
       flex: 1;
       padding-right: 2.5rem;
@@ -183,10 +297,24 @@
       display: flex;
       min-width: 9.5rem;
       flex: 0;
+      border-top: none;
+      padding-top: 0;
+
+      &__amount {
+        &__top {
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.25rem;
+        }
+
+        &__value {
+          @include font-h5;
+        }
+      }
 
       &__show,
       .skeleton-loader {
-        margin-top: 4.375rem;
+        margin-top: 0;
       }
 
       &__cancellation {
@@ -225,6 +353,36 @@
       display: flex;
       flex-direction: row;
       gap: 2.5rem;
+    }
+  }
+
+  &__attachments {
+    padding: 1.5rem;
+
+    @include mq(large) {
+      padding: 0;
+    }
+
+    &__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    &__item {
+      @include font-body-s;
+      padding: 0.75rem 1rem;
+      border: 1px solid $color-neutral-4;
+      border-radius: 8px;
+      background: $color-neutral-1;
+
+      button {
+        text-align: left;
+        word-break: break-word;
+      }
     }
   }
 

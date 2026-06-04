@@ -43,36 +43,38 @@ export const useDateStartEnd = () => {
     "end",
   ]);
 
-  // Date, Start, End
+  const date = useMemo(() => {
+    if (!_dateStartEnd.date) return null;
 
-  let date: CalendarDate | null = null;
+    try {
+      return parseDate(_dateStartEnd.date);
+    } catch {
+      console.error("Invalid date on search params: ", _dateStartEnd.date);
+      return null;
+    }
+  }, [_dateStartEnd.date]);
 
-  try {
-    date = _dateStartEnd.date ? parseDate(_dateStartEnd.date) : null;
-  } catch {
-    date = null;
-    console.error("Invalid date on search params: ", _dateStartEnd.date);
-  }
+  const start = useMemo(() => {
+    if (!_dateStartEnd.start) return null;
 
-  let start: TimeDuration | null = null;
+    try {
+      return TimeDuration.fromString(_dateStartEnd.start);
+    } catch {
+      console.error("Invalid start on search params: ", _dateStartEnd.start);
+      return null;
+    }
+  }, [_dateStartEnd.start]);
 
-  try {
-    start = _dateStartEnd.start
-      ? TimeDuration.fromString(_dateStartEnd.start)
-      : null;
-  } catch {
-    start = null;
-    console.error("Invalid start on search params: ", _dateStartEnd.start);
-  }
+  const end = useMemo(() => {
+    if (!_dateStartEnd.end) return null;
 
-  let end: TimeDuration | null = null;
-
-  try {
-    end = _dateStartEnd.end ? TimeDuration.fromString(_dateStartEnd.end) : null;
-  } catch {
-    end = null;
-    console.error("Invalid end on search params: ", _dateStartEnd.end);
-  }
+    try {
+      return TimeDuration.fromString(_dateStartEnd.end);
+    } catch {
+      console.error("Invalid end on search params: ", _dateStartEnd.end);
+      return null;
+    }
+  }, [_dateStartEnd.end]);
 
   const setDateStartEnd = useCallback(
     (

@@ -1,4 +1,4 @@
-import { CSSProperties, Ref, useState } from "react";
+import { CSSProperties, Ref, useEffect, useState } from "react";
 import {
   DialogTrigger as AriaDialogTrigger,
   Popover as AriaPopover,
@@ -58,6 +58,18 @@ const InputTimeRange = ({
   const [menuStart, setMenuStart] = useState(start);
   const [menuEnd, setMenuEnd] = useState(end);
 
+  const startKey = start?.id ?? null;
+  const endKey = end?.id ?? null;
+
+  useEffect(() => {
+    if (isOpen) {
+      return;
+    }
+
+    setMenuStart(start);
+    setMenuEnd(end);
+  }, [startKey, endKey, isOpen, start, end]);
+
   const cancel = () => {
     setMenuStart(start);
     setMenuEnd(end);
@@ -116,7 +128,6 @@ const InputTimeRange = ({
               setEnd={setMenuEnd}
               availableRanges={availableRanges}
               unavailableRanges={unavailableRanges}
-              onReset={() => onChange?.(null, null)}
             />
           </main>
           <footer>

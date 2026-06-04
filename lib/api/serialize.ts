@@ -10,7 +10,12 @@ const STATUS_BY_INT = [
 ] as const;
 
 const JOURNEY_BY_INT = ["venues", "services"] as const;
-const SUBSCRIPTION_BY_INT = ["basic"] as const;
+const SUBSCRIPTION_BY_INT = ["basic", "premium", "expert"] as const;
+const SUBSCRIPTION_TO_INT: Record<string, number> = {
+  basic: 0,
+  premium: 1,
+  expert: 2,
+};
 
 export function mapStatus(value: unknown): string {
   if (typeof value === "string") return value;
@@ -28,12 +33,36 @@ export function mapJourney(value: unknown): string {
   return "venues";
 }
 
-function mapSubscription(value: unknown): string {
+export function mapSubscription(value: unknown): string {
   if (typeof value === "string") return value;
   if (typeof value === "number") {
     return SUBSCRIPTION_BY_INT[value] ?? "basic";
   }
   return "basic";
+}
+
+export function parseSubscriptionInt(value: unknown): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") return SUBSCRIPTION_TO_INT[value] ?? 0;
+  return 0;
+}
+
+export function mapSubscriptionRow(row: DbRow) {
+  return {
+    id: str(row.id),
+    venueID: str(row.venue_id ?? row.venueID),
+    ownerID: str(row.owner_id ?? row.ownerID),
+    plan: str(row.plan),
+    interval: str(row.billing_interval ?? row.interval),
+    status: str(row.status),
+    stripeCustomerID: str(row.stripe_customer_id),
+    stripeSubscriptionID: str(row.stripe_subscription_id),
+    currentPeriodEnd: row.current_period_end
+      ? String(row.current_period_end)
+      : null,
+    cancelAtPeriodEnd: Boolean(row.cancel_at_period_end),
+    createdAt: row.created_at ? String(row.created_at) : null,
+  };
 }
 
 function str(value: unknown): string {
@@ -59,6 +88,15 @@ export function mapPhoto(row: DbRow) {
     smallURL: str(row.small_url ?? row.smallURL),
     mediumURL: str(row.medium_url ?? row.mediumURL),
     largeURL: str(row.large_url ?? row.largeURL),
+  };
+}
+
+export function mapAttachment(row: DbRow) {
+  return {
+    id: str(row.id),
+    url: str(row.url),
+    extension: str(row.extension),
+    filename: str(row.filename),
   };
 }
 
@@ -552,7 +590,280 @@ export function mapHighlight(row: DbRow) {
     mode: str(row.mode),
     priority: num(row.priority),
     recommended: Boolean(row.recommended),
+    plan: row.plan ? str(row.plan) : null,
   };
+}
+
+export const QUOTE_STATUSES = [
+  "new",
+  "in_follow_up",
+  "proposal_sent",
+  "won",
+  "lost",
+] as const;
+
+export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
+
+export function isQuoteStatus(value: unknown): value is QuoteStatus {
+  return (
+    typeof value === "string" &&
+    (QUOTE_STATUSES as readonly string[]).includes(value)
+  );
+}
+
+export function packVenueSpaceFromRow(pack: DbRow | undefined) {
+  const links = pack?.packs_spaces as
+    | { spaces?: DbRow & { venues?: DbRow } }[]
+    | undefined;
+  const link = links?.[0];
+  const space = link?.spaces;
+  const venue = space?.venues;
+  return {
+    packName: pack ? str(pack.name) : "",
+    packReference: pack ? str(pack.reference) : "",
+    spaceID: space ? str(space.id) : "",
+    spaceName: space ? str(space.name) : "",
+    venueID: venue ? str(venue.id) : "",
+    venueName: venue ? str(venue.name) : "",
+    isDeleted: pack ? !!pack.deleted_at : false,
+  };
+}
+
+function mapLeadPackAssociation(
+  row: DbRow,
+  parentKey: "quote_id" | "contact_id",
+  parentIdKey: "quoteID" | "contactID",
+) {
+  const pack = row.packs as DbRow | undefined;
+  const venueSpace = packVenueSpaceFromRow(pack);
+  const extraIDs = Array.isArray(row.extra_ids)
+    ? row.extra_ids.map((id) => str(id))
+    : [];
+  const extraParams = Array.isArray(row.extra_params) ? row.extra_params : [];
+
+  return {
+    id: str(row.id),
+    [parentIdKey]: str(row[parentKey]),
+    packID: str(row.pack_id),
+    createdAt: ts(row.created_at),
+    createdBy: row.created_by ? str(row.created_by) : null,
+    status: str(row.status),
+    extraIDs,
+    extraParams,
+    ...venueSpace,
+  };
+}
+
+export function mapQuotePack(row: DbRow) {
+  return mapLeadPackAssociation(row, "quote_id", "quoteID");
+}
+
+export function mapContactPack(row: DbRow) {
+  return mapLeadPackAssociation(row, "contact_id", "contactID");
+}
+
+export function parseQualityScore(value: unknown): number | null | undefined {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0 || n > 5) return undefined;
+  return n;
+}
+
+export function mapPackLookup(pack: DbRow) {
+  const venueSpace = packVenueSpaceFromRow(pack);
+  return {
+    packID: str(pack.id),
+    ...venueSpace,
+  };
+}
+
+export function maskName(value: unknown): string {
+  const s = str(value).trim();
+  if (!s) return "";
+  return `${s[0]}*****`;
+}
+
+export function maskEmail(value: unknown): string {
+  const s = str(value).trim();
+  if (!s) return "";
+  const at = s.indexOf("@");
+  if (at <= 0) return `${s[0]}*****`;
+  return `${s[0]}*****${s.slice(at)}`;
+}
+
+export function maskPhone(value: unknown): string {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  const visible = digits.slice(0, 2);
+  return `+${visible}*****`;
+}
+
+type EventHubPackInput = {
+  packID: string;
+  packName: string;
+  packReference: string;
+  spaceID: string;
+  spaceName: string;
+  venueID: string;
+  venueName: string;
+  status?: string;
+};
+
+export function mapLeadOutcome(ownerWon: boolean, decided: boolean) {
+  if (ownerWon) {
+    return { outcome: "won" as const, outcomeLabel: "Ganhou esta lead" };
+  }
+  if (decided) {
+    return {
+      outcome: "lost" as const,
+      outcomeLabel: "Atribuída a outro fornecedor",
+    };
+  }
+  return { outcome: "pending" as const, outcomeLabel: "Em aberto" };
+}
+
+export function countDistinctSpacesFromQuotePackRows(
+  rows: { packs?: DbRow }[],
+): number {
+  const spaceIds = new Set<string>();
+  for (const row of rows) {
+    const pack = row.packs;
+    const links = pack?.packs_spaces as
+      | { spaces?: DbRow }[]
+      | undefined;
+    for (const link of links ?? []) {
+      const spaceId = link.spaces?.id;
+      if (spaceId) spaceIds.add(str(spaceId));
+    }
+  }
+  return spaceIds.size;
+}
+
+export function mapLeadScope(associatedSpaceCount: number) {
+  if (associatedSpaceCount <= 1) {
+    return {
+      leadScope: "exclusive" as const,
+      associatedSpaceCount,
+      leadScopeLabel: "Lead exclusiva",
+    };
+  }
+  return {
+    leadScope: "shared" as const,
+    associatedSpaceCount,
+    leadScopeLabel: `Lead partilhada com mais ${associatedSpaceCount} espaços`,
+  };
+}
+
+function mapEventHubLeadBase(
+  row: DbRow,
+  leadType: "quote" | "contact",
+  matchedPacks: EventHubPackInput[],
+  associatedSpaceCount: number,
+  decided: boolean,
+) {
+  const qualityScore =
+    row.quality_score != null ? num(row.quality_score) : null;
+  const ownerWon = matchedPacks.some((p) => p.status === "won");
+
+  return {
+    id: str(row.id),
+    leadType,
+    leadTypeLabel:
+      leadType === "quote" ? "Pedido de orçamento" : "Pedido de contacto",
+    qualityScore,
+    ...mapLeadScope(associatedSpaceCount),
+    ...mapLeadOutcome(ownerWon, decided),
+    status: str(row.status ?? "new"),
+    createdAt: ts(row.created_at),
+    contact: {
+      name: maskName(row.name),
+      email: maskEmail(row.email),
+      phoneExtension:
+        row.phone_extension != null ? num(row.phone_extension) : null,
+      phoneNumber:
+        row.phone_number != null ? maskPhone(row.phone_number) : "",
+    },
+    suggestedPacks: matchedPacks,
+  };
+}
+
+export function mapEventHubQuoteLead(
+  quote: DbRow,
+  matchedPacks: EventHubPackInput[],
+  associatedSpaceCount: number,
+  decided = false,
+) {
+  const eventDate = quote.event_date
+    ? String(quote.event_date).slice(0, 10)
+    : null;
+
+  return {
+    ...mapEventHubLeadBase(
+      quote,
+      "quote",
+      matchedPacks,
+      associatedSpaceCount,
+      decided,
+    ),
+    eventKind: str(quote.event_kind),
+    eventDate,
+    startAt: quote.start_at ? intervalToGoDuration(quote.start_at) : null,
+    endAt: quote.end_at ? intervalToGoDuration(quote.end_at) : null,
+    timezone: str(quote.timezone),
+    numPeople: num(quote.num_people),
+    budget: quote.budget != null ? num(quote.budget) : null,
+    currency: str(quote.currency),
+    notes: str(quote.notes),
+    area: str(quote.area),
+    country: str(quote.country),
+    attributes: arr(quote.attributes),
+    companyEvent: Boolean(quote.company_event),
+    companyName: str(quote.company_name),
+    contactMethod: null,
+    message: null,
+  };
+}
+
+export function mapEventHubContactLead(
+  contact: DbRow,
+  matchedPacks: EventHubPackInput[],
+  associatedSpaceCount: number,
+  decided = false,
+) {
+  return {
+    ...mapEventHubLeadBase(
+      contact,
+      "contact",
+      matchedPacks,
+      associatedSpaceCount,
+      decided,
+    ),
+    eventKind: null,
+    eventDate: null,
+    startAt: null,
+    endAt: null,
+    timezone: null,
+    numPeople: null,
+    budget: null,
+    currency: null,
+    notes: null,
+    area: null,
+    country: null,
+    attributes: [],
+    companyEvent: false,
+    companyName: null,
+    contactMethod: str(contact.kind),
+    message: str(contact.message),
+  };
+}
+
+/** @deprecated Use mapEventHubQuoteLead */
+export function mapEventHubLead(
+  quote: DbRow,
+  matchedPacks: EventHubPackInput[],
+  associatedSpaceCount: number,
+) {
+  return mapEventHubQuoteLead(quote, matchedPacks, associatedSpaceCount);
 }
 
 export function collectPhotoIds(

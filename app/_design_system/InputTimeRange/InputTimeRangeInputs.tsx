@@ -2,14 +2,13 @@ import { TimeDuration } from "@/_utils/number";
 import InputSelect from "../InputSelect";
 import IconUserInterfaceMiscellaneousClock from "../_icons/UserInterface/Miscellaneous/Clock.svg";
 import { scheduleStartEndOptions } from "@/(onboarding)/onboarding/_components/Step4/Prices/Price";
-import { CSSProperties, useCallback, useEffect } from "react";
+import { CSSProperties, useCallback } from "react";
 
 const InputTimeRangeInputs = ({
   start,
   end,
   setStart,
   setEnd,
-  onReset,
   startStyle,
   endStyle,
   availableRanges,
@@ -20,7 +19,6 @@ const InputTimeRangeInputs = ({
   end?: TimeDuration | null;
   setStart?: (start: TimeDuration | null) => void;
   setEnd?: (end: TimeDuration | null) => void;
-  onReset?: () => void;
   startStyle?: CSSProperties;
   endStyle?: CSSProperties;
   availableRanges?: { start: TimeDuration; end: TimeDuration }[];
@@ -121,25 +119,6 @@ const InputTimeRangeInputs = ({
       ...option.selectOption,
       disabled: isEndOptionUnavailable(option),
     }));
-
-  useEffect(() => {
-    if (
-      (start && isStartOptionUnavailable(start)) ||
-      (end && isEndOptionUnavailable(end))
-    ) {
-      setStart?.(null);
-      setEnd?.(null);
-      onReset?.();
-    }
-  }, [
-    end,
-    isEndOptionUnavailable,
-    isStartOptionUnavailable,
-    onReset,
-    setEnd,
-    setStart,
-    start,
-  ]);
 
   return (
     <>

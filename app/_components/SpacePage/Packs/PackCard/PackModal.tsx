@@ -1,22 +1,18 @@
-import Image from "next/image";
 import Modal from "@/_design_system/Modal";
 import Stack from "@/_design_system/Stack";
+import { TextButton } from "@/_design_system/Button";
 import { Pack } from "@/_models/pack";
 import { createBEMClasses } from "@/_utils/classname";
 import { useMediaQuery } from "@/_utils/mediaQuery";
-import PhotoCarousel from "../../PhotoCarousel";
-import { getPhotoURLs, usePhotos } from "@/_models/photo";
 import AmenitiesItem, { AmenitiesList } from "@/_design_system/AmenitiesItem";
 import IconUserInterfaceMiscellaneousSeparatorDot from "@/_design_system/_icons/UserInterface/Miscellaneous/SeparatorDot.svg";
-import { useState } from "react";
-import { Button as AriaButton } from "react-aria-components";
 import InputCapacity from "@/_design_system/InputCapacity";
 import IconUserInterfaceMiscellaneousClock from "@/_design_system/_icons/UserInterface/Miscellaneous/Clock.svg";
 import PackCancellationLabel from "@/_components/PackCancellationLabel";
 import SimpleBar from "simplebar-react";
 import IconUserInterfaceMiscellaneousCapacity from "@/_design_system/_icons/UserInterface/Miscellaneous/Capacity.svg";
-import { useImageRatio } from "@/_utils/imageRatio";
 import IconUserInterfaceFormsCalendar from "@/_design_system/_icons/UserInterface/Forms/Calendar.svg";
+import { useAttachments } from "@/_models/attachment";
 
 const { block, element } = createBEMClasses("client-pack-modal");
 
@@ -31,12 +27,9 @@ const PackModal = ({
 }) => {
   const isMobile = useMediaQuery("large");
 
-  const { data: photos = [] } = usePhotos(pack.allPhotoIDs);
-
-  const [selected, setSelected] = useState(0);
-
-  const { containerRatio, imageRatio, containerRef, onLoadImage } =
-    useImageRatio(selected);
+  const { data: attachments = [] } = useAttachments(
+    pack.attachmentIDs?.length ? pack.attachmentIDs : undefined,
+  );
 
   return (
     <Modal
@@ -47,35 +40,23 @@ const PackModal = ({
       className={block()}
       contentStyle={isMobile ? { padding: 0 } : { overflow: "hidden" }}
     >
-      {isMobile ? (
-        <div className={element("photo-carousel")}>
-          <PhotoCarousel photoURLs={getPhotoURLs(photos, "large")} />
-        </div>
-      ) : (
-        <SimpleBar style={{ width: "55%", flexShrink: 0 }}>
-          <Stack gap="0.5rem" className={element("photo-grid")}>
-            <div
-              className={element("photo-grid__selected", {
-                fit: containerRatio > imageRatio ? "width" : "height",
-              })}
-              ref={containerRef}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="" src={photos[selected]?.large} onLoad={onLoadImage} />
-            </div>
-            <div className={element("photo-grid__list")}>
-              {photos.map((photo, index) => (
-                <div
-                  key={photo.id}
-                  className={element("photo-grid__list__option", {
-                    selected: selected === index,
-                  })}
-                >
-                  <Image alt="" src={photo.small} fill />
-                  <AriaButton onPress={() => setSelected(index)} />
-                </div>
+      {!!attachments.length && (
+        <SimpleBar
+          style={isMobile ? undefined : { width: "55%", flexShrink: 0 }}
+        >
+          <Stack gap="0.75rem" className={element("attachments")}>
+            <h5>Anexos</h5>
+            <ul className={element("attachments__list")}>
+              {attachments.map((attachment) => (
+                <li key={attachment.id} className={element("attachments__item")}>
+                  <TextButton
+                    text={attachment.filename}
+                    href={attachment.url}
+                    target="_blank"
+                  />
+                </li>
               ))}
-            </div>
+            </ul>
           </Stack>
         </SimpleBar>
       )}

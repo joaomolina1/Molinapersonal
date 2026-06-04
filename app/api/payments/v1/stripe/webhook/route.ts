@@ -1,7 +1,11 @@
 import { emptyResponse } from "@lib/api/context";
 import { createAdminClient } from "@lib/db";
 import { optionalEnvValue } from "@lib/env";
-import { getStripeClient, updatePaymentFromStripeEvent } from "@lib/stripe/checkout";
+import {
+  getStripeClient,
+  syncSubscriptionFromStripe,
+  updatePaymentFromStripeEvent,
+} from "@lib/stripe/checkout";
 import Stripe from "stripe";
 
 export async function POST(request: Request) {
@@ -38,6 +42,31 @@ export async function POST(request: Request) {
           status: "paid",
         });
         break;
+    }
+  }
+
+  if (event.type.startsWith("customer.subscription.")) {
+    const subscription = event.data.object as Stripe.Subscription;
+    await syncSubscriptionFromStripe(admin, subscription);
+  }
+
+  if (
+    event.type === "invoice.paid" ||
+    event.type === "invoice.payment_failed"
+  ) {
+    const invoice = event.data.object as Stripe.Invoice;
+    const subscriptionId =
+      typeof invoice.subscription === "string"
+        ? invoice.subscription
+        : invoice.subscription?.id;
+    if (subscriptionId) {
+      try {
+        const subscription =
+          await getStripeClient().subscriptions.retrieve(subscriptionId);
+        await syncSubscriptionFromStripe(admin, subscription);
+      } catch (err) {
+        console.error("Failed to sync subscription from invoice", err);
+      }
     }
   }
 

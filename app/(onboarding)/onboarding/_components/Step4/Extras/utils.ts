@@ -48,3 +48,39 @@ export const getExtraPriceType = (
 
 export type ExtraDraft = Partial<Omit<Extra, "id" | "type" | "mandatory">> &
   Pick<Extra, "id" | "type" | "mandatory">;
+
+export const getExtraPriceTypeLabel = (type: ExtraPriceType): string =>
+  EXTRA_PRICE_TYPES.find((item) => item.id === type)?.text ?? type;
+
+export const getExtraDraftError = (extra: ExtraDraft): string | undefined => {
+  if (!extra.description?.trim()) {
+    return "Indique a descrição do extra";
+  }
+
+  if (extra.type === "fixed") {
+    if (extra.fixedPrice === undefined) {
+      return "Indique o valor fixo";
+    }
+    return undefined;
+  }
+
+  if (extra.type === "per-hour") {
+    if (!extra.priceHour) {
+      return "Indique o valor por hora";
+    }
+    return undefined;
+  }
+
+  if (extra.type === "per-person") {
+    if (!extra.pricePax) {
+      return "Indique o valor por pessoa";
+    }
+    return undefined;
+  }
+
+  if (!extra.priceHour || !extra.pricePax) {
+    return "Indique o valor por hora e por pessoa";
+  }
+
+  return undefined;
+};

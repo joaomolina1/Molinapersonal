@@ -50,6 +50,9 @@ CREATE TRIGGER on_auth_user_created
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_new_user();
 
+-- Not exposed via PostgREST RPC (trigger-only)
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC;
+
 -- ---------------------------------------------------------------------------
 -- Venues domain
 -- ---------------------------------------------------------------------------
@@ -223,6 +226,7 @@ CREATE INDEX idx_highlights_space_mode ON public.highlights (space_id, mode);
 CREATE OR REPLACE FUNCTION public.update_search_vector()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SET search_path = public
 AS $$
 BEGIN
     NEW.search_vector :=
@@ -539,12 +543,24 @@ CREATE POLICY "Owners manage ical exports"
 CREATE POLICY "Owners manage ical imports"
     ON public.icals_imports FOR ALL USING (auth.uid() = owner_id);
 
--- Leads
+-- Leads (minimal validation; API also inserts via service role)
 CREATE POLICY "Anyone can submit quote"
-    ON public.quote FOR INSERT WITH CHECK (true);
+    ON public.quote FOR INSERT
+    WITH CHECK (
+        created_at IS NOT NULL
+        AND email IS NOT NULL
+        AND length(trim(email)) >= 3
+    );
 
 CREATE POLICY "Anyone can submit contact request"
-    ON public.contact_request FOR INSERT WITH CHECK (true);
+    ON public.contact_request FOR INSERT
+    WITH CHECK (
+        created_at IS NOT NULL
+        AND email IS NOT NULL
+        AND length(trim(email)) >= 3
+        AND message IS NOT NULL
+        AND length(trim(message)) >= 1
+    );
 
 -- Watchlist
 CREATE POLICY "Users manage own watchlist"

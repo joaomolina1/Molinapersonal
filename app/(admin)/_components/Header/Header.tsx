@@ -65,6 +65,18 @@ const AdminHeader = () => {
         </div>
         <div
           className={element("nav-link", {
+            active: pathname === "/admin/subscriptions",
+          })}
+        >
+          <Button
+            type="link-inverted"
+            leftIcon={<IconUserInterfaceMiscellaneousPromote />}
+            label="Subscrições"
+            href="/admin/subscriptions"
+          />
+        </div>
+        <div
+          className={element("nav-link", {
             active: pathname === "/admin/quotes",
           })}
         >

@@ -1,7 +1,6 @@
 import { AmenitiesList } from "@/_design_system/AmenitiesItem";
 import Button, { IconButton } from "@/_design_system/Button";
 import Callout from "@/_design_system/Callout";
-import Photo from "@/_design_system/Photo";
 import Stack from "@/_design_system/Stack";
 import Tag from "@/_design_system/Tag";
 import Tooltip from "@/_design_system/Tooltip";
@@ -11,7 +10,7 @@ import IconUserInterfaceMiscellaneousSeparatorDot from "@/_design_system/_icons/
 import IconUserInterfaceNavigationMenuVertical from "@/_design_system/_icons/UserInterface/Navigation/MenuVertical.svg";
 import { InputError } from "@/_design_system/_utils/InputWrapper";
 import { Pack, useCreatePackCopy, useDeletePack } from "@/_models/pack";
-import { usePhoto } from "@/_models/photo";
+import { useAttachments } from "@/_models/attachment";
 import { createBEMClasses } from "@/_utils/classname";
 import { isNotNil } from "@/_utils/filter";
 import { useMediaQuery } from "@/_utils/mediaQuery";
@@ -75,7 +74,9 @@ const PackCard = ({
     ),
   );
 
-  const { data: primaryPhoto } = usePhoto(pack.primaryPhotoID);
+  const { data: attachments = [] } = useAttachments(
+    pack.attachmentIDs?.length ? pack.attachmentIDs : undefined,
+  );
 
   return (
     <Stack gap="1rem" className={block()}>
@@ -86,9 +87,19 @@ const PackCard = ({
         alignItems="center"
         justifyContent="space-between"
       >
-        {!isMobile && !!primaryPhoto && (
-          <div className={element("photo")}>
-            <Photo src={primaryPhoto.medium} alt="" />
+        {!isMobile && attachments.length > 0 && (
+          <div className={element("attachments")}>
+            <p className={element("attachments__count")}>
+              {attachments.length}{" "}
+              {attachments.length === 1 ? "anexo" : "anexos"}
+            </p>
+            <ul className={element("attachments__list")}>
+              {attachments.slice(0, 3).map((attachment) => (
+                <li key={attachment.id} className={element("attachments__item")}>
+                  {attachment.filename}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
         <Stack gap="1rem" style={{ flex: 1, alignSelf: "flex-start" }}>

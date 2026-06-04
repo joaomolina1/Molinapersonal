@@ -375,7 +375,11 @@ const Location = ({ venue }: { venue: Venue }) => {
         subtitle={isMobile ? undefined : "Localização"}
       />
       <div className={element("map")}>
-        <MapWithPin latitude={venue.latitude} longitude={venue.longitude} />
+        <MapWithPin
+          latitude={venue.latitude}
+          longitude={venue.longitude}
+          zoom={venue.subscription === "basic" ? 12 : 16}
+        />
       </div>
     </Stack>
   );
@@ -429,16 +433,11 @@ const OtherSpaceStack = ({
 
   const otherSpaces = useSearchResults({
     query: {
-      top: venue.latitude + 0.001,
-      bottom: venue.latitude - 0.001,
-      left: venue.longitude - 0.001,
-      right: venue.longitude + 0.001,
+      venueID: venue.id,
+      pageSize: 50,
     },
     filter: (results) =>
-      results?.filter(
-        (searchResult) =>
-          searchResult.venueID === venue.id && searchResult.id !== spaceID,
-      ),
+      results?.filter((searchResult) => searchResult.id !== spaceID),
   });
 
   const handleOtherSpaceClick = (otherSpace: SearchResult) => {

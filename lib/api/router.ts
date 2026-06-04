@@ -8,14 +8,17 @@ import {
   handleDashboardRoute,
   handleEmailRoute,
   handleHighlightsRoute,
+  handleEventHubRoute,
   handleIcalRoute,
   handlePacksRoute,
   handlePaymentsRoute,
+  handleAttachmentsRoute,
   handlePhotosRoute,
   handleQuoteRoute,
   handleReviewsRoute,
   handleSearchRoute,
   handleSpacesRoute,
+  handleSubscriptionsRoute,
   handleUsersRoute,
   handleVenuesRoute,
   handleWatchlistRoute,
@@ -53,14 +56,20 @@ export async function dispatchApi(
         return handleUsersRoute(ctx, action);
       case "quote":
         return handleQuoteRoute(ctx, action, isPublic);
+      case "event-hub":
+        return handleEventHubRoute(ctx, action);
       case "contact":
         return handleContactRoute(ctx, action);
       case "watchlist":
         return handleWatchlistRoute(ctx, action);
       case "highlights":
         return handleHighlightsRoute(ctx, action);
+      case "subscriptions":
+        return handleSubscriptionsRoute(ctx, action);
       case "photos":
         return handlePhotosRoute(ctx, action);
+      case "attachments":
+        return handleAttachmentsRoute(ctx, action);
       case "payments":
         return handlePaymentsRoute(ctx, action);
       case "ical":

@@ -1,5 +1,5 @@
 import { createBEMClasses } from "@/_utils/classname";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDate,
   today,
@@ -21,15 +21,61 @@ import { scheduleStartEndOptions } from "@/(onboarding)/onboarding/_components/S
 import { TimeDuration } from "@/_utils/number";
 import { sendGAEvent } from "@next/third-parties/google";
 import { Venue } from "@/_models/venue";
-import { useSearchParamsArrayState } from "@/_services/searchParams";
+import {
+  useSearchParamsArrayState,
+} from "@/_services/searchParams";
+
+const EXTRA_PARAMS_DEBOUNCE_MS = 400;
 
 export const usePackSearch = () => {
   const { date, start, end, setDateStartEnd } = useDateStartEnd();
   const { numPeople, numPeopleDebounced, setNumPeople } = useNumPeople();
-  const [extras, setExtras] = useSearchParamsArrayState<string>("extra");
+  const [extrasFromUrl, setExtrasUrl] =
+    useSearchParamsArrayState<string>("extra");
+  const extrasFromUrlKey = extrasFromUrl.join(",");
+  const [extras, setExtrasState] = useState(extrasFromUrl);
   const [extraParams, setExtraParamsState] = useState<
     Record<string, { hours?: number; pax?: number }>
   >({});
+  const [extraParamsDebounced, setExtraParamsDebounced] = useState(extraParams);
+  const extraParamsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setExtrasState((prev) => {
+      if (
+        prev.length === extrasFromUrl.length &&
+        prev.every((value, index) => value === extrasFromUrl[index])
+      ) {
+        return prev;
+      }
+
+      return extrasFromUrl;
+    });
+  }, [extrasFromUrlKey]);
+
+  useEffect(() => {
+    if (extraParamsTimerRef.current) {
+      clearTimeout(extraParamsTimerRef.current);
+    }
+
+    extraParamsTimerRef.current = setTimeout(() => {
+      setExtraParamsDebounced(extraParams);
+    }, EXTRA_PARAMS_DEBOUNCE_MS);
+
+    return () => {
+      if (extraParamsTimerRef.current) {
+        clearTimeout(extraParamsTimerRef.current);
+      }
+    };
+  }, [extraParams]);
+
+  const setExtras = useCallback(
+    (values: string[]) => {
+      setExtrasState(values);
+      setExtrasUrl(values);
+    },
+    [setExtrasUrl],
+  );
 
   const setExtraParams = useCallback(
     (
@@ -39,7 +85,9 @@ export const usePackSearch = () => {
             prev: Record<string, { hours?: number; pax?: number }>,
           ) => Record<string, { hours?: number; pax?: number }>),
     ) => {
-      setExtraParamsState(value);
+      setExtraParamsState((prev) =>
+        typeof value === "function" ? value(prev) : value,
+      );
     },
     [],
   );
@@ -49,7 +97,7 @@ export const usePackSearch = () => {
   const startEndRef = useRef<HTMLButtonElement>(null);
   const numPeopleRef = useRef<HTMLInputElement>(null);
 
-  const focusOnUnfilledInput = () => {
+  const focusOnUnfilledInput = useCallback(() => {
     if (!date) {
       dateRef.current?.click();
       return;
@@ -62,13 +110,12 @@ export const usePackSearch = () => {
 
     if (!numPeople) {
       numPeopleRef.current?.focus();
-      return;
     }
-  };
+  }, [date, start, end, numPeople, dateRef]);
 
-  const scrollIntoView = () => {
+  const scrollIntoView = useCallback(() => {
     dateScrollIntoView();
-  };
+  }, [dateScrollIntoView]);
 
   return {
     date,
@@ -81,6 +128,7 @@ export const usePackSearch = () => {
     extras,
     setExtras,
     extraParams,
+    extraParamsDebounced,
     setExtraParams,
     refs: {
       date: dateRef,
@@ -115,15 +163,41 @@ const PackSearch = ({
     date_from: today(getLocalTimeZone()).toString(),
   });
 
+  const packScheduleKey = useMemo(
+    () => getPackScheduleKey(allPacks),
+    [allPacks],
+  );
+
+  const publicBookingsKey = useMemo(
+    () =>
+      publicBookings
+        .map(
+          (booking) =>
+            `${booking.date}-${booking.start?.id ?? ""}-${booking.end?.id ?? ""}`,
+        )
+        .join("|"),
+    [publicBookings],
+  );
+
+  const allPacksRef = useRef(allPacks);
+  allPacksRef.current = allPacks;
+
+  const publicBookingsRef = useRef(publicBookings);
+  publicBookingsRef.current = publicBookings;
+
   const isDateUnavailable = useCallback(
     (date: CalendarDate) =>
-      getIsDateUnavailable(date, allPacks, publicBookings),
-    [allPacks, publicBookings],
+      getIsDateUnavailable(
+        date,
+        allPacksRef.current,
+        publicBookingsRef.current,
+      ),
+    [packScheduleKey, publicBookingsKey],
   );
 
   const allAvailableRanges = useMemo(
-    () => getAvailableRanges(allPacks),
-    [allPacks],
+    () => getAvailableRanges(allPacksRef.current),
+    [packScheduleKey],
   );
 
   const availableRanges = useMemo(
@@ -134,43 +208,148 @@ const PackSearch = ({
     [allAvailableRanges, date],
   );
 
-  const unavailableRanges = useMemo(
+  const availableRangesKey = useMemo(
     () =>
-      date ? getUnavailableRangesForDate(date, publicBookings) : undefined,
-    [date, publicBookings],
+      availableRanges
+        .map(
+          (range) =>
+            `${range.start.id}-${range.end.id}-${range.from.toString()}-${range.to.toString()}-${range.daysOfWeek.join(",")}`,
+        )
+        .join("|"),
+    [availableRanges],
   );
 
-  const handlePackDateSearch = (newDate: CalendarDate | null) => {
-    sendGAEvent("event", "Rinu_CustomClick", {
-      Rinu_ScreenName: "/space",
-      Rinu_ItemCategory: "Parametros",
-      ...getGaPackSearchData(space, venue, packSearch),
-      Rinu_eLabel5: newDate?.toString(),
-    });
-  };
+  const unavailableRanges = useMemo(
+    () =>
+      date
+        ? getUnavailableRangesForDate(date, publicBookingsRef.current)
+        : undefined,
+    [date, publicBookingsKey],
+  );
 
-  const handlePackTimeRangeSearch = (
-    newStart: TimeDuration | null,
-    newEnd: TimeDuration | null,
-  ) => {
-    sendGAEvent("event", "Rinu_CustomClick", {
-      Rinu_ScreenName: "/space",
-      Rinu_ItemCategory: "Parametros",
-      ...getGaPackSearchData(space, venue, packSearch),
-      Rinu_eLabel6: newStart
-        ? `${newStart?.timeLabel}-${newEnd?.timeLabel}`
-        : null,
-    });
-  };
+  const unavailableRangesKey = useMemo(
+    () =>
+      unavailableRanges
+        ?.map((range) => `${range.start.id}-${range.end.id}`)
+        .join("|") ?? "",
+    [unavailableRanges],
+  );
 
-  const handlePackNumberSearch = (numPeople: number | null) => {
-    sendGAEvent("event", "Rinu_CustomClick", {
-      Rinu_ScreenName: "/space",
-      Rinu_ItemCategory: "Parametros",
-      ...getGaPackSearchData(space, venue, packSearch),
-      Rinu_eLabel7: numPeople,
-    });
-  };
+  const stableAvailableRanges = useMemo(
+    () => availableRanges,
+    [availableRangesKey],
+  );
+
+  const stableUnavailableRanges = useMemo(
+    () => unavailableRanges,
+    [unavailableRangesKey],
+  );
+
+  const didValidateInitialTimes = useRef(false);
+
+  useEffect(() => {
+    if (didValidateInitialTimes.current || !date || !start || !end) {
+      return;
+    }
+
+    if (!allAvailableRanges.length) {
+      return;
+    }
+
+    didValidateInitialTimes.current = true;
+
+    const rangesForDate = getAvailableRangesForDate(date, allAvailableRanges);
+    const isValid = isTimeRangeAvailable(
+      start,
+      end,
+      rangesForDate,
+      date,
+      publicBookingsRef.current,
+    );
+
+    if (!isValid) {
+      setDateStartEnd(date, null, null);
+    }
+  }, [
+    allAvailableRanges,
+    date,
+    end,
+    setDateStartEnd,
+    start,
+  ]);
+
+  const handleDateChange = useCallback(
+    (newDate: CalendarDate | null) => {
+      let nextStart = start;
+      let nextEnd = end;
+
+      if (newDate && start && end) {
+        const rangesForDate = getAvailableRangesForDate(
+          newDate,
+          allAvailableRanges,
+        );
+        const isTimeRangeValid = isTimeRangeAvailable(
+          start,
+          end,
+          rangesForDate,
+          newDate,
+          publicBookingsRef.current,
+        );
+
+        if (!isTimeRangeValid) {
+          nextStart = null;
+          nextEnd = null;
+        }
+      }
+
+      setDateStartEnd(newDate, nextStart, nextEnd);
+      sendGAEvent("event", "Rinu_CustomClick", {
+        Rinu_ScreenName: "/space",
+        Rinu_ItemCategory: "Parametros",
+        ...getGaPackSearchData(space, venue, packSearch),
+        Rinu_eLabel5: newDate?.toString(),
+      });
+    },
+    [
+      allAvailableRanges,
+      end,
+      packSearch,
+      setDateStartEnd,
+      space,
+      start,
+      venue,
+    ],
+  );
+
+  const handleTimeRangeChange = useCallback(
+    (newStart: TimeDuration | null, newEnd: TimeDuration | null) => {
+      setDateStartEnd(date, newStart, newEnd);
+      sendGAEvent("event", "Rinu_CustomClick", {
+        Rinu_ScreenName: "/space",
+        Rinu_ItemCategory: "Parametros",
+        ...getGaPackSearchData(space, venue, packSearch),
+        Rinu_eLabel6: newStart
+          ? `${newStart?.timeLabel}-${newEnd?.timeLabel}`
+          : null,
+      });
+    },
+    [date, packSearch, setDateStartEnd, space, venue],
+  );
+
+  const handleNumPeopleChange = useCallback(
+    (value: number | undefined) => {
+      const numPeople = value ?? null;
+      setNumPeople(numPeople, () => {
+        sendGAEvent("event", "Rinu_CustomClick", {
+          Rinu_ScreenName: "/space",
+          Rinu_ItemCategory: "Parametros",
+          ...getGaPackSearchData(space, venue, packSearch),
+          Rinu_eLabel7: numPeople,
+        });
+      });
+    },
+    [packSearch, setNumPeople, space, venue],
+  );
 
   return (
     <div className={block()}>
@@ -178,10 +357,7 @@ const PackSearch = ({
         <InputDate
           label="Data"
           value={date}
-          onChange={(newDate) => {
-            setDateStartEnd(newDate, start, end);
-            handlePackDateSearch(newDate);
-          }}
+          onChange={handleDateChange}
           showIcon={false}
           isDateUnavailable={isDateUnavailable}
           ref={refs.date}
@@ -190,22 +366,15 @@ const PackSearch = ({
           label="Horas"
           start={start}
           end={end}
-          onChange={(newStart, newEnd) => {
-            setDateStartEnd(date, newStart, newEnd);
-            handlePackTimeRangeSearch(newStart, newEnd);
-          }}
-          availableRanges={availableRanges}
-          unavailableRanges={unavailableRanges}
+          onChange={handleTimeRangeChange}
+          availableRanges={stableAvailableRanges}
+          unavailableRanges={stableUnavailableRanges}
           ref={refs.startEnd}
         />
         <InputNumber
           label="Pessoas"
           value={numPeople ?? undefined}
-          onChange={(numPeople) => {
-            setNumPeople(numPeople ?? null, () =>
-              handlePackNumberSearch(numPeople ?? null),
-            );
-          }}
+          onChange={handleNumPeopleChange}
           allowNegative={false}
           decimalScale={0}
           ref={refs.persons}
@@ -217,24 +386,63 @@ const PackSearch = ({
 
 export default PackSearch;
 
+function getPackScheduleKey(allPacks: Pack[]) {
+  const parts: string[] = [];
+
+  for (const pack of allPacks) {
+    parts.push(String(pack.noticeDays ?? 0));
+    for (const price of pack.prices) {
+      parts.push(`${price.from?.slice(0, 10) ?? ""}:${price.to?.slice(0, 10) ?? ""}`);
+      for (const schedule of price.schedules) {
+        parts.push(
+          [
+            schedule.start?.string ?? "",
+            schedule.end?.string ?? "",
+            schedule.daysOfWeek.join(","),
+          ].join(":"),
+        );
+      }
+    }
+  }
+
+  return parts.join("|");
+}
+
 const getAvailableRanges = (allPacks: Pack[]) => {
   return allPacks.flatMap((pack) =>
-    pack.prices.flatMap((price) =>
-      price.schedules
+    pack.prices.flatMap((price) => {
+      const from = safeParsePriceDate(price.from);
+      const to = safeParsePriceDate(price.to);
+
+      if (!from || !to) {
+        return [];
+      }
+
+      return price.schedules
         .filter((schedule) => !!schedule.start && !!schedule.end)
         .map((schedule) => ({
           start: schedule.start!,
           end: schedule.end!,
           from: maxDate(
-            parseDate(price.from.slice(0, 10)),
+            from,
             today("Europe/Lisbon").add({ days: pack.noticeDays ?? 0 }),
           )!,
-          to: parseDate(price.to.slice(0, 10)),
+          to,
           daysOfWeek: schedule.daysOfWeek,
-        })),
-    ),
+        }));
+    }),
   );
 };
+
+function safeParsePriceDate(value: string | null | undefined) {
+  if (!value?.trim()) return null;
+
+  try {
+    return parseDate(value.slice(0, 10));
+  } catch {
+    return null;
+  }
+}
 
 type AvailableRanges = ReturnType<typeof getAvailableRanges>;
 
@@ -242,13 +450,14 @@ const getAvailableRangesForDate = (
   date: CalendarDate,
   availableRanges: AvailableRanges,
 ) => {
+  const dayId = getDayOfWeekId(date);
+  if (!dayId) return [];
+
   return availableRanges.filter(
     (schedule) =>
       date.compare(schedule.from) >= 0 &&
       date.compare(schedule.to) <= 0 &&
-      schedule.daysOfWeek.includes(
-        DAYS_OF_WEEK[getDayOfWeek(date, "pt-DE")].id,
-      ),
+      schedule.daysOfWeek.includes(dayId),
   );
 };
 
@@ -268,6 +477,52 @@ const getUnavailableRangesForDate = (
       start: range.start!,
       end: range.end!,
     }));
+};
+
+const getDayOfWeekId = (date: CalendarDate) => {
+  const day = DAYS_OF_WEEK[getDayOfWeek(date, "pt-DE")];
+  return day?.id;
+};
+
+const isTimeRangeAvailable = (
+  start: TimeDuration,
+  end: TimeDuration,
+  availableRanges: AvailableRanges,
+  date: CalendarDate,
+  publicBookings: {
+    start: TimeDuration | null;
+    end: TimeDuration | null;
+    date: CalendarDate;
+  }[],
+) => {
+  const dayId = getDayOfWeekId(date);
+  if (!dayId) return false;
+
+  const rangesForDay = availableRanges.filter(
+    (schedule) =>
+      date.compare(schedule.from) >= 0 &&
+      date.compare(schedule.to) <= 0 &&
+      schedule.daysOfWeek.includes(dayId),
+  );
+
+  if (rangesForDay.length === 0) return false;
+
+  const startAvailable = rangesForDay.some(
+    (range) =>
+      start.number >= range.start.number && start.number < range.end.number,
+  );
+  const endAvailable = rangesForDay.some(
+    (range) => end.number > range.start.number && end.number <= range.end.number,
+  );
+
+  if (!startAvailable || !endAvailable) return false;
+
+  const unavailableRanges = getUnavailableRangesForDate(date, publicBookings);
+
+  return !unavailableRanges.some(
+    (range) =>
+      start.number < range.end.number && end.number > range.start.number,
+  );
 };
 
 const getIsDateUnavailable = (
