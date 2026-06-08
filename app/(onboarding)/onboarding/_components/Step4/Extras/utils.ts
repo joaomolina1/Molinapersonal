@@ -1,3 +1,7 @@
+import { v4 as uuidv4 } from "uuid";
+
+export const EXTRA_COPY_PREFIX = "(copia) ";
+
 export type Extra = {
   id: string;
   type: ExtraPriceType;
@@ -51,6 +55,17 @@ export type ExtraDraft = Partial<Omit<Extra, "id" | "type" | "mandatory">> &
 
 export const getExtraPriceTypeLabel = (type: ExtraPriceType): string =>
   EXTRA_PRICE_TYPES.find((item) => item.id === type)?.text ?? type;
+
+export const cloneExtraDraft = (extra: ExtraDraft): ExtraDraft => {
+  const description = extra.description?.trim();
+  return {
+    ...extra,
+    id: uuidv4(),
+    description: description
+      ? `${EXTRA_COPY_PREFIX}${description}`
+      : EXTRA_COPY_PREFIX.trim(),
+  };
+};
 
 export const getExtraDraftError = (extra: ExtraDraft): string | undefined => {
   if (!extra.description?.trim()) {

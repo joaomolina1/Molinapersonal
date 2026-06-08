@@ -13,7 +13,12 @@ import {
   useAdminLeadPackPreview,
   useAssociateQuotePack,
 } from "@/_models/quote";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  manualInitialExtraSelection,
+  usesExtraHours,
+  usesExtraPax,
+} from "@lib/extras/quantities";
 import { useShowToast } from "@/_design_system/Toast";
 import { createBEMClasses } from "@/_utils/classname";
 import ValueWithLabel from "@/(host)/_components/ValueWithLabel";
@@ -42,6 +47,7 @@ type AssociatePackModalProps = {
   leadContext: AssociatePackLeadContext;
   associatedPackIds: string[];
   currentCount: number;
+  stacked?: boolean;
 };
 
 const extraParamsToApi = (params: AdminExtraParams) =>
@@ -57,12 +63,15 @@ const AssociatePackModal = ({
   leadContext,
   associatedPackIds,
   currentCount,
+  stacked = false,
 }: AssociatePackModalProps) => {
   const [search, setSearch] = useState("");
   const [packIdInput, setPackIdInput] = useState("");
   const [selectedFromList, setSelectedFromList] = useState<string | undefined>();
   const [extraIDs, setExtraIDs] = useState<string[]>([]);
   const [extraParams, setExtraParams] = useState<AdminExtraParams>({});
+  const extrasInitPackRef = useRef<string | null>(null);
+  const lastPreviewFetchKeyRef = useRef("");
   const showToast = useShowToast();
 
   const trimmedPackId = packIdInput.trim();
@@ -120,6 +129,15 @@ const AssociatePackModal = ({
     !alreadyAssociated &&
     !lookup.isDeleted;
 
+  const previewExtrasKey = useMemo(
+    () =>
+      JSON.stringify({
+        ids: [...extraIDs].sort(),
+        params: extraParamsToApi(extraParams),
+      }),
+    [extraIDs, extraParams],
+  );
+
   useEffect(() => {
     if (!isOpen) {
       setSearch("");
@@ -127,6 +145,8 @@ const AssociatePackModal = ({
       setSelectedFromList(undefined);
       setExtraIDs([]);
       setExtraParams({});
+      extrasInitPackRef.current = null;
+      lastPreviewFetchKeyRef.current = "";
       resetPreview();
     }
   }, [isOpen, resetPreview]);
@@ -143,11 +163,68 @@ const AssociatePackModal = ({
   }, [searchQuery]);
 
   useEffect(() => {
+    if (!isOpen || !activePackId) {
+      extrasInitPackRef.current = null;
+      return;
+    }
+    if (
+      extrasInitPackRef.current &&
+      extrasInitPackRef.current !== activePackId
+    ) {
+      extrasInitPackRef.current = null;
+      setExtraIDs([]);
+      setExtraParams({});
+      lastPreviewFetchKeyRef.current = "";
+    }
+  }, [activePackId, isOpen]);
+
+  useEffect(() => {
+    const packId = preview?.pack?.id;
+    if (!packId || packId !== activePackId) return;
+    if (extrasInitPackRef.current === packId) return;
+
+    const packExtras = preview.pack.extras ?? [];
+    const ids = new Set(
+      packExtras.filter((e) => e.mandatory).map((e) => e.id),
+    );
+    const params: AdminExtraParams = {};
+
+    for (const extra of packExtras) {
+      if (!ids.has(extra.id)) continue;
+      if (usesExtraHours(extra) || usesExtraPax(extra)) {
+        const initial = manualInitialExtraSelection(
+          extra,
+          leadContext.eventHours,
+          leadContext.eventPax,
+        );
+        params[extra.id] = {
+          hours: initial.hours ?? undefined,
+          pax: initial.pax ?? undefined,
+        };
+      }
+    }
+
+    setExtraIDs([...ids]);
+    setExtraParams(params);
+    extrasInitPackRef.current = packId;
+  }, [
+    activePackId,
+    leadContext.eventHours,
+    leadContext.eventPax,
+    preview?.pack?.id,
+  ]);
+
+  useEffect(() => {
     if (!activePackId || !isOpen) {
+      lastPreviewFetchKeyRef.current = "";
       resetPreview();
       return;
     }
+
+    const fetchKey = `${activePackId}|${leadContext.type}|${leadContext.id}|${previewExtrasKey}`;
     const t = setTimeout(() => {
+      if (fetchKey === lastPreviewFetchKeyRef.current) return;
+      lastPreviewFetchKeyRef.current = fetchKey;
       fetchPreview({
         packID: activePackId,
         leadType: leadContext.type,
@@ -165,19 +242,9 @@ const AssociatePackModal = ({
     isOpen,
     leadContext.id,
     leadContext.type,
+    previewExtrasKey,
     resetPreview,
   ]);
-
-  useEffect(() => {
-    if (!preview?.pack.extras?.length) return;
-    const mandatory = preview.pack.extras
-      .filter((e) => e.mandatory)
-      .map((e) => e.id);
-    setExtraIDs((prev) => {
-      const merged = new Set([...prev, ...mandatory]);
-      return [...merged];
-    });
-  }, [preview?.pack.id]);
 
   const handleSubmit = async () => {
     if (!activePackId || !canAssociate) return;
@@ -213,6 +280,7 @@ const AssociatePackModal = ({
       width="x-large"
       ariaLabel="Associar pack ao pedido"
       className={block()}
+      stacked={stacked}
     >
       <Stack gap="1.5rem">
         <p>
@@ -246,7 +314,7 @@ const AssociatePackModal = ({
           }
         />
 
-        {activePackId && isPreviewLoading && (
+        {activePackId && isPreviewLoading && !preview && (
           <p className={element("hint")}>A carregar pack…</p>
         )}
         {alreadyAssociated && (
@@ -275,6 +343,11 @@ const AssociatePackModal = ({
         )}
 
         {preview?.pack.extras && preview.pack.extras.length > 0 && (
+          <div className={element("extras")}>
+            <p className={element("hint")}>
+              Depois de associar, pode alterar horas e pessoas por extra na página
+              do pedido em «Configurar extras» em cada pack.
+            </p>
           <AdminPackExtras
             extras={preview.pack.extras}
             extraIDs={extraIDs}
@@ -285,8 +358,8 @@ const AssociatePackModal = ({
             }}
             eventHours={leadContext.eventHours}
             eventPax={leadContext.eventPax}
-            canConfigure={leadContext.canPrice}
           />
+          </div>
         )}
 
         {priceHint && <p className={element("hint")}>{priceHint}</p>}

@@ -9,21 +9,16 @@ import { useState } from "react";
 import AssociatePackModal, {
   AssociatePackLeadContext,
 } from "../AssociatePackModal";
+import LeadPackExtrasEditor from "../LeadPackExtrasEditor";
 import { createBEMClasses } from "@/_utils/classname";
+import { ContactPackAssociation } from "@/_models/contact";
+import { QuotePackAssociation } from "@/_models/quote";
 
 const { block, element } = createBEMClasses("lead-packs-manager");
 
 const MAX_PACKS = 5;
 
-export type LeadPackItem = {
-  id: string;
-  packID: string;
-  packName: string;
-  packReference: string;
-  spaceName: string;
-  venueName: string;
-  status: string;
-};
+type LeadPackAssociation = QuotePackAssociation | ContactPackAssociation;
 
 const LeadPacksManager = ({
   packs,
@@ -33,7 +28,7 @@ const LeadPacksManager = ({
   onRemove,
   onToggleWinner,
 }: {
-  packs: LeadPackItem[];
+  packs: LeadPackAssociation[];
   isLoading: boolean;
   leadContext: AssociatePackLeadContext;
   isMutating: boolean;
@@ -41,6 +36,7 @@ const LeadPacksManager = ({
   onToggleWinner: (packId: string, next: "suggested" | "won") => void;
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedPackId, setExpandedPackId] = useState<string | null>(null);
 
   return (
     <Stack gap="0.75rem" alignItems="flex-start" className={block()}>
@@ -48,8 +44,7 @@ const LeadPacksManager = ({
         Packs associados ({packs.length}/{MAX_PACKS})
       </strong>
       <p className={element("hint")}>
-        Marque como vencedor o(s) pack(s) que ganharam a lead. Pode marcar mais
-        do que um (fornecedores diferentes na mesma lead).
+        Marque vencedores e configure extras (horas/pax) em cada pack associado.
       </p>
 
       {isLoading && <p>A carregar packs...</p>}
@@ -60,6 +55,7 @@ const LeadPacksManager = ({
 
       {packs.map((pack) => {
         const isWinner = pack.status === "won";
+        const isExpanded = expandedPackId === pack.packID;
         return (
           <div
             key={pack.id}
@@ -77,9 +73,14 @@ const LeadPacksManager = ({
               <span className={element("item__meta")}>
                 {pack.spaceName} · {pack.venueName}
               </span>
+              {pack.extraIDs.length > 0 && (
+                <span className={element("item__meta")}>
+                  {pack.extraIDs.length} extra(s) selecionado(s)
+                </span>
+              )}
             </Stack>
 
-            <Stack row gap="0.5rem" alignItems="center">
+            <Stack row gap="0.5rem" alignItems="center" flexWrap="wrap">
               <Button
                 type={isWinner ? "primary" : "secondary"}
                 label={isWinner ? "Vencedor ✓" : "Marcar vencedor"}
@@ -91,6 +92,13 @@ const LeadPacksManager = ({
                 }
                 disabled={isMutating}
               />
+              <Button
+                type="secondary"
+                label={isExpanded ? "Ocultar extras" : "Configurar extras"}
+                onClick={() =>
+                  setExpandedPackId(isExpanded ? null : pack.packID)
+                }
+              />
               <IconButton
                 ariaLabel="Remover pack"
                 icon={<IconUserInterfaceActionsClose />}
@@ -99,6 +107,13 @@ const LeadPacksManager = ({
                 disabled={isMutating}
               />
             </Stack>
+
+            {isExpanded && (
+              <LeadPackExtrasEditor
+                leadContext={leadContext}
+                association={pack}
+              />
+            )}
           </div>
         );
       })}
@@ -116,6 +131,7 @@ const LeadPacksManager = ({
         leadContext={leadContext}
         associatedPackIds={packs.map((p) => p.packID)}
         currentCount={packs.length}
+        stacked
       />
     </Stack>
   );

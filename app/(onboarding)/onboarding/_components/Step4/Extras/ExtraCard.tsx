@@ -3,6 +3,7 @@
 import Stack from "@/_design_system/Stack";
 import Tag from "@/_design_system/Tag";
 import { IconButton } from "@/_design_system/Button";
+import IconUserInterfaceActionsCopy from "@/_design_system/_icons/UserInterface/Actions/Copy.svg";
 import IconUserInterfaceActionsDelete from "@/_design_system/_icons/UserInterface/Actions/Delete.svg";
 import IconUserInterfaceActionsEdit from "@/_design_system/_icons/UserInterface/Actions/Edit.svg";
 import Tooltip from "@/_design_system/Tooltip";
@@ -67,11 +68,13 @@ const formatExtraQuantityLines = (extra: ExtraDraft): string[] => {
 const ExtraCard = ({
   extra,
   onEdit,
+  onCopy,
   onDelete,
   showError,
 }: {
   extra: ExtraDraft;
   onEdit: () => void;
+  onCopy: () => void;
   onDelete: () => void;
   showError?: boolean;
 }) => {
@@ -113,6 +116,11 @@ const ExtraCard = ({
           ))}
         </Stack>
         <Stack row gap="0.25rem" className={element("card-actions")}>
+          <IconButton
+            icon={<IconUserInterfaceActionsCopy />}
+            onClick={onCopy}
+            ariaLabel="Copiar extra"
+          />
           <IconButton
             icon={<IconUserInterfaceActionsEdit />}
             onClick={onEdit}

@@ -5,6 +5,7 @@ import {
 } from "@/_constants/quote/statuses";
 import { useFetch } from "@/_services/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { LeadsListParams, contactsListQueryKey } from "@/_models/leadsList";
 
 import type { LeadPackExtraParam } from "@/_models/quote";
 
@@ -29,6 +30,11 @@ export class Contact {
   constructor(data: any) {
     Object.assign(this, data);
     this.status = data.status ?? "new";
+    this.assignedAdminIds = Array.isArray(data.assigned_admin_ids)
+      ? data.assigned_admin_ids.map(String)
+      : Array.isArray(data.assignedAdminIds)
+        ? data.assignedAdminIds.map(String)
+        : [];
     this.qualityScore =
       data.qualityScore != null
         ? (data.qualityScore as LeadQualityScore)
@@ -53,6 +59,7 @@ export class Contact {
   pack_name?: string;
   message!: string;
   status!: QuoteStatus;
+  assignedAdminIds!: string[];
   qualityScore!: LeadQualityScore | null;
 
   get statusWording() {
@@ -60,15 +67,29 @@ export class Contact {
   }
 }
 
-export const useContacts = () => {
+export const useContacts = (params?: LeadsListParams) => {
   const fetchApi = useFetch();
 
   return useQuery<Contact[]>({
-    queryKey: ["contact"],
+    queryKey: contactsListQueryKey(params),
     queryFn: () =>
-      fetchApi("contact").then((contacts: any[]) =>
+      fetchApi("contact", undefined, undefined, undefined, {
+        q: params?.q || undefined,
+        assigned: params?.assigned,
+      }).then((contacts: any[]) =>
         contacts.map((contact) => new Contact(contact)),
       ),
+  });
+};
+
+export const useContact = (contactId?: string) => {
+  const fetchApi = useFetch();
+
+  return useQuery<Contact>({
+    queryKey: ["contact", contactId],
+    queryFn: () =>
+      fetchApi("contact", contactId!).then((row) => new Contact(row)),
+    enabled: !!contactId,
   });
 };
 
@@ -161,18 +182,22 @@ export const useUpdateContactLead = () => {
       contactId: string;
       status?: QuoteStatus;
       qualityScore?: LeadQualityScore | null;
+      assignedAdminIds?: string[];
     }
   >({
-    mutationFn: ({ contactId, status, qualityScore }) =>
+    mutationFn: ({ contactId, status, qualityScore, assignedAdminIds }) =>
       fetchApi("contact", contactId, {
         method: "PATCH",
         body: {
           ...(status !== undefined ? { status } : {}),
           ...(qualityScore !== undefined ? { qualityScore } : {}),
+          ...(assignedAdminIds !== undefined ? { assignedAdminIds } : {}),
         },
       }),
-    onSettled: () => {
+    onSettled: (_data, _err, { contactId }) => {
       queryClient.invalidateQueries({ queryKey: ["contact"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-list"] });
+      queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
     },
   });
 };

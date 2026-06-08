@@ -21,6 +21,14 @@
       border-radius: 4px;
       padding: 0.5rem;
     }
+
+    &--interactive {
+      cursor: pointer;
+
+      &:hover {
+        background: rgb(37 99 235 / 6%);
+      }
+    }
   }
 
   &__price {

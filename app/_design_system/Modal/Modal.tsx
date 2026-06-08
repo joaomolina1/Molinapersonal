@@ -30,6 +30,8 @@ export type ModalProps = {
   footer?: ReactNode;
   className?: string;
   contentStyle?: CSSProperties;
+  /** Raise overlay above another open modal (e.g. associate pack inside lead detail). */
+  stacked?: boolean;
 };
 
 const { block, element } = createBEMClasses("modal");
@@ -48,6 +50,7 @@ const Modal = ({
   footer,
   className,
   contentStyle,
+  stacked = false,
   children,
 }: PropsWithChildren<ModalProps>) => {
   // On IOS Safari, the keyboard hides a portion of the page.
@@ -79,6 +82,7 @@ const Modal = ({
         "mobile-height": mobileHeight,
         "stick-to-bottom": stickToBottom,
         "mobile-ignore-keyboard": mobileIgnoreKeyboard,
+        stacked,
       })}
       isOpen={isOpen}
       onOpenChange={onOpenChange}

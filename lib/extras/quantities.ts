@@ -108,6 +108,62 @@ export function reconcileExtraSelection(
   };
 }
 
+// Manual resolution for admin tooling: respects the extra's own min/max but is
+// NOT capped to the event duration/headcount, so an admin can set any value
+// even when the lead has no date/time/people.
+export function manualExtraHours(
+  extra: ExtraQuantityConfig,
+  selectedHours?: number | null,
+): number | null {
+  if (!usesExtraHours(extra)) return null;
+  if (selectedHours == null) return null;
+  return clampValue(selectedHours, extra.minHour, extra.maxHour);
+}
+
+export function manualExtraPax(
+  extra: ExtraQuantityConfig,
+  selectedPax?: number | null,
+): number | null {
+  if (!usesExtraPax(extra)) return null;
+  if (selectedPax == null) return null;
+  return clampValue(selectedPax, extra.minPax, extra.maxPax);
+}
+
+export function manualInitialExtraSelection(
+  extra: ExtraQuantityConfig,
+  eventHours: number,
+  eventPax: number,
+): ExtraSelection {
+  const defaultHours =
+    extra.defaultHour != null && extra.defaultHour > 0
+      ? extra.defaultHour
+      : eventHours > 0
+        ? eventHours
+        : null;
+  const defaultPax =
+    extra.defaultPax != null && extra.defaultPax > 0
+      ? extra.defaultPax
+      : eventPax > 0
+        ? eventPax
+        : null;
+  return {
+    id: extra.id,
+    hours: manualExtraHours(extra, defaultHours),
+    pax: manualExtraPax(extra, defaultPax),
+  };
+}
+
+export function reconcileManualExtraSelection(
+  extra: ExtraQuantityConfig,
+  current: ExtraSelection | undefined,
+): ExtraSelection {
+  return {
+    id: extra.id,
+    hours: manualExtraHours(extra, current?.hours),
+    pax: manualExtraPax(extra, current?.pax),
+  };
+}
+
 export function computeExtraPrice(
   extra: ExtraQuantityConfig,
   hours: number | null,

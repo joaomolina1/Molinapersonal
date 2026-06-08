@@ -1,0 +1,21 @@
+.lead-pack-extras-editor {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border: 1px dashed var(--color-border, #e4e4e7);
+  border-radius: 8px;
+  background: var(--color-surface-secondary, #fafafa);
+
+  &__hint {
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary, #5c5c5c);
+    line-height: 1.4;
+  }
+
+  &__empty {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary, #5c5c5c);
+  }
+}

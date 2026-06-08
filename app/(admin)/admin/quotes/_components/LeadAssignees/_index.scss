@@ -1,0 +1,8 @@
+.lead-assignees {
+  width: 100%;
+
+  &__empty {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary, #5c5c5c);
+  }
+}

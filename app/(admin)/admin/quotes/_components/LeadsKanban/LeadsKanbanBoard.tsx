@@ -1,21 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Stack from "@/_design_system/Stack";
 import EmptyState from "@/_components/EmptyState";
 import { QUOTE_STATUS_BUCKETS } from "@/_constants/quote/statuses";
 import { QuoteStatus } from "@/_constants/quote/statuses";
 import { createBEMClasses } from "@/_utils/classname";
 import KanbanColumn from "./KanbanColumn";
-import LeadDetailModal from "./LeadDetailModal";
+import LeadsBoardToolbar from "./LeadsBoardToolbar";
 import { useLeadsBoard } from "./useLeadsBoard";
+import { useLeadsBoardFilters } from "./useLeadsBoardFilters";
 import { BoardLead } from "./types";
 
 const { block } = createBEMClasses("leads-kanban");
 
 const LeadsKanbanBoard = () => {
-  const { leads, isLoading } = useLeadsBoard();
-  const [selectedLead, setSelectedLead] = useState<BoardLead | null>(null);
+  const { query, setQuery, assigned, setAssigned, listParams } =
+    useLeadsBoardFilters();
+  const { leads, isLoading } = useLeadsBoard(listParams);
 
   const byStatus = useMemo(() => {
     const map = Object.fromEntries(
@@ -29,47 +31,49 @@ const LeadsKanbanBoard = () => {
     return map;
   }, [leads]);
 
-  if (isLoading && !leads.length) {
-    return <p>A carregar pedidos…</p>;
-  }
-
-  if (!leads.length) {
-    return (
-      <EmptyState
-        text={{
-          body: "Nenhum pedido de orçamento ou contacto",
-        }}
-      />
-    );
-  }
+  const totalVisible = leads.length;
 
   return (
     <Stack gap="1.5rem" className={block()}>
+      <LeadsBoardToolbar
+        query={query}
+        onQueryChange={setQuery}
+        assigned={assigned}
+        onAssignedChange={setAssigned}
+      />
+
       <p className={`${block()}__hint`}>
-        Arraste os cartões entre colunas para atualizar o estado. Orçamentos e
-        pedidos de contacto partilham o mesmo fluxo — a etiqueta no cartão indica
-        o tipo.
+        Arraste os cartões entre colunas para atualizar o estado. Clique num
+        cartão para abrir a página do pedido.{" "}
+        {totalVisible > 0 && (
+          <span>
+            A mostrar <strong>{totalVisible}</strong> pedido(s).
+          </span>
+        )}
       </p>
 
-      <div className={`${block()}__board`}>
-        {QUOTE_STATUS_BUCKETS.map((bucket) => (
-          <KanbanColumn
-            key={bucket.id}
-            statusId={bucket.id}
-            label={bucket.label}
-            leads={byStatus[bucket.id]}
-            onOpenLead={setSelectedLead}
-          />
-        ))}
-      </div>
+      {isLoading && !leads.length && <p>A carregar pedidos…</p>}
 
-      <LeadDetailModal
-        lead={selectedLead}
-        isOpen={!!selectedLead}
-        onOpenChange={(open) => {
-          if (!open) setSelectedLead(null);
-        }}
-      />
+      {!isLoading && !leads.length && (
+        <EmptyState
+          text={{
+            body: "Nenhum pedido corresponde à pesquisa ou filtro",
+          }}
+        />
+      )}
+
+      {!!leads.length && (
+        <div className={`${block()}__board`}>
+          {QUOTE_STATUS_BUCKETS.map((bucket) => (
+            <KanbanColumn
+              key={bucket.id}
+              statusId={bucket.id}
+              label={bucket.label}
+              leads={byStatus[bucket.id]}
+            />
+          ))}
+        </div>
+      )}
     </Stack>
   );
 };

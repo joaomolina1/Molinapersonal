@@ -45,7 +45,12 @@ export const boardLeadSummary = (lead: BoardLead): BoardLeadSummary => {
           : "—",
       email: q.email || "—",
       qualityScore: q.qualityScore,
-      subtitle: [datePart, timePart, q.num_people ? `${q.num_people} pax` : ""]
+      subtitle: [
+        datePart,
+        timePart,
+        q.num_people ? `${q.num_people} pax` : "",
+        q.company_name || "",
+      ]
         .filter(Boolean)
         .join(" · "),
     };

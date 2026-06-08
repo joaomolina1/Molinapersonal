@@ -13,12 +13,10 @@ const KanbanColumn = ({
   statusId,
   label,
   leads,
-  onOpenLead,
 }: {
   statusId: QuoteStatus;
   label: string;
   leads: BoardLead[];
-  onOpenLead: (lead: BoardLead) => void;
 }) => {
   const showToast = useShowToast();
   const updateLeadStatus = useUpdateBoardLeadStatus();
@@ -52,11 +50,7 @@ const KanbanColumn = ({
       </header>
       <div className={element("column__list")}>
         {leads.map((lead) => (
-          <KanbanCard
-            key={`${lead.kind}-${lead.data.id}`}
-            lead={lead}
-            onOpen={() => onOpenLead(lead)}
-          />
+          <KanbanCard key={`${lead.kind}-${lead.data.id}`} lead={lead} />
         ))}
       </div>
     </section>

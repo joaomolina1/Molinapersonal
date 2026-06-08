@@ -8,8 +8,8 @@ import { AdminPackPreviewExtra } from "@/_models/quote";
 import { formatMoney } from "@/_utils/number";
 import {
   computeExtraPrice,
-  initialExtraSelection,
-  reconcileExtraSelection,
+  manualInitialExtraSelection,
+  reconcileManualExtraSelection,
   usesExtraHours,
   usesExtraPax,
 } from "@lib/extras/quantities";
@@ -29,7 +29,6 @@ const AdminPackExtras = ({
   onChange,
   eventHours,
   eventPax,
-  canConfigure,
 }: {
   extras: AdminPackPreviewExtra[];
   extraIDs: string[];
@@ -37,7 +36,6 @@ const AdminPackExtras = ({
   onChange: (ids: string[], params: AdminExtraParams) => void;
   eventHours: number;
   eventPax: number;
-  canConfigure: boolean;
 }) => {
   const selectedSet = useMemo(() => new Set(extraIDs), [extraIDs]);
 
@@ -45,7 +43,7 @@ const AdminPackExtras = ({
 
   const toggleExtra = (extra: AdminPackPreviewExtra, checked: boolean) => {
     if (checked) {
-      const initial = initialExtraSelection(extra, eventHours, eventPax);
+      const initial = manualInitialExtraSelection(extra, eventHours, eventPax);
       const nextIds = [...extraIDs.filter((id) => id !== extra.id), extra.id];
       onChange(nextIds, {
         ...extraParams,
@@ -67,17 +65,24 @@ const AdminPackExtras = ({
     value: number | undefined,
   ) => {
     const current = extraParams[extra.id] ?? {};
-    const next = reconcileExtraSelection(
-      extra,
-      { id: extra.id, ...current, [field]: value ?? null },
-      eventHours,
-      eventPax,
-    );
+    const next = reconcileManualExtraSelection(extra, {
+      id: extra.id,
+      ...current,
+      [field]: value ?? null,
+    });
+    const nextHours = next.hours ?? undefined;
+    const nextPax = next.pax ?? undefined;
+    if (
+      (current.hours ?? undefined) === nextHours &&
+      (current.pax ?? undefined) === nextPax
+    ) {
+      return;
+    }
     onChange(extraIDs, {
       ...extraParams,
       [extra.id]: {
-        hours: next.hours ?? undefined,
-        pax: next.pax ?? undefined,
+        hours: nextHours,
+        pax: nextPax,
       },
     });
   };
@@ -85,12 +90,6 @@ const AdminPackExtras = ({
   return (
     <div className={block()}>
       <strong>Extras do pack</strong>
-      {!canConfigure && (
-        <p className={element("hint")}>
-          Selecione data, horário e pessoas no pedido de orçamento para
-          configurar extras e ver preço.
-        </p>
-      )}
       <Stack gap="0.5rem" className={element("list")}>
         {extras.map((extra) => {
           const isSelected =
@@ -107,26 +106,25 @@ const AdminPackExtras = ({
           return (
             <div
               key={extra.id}
-              className={element("item", { selected: isSelected })}
+              className={element("item", {
+                selected: isSelected,
+              })}
             >
               <Stack row gap="0.5rem" alignItems="flex-start">
                 <InputCheckbox
                   checked={isSelected}
                   onChange={(checked) => toggleExtra(extra, checked)}
-                  disabled={extra.mandatory || !canConfigure}
+                  disabled={extra.mandatory}
+                  label={extra.description}
                   ariaLabel={extra.description}
                 />
-                <Stack gap="0.25rem" alignItems="flex-start">
-                  <span>{extra.description}</span>
-                  {isSelected && price != null && (
-                    <span className={element("price")}>
-                      {formatMoney(price)}
-                    </span>
-                  )}
-                </Stack>
+                {isSelected && price != null && (
+                  <span className={element("price")}>
+                    {formatMoney(price)}
+                  </span>
+                )}
               </Stack>
               {isSelected &&
-                canConfigure &&
                 (usesExtraHours(extra) || usesExtraPax(extra)) && (
                   <Stack row gap="0.75rem" className={element("fields")}>
                     {usesExtraHours(extra) && (

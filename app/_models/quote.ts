@@ -12,6 +12,7 @@ import { useFetch } from "@/_services/api";
 import { TimeDuration } from "@/_utils/number";
 import { CalendarDate, parseDate } from "@internationalized/date";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { LeadsListParams, quotesListQueryKey } from "@/_models/leadsList";
 
 export type LeadPackExtraParam = {
   id: string;
@@ -93,6 +94,11 @@ export class Quote {
     Object.assign(this, data);
 
     this.status = data.status ?? "new";
+    this.assignedAdminIds = Array.isArray(data.assigned_admin_ids)
+      ? data.assigned_admin_ids.map(String)
+      : Array.isArray(data.assignedAdminIds)
+        ? data.assignedAdminIds.map(String)
+        : [];
     this.qualityScore =
       data.qualityScore != null
         ? (data.qualityScore as LeadQualityScore)
@@ -130,6 +136,7 @@ export class Quote {
   space_id?: string;
   pack_id?: string;
   status!: QuoteStatus;
+  assignedAdminIds!: string[];
   qualityScore!: LeadQualityScore | null;
 
   get statusWording() {
@@ -269,31 +276,49 @@ export const useUpdateQuoteLead = () => {
       quoteId: string;
       status?: QuoteStatus;
       qualityScore?: LeadQualityScore | null;
+      assignedAdminIds?: string[];
     }
   >({
-    mutationFn: ({ quoteId, status, qualityScore }) =>
+    mutationFn: ({ quoteId, status, qualityScore, assignedAdminIds }) =>
       fetchApi("quote", quoteId, {
         method: "PATCH",
         body: {
           ...(status !== undefined ? { status } : {}),
           ...(qualityScore !== undefined ? { qualityScore } : {}),
+          ...(assignedAdminIds !== undefined ? { assignedAdminIds } : {}),
         },
       }),
-    onSettled: () => {
+    onSettled: (_data, _err, { quoteId }) => {
       queryClient.invalidateQueries({ queryKey: ["quote"] });
+      queryClient.invalidateQueries({ queryKey: ["quotes-list"] });
+      queryClient.invalidateQueries({ queryKey: ["quote", quoteId] });
     },
+  });
+};
+
+export const useQuote = (quoteId?: string) => {
+  const fetchApi = useFetch();
+
+  return useQuery<Quote>({
+    queryKey: ["quote", quoteId],
+    queryFn: () =>
+      fetchApi("quote", quoteId!).then((row) => new Quote(row)),
+    enabled: !!quoteId,
   });
 };
 
 export { parseLeadQualityScore };
 
-export const useQuotes = () => {
+export const useQuotes = (params?: LeadsListParams) => {
   const fetchApi = useFetch();
 
   return useQuery<Quote[]>({
-    queryKey: ["quote"],
+    queryKey: quotesListQueryKey(params),
     queryFn: () =>
-      fetchApi("quote").then((quotes: any[]) =>
+      fetchApi("quote", undefined, undefined, undefined, {
+        q: params?.q || undefined,
+        assigned: params?.assigned,
+      }).then((quotes: any[]) =>
         quotes.map((quote) => new Quote(quote)),
       ),
   });

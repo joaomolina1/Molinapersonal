@@ -77,6 +77,12 @@ import {
   parseLeadPackExtrasBody,
 } from "@lib/api/leadPricing";
 import {
+  filterLeadRows,
+  parseAssignedAdminIds,
+  parseLeadListQuery,
+  validateAssignedAdminIds,
+} from "@lib/api/leadList";
+import {
   insertLeadPack,
   isLeadPackLimitError,
   leadPackSelect,
@@ -1924,12 +1930,37 @@ export async function handleQuoteRoute(
   }
 
   if (ctx.request.method === "GET" && !action && ctx.session) {
+    if (!requireAdmin(ctx)) return emptyResponse(403);
+    const listQuery = parseLeadListQuery(ctx);
     const { data, error } = await admin
       .from("quote")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) return emptyResponse(500);
-    return jsonResponse(data ?? []);
+    const rows = filterLeadRows(
+      (data ?? []) as Record<string, unknown>[],
+      listQuery,
+      ctx.session.user_id,
+      "quote",
+    );
+    return jsonResponse(rows);
+  }
+
+  // GET /quote/:id
+  if (
+    ctx.request.method === "GET" &&
+    action &&
+    !action.includes("/")
+  ) {
+    if (!requireAdmin(ctx)) return emptyResponse(403);
+    const { data, error } = await admin
+      .from("quote")
+      .select("*")
+      .eq("id", action)
+      .maybeSingle();
+    if (error) return emptyResponse(500);
+    if (!data) return emptyResponse(404);
+    return jsonResponse(data);
   }
 
   // POST /quote/pack-preview — pack + extras + price for a lead
@@ -2055,6 +2086,7 @@ export async function handleQuoteRoute(
     const body = (ctx.body ?? {}) as {
       status?: string;
       qualityScore?: unknown;
+      assignedAdminIds?: unknown;
     };
     const update: Record<string, unknown> = {};
     if (body.status !== undefined) {
@@ -2065,6 +2097,14 @@ export async function handleQuoteRoute(
       const score = parseQualityScore(body.qualityScore);
       if (score === undefined) return emptyResponse(400);
       update.quality_score = score;
+    }
+    const assignedAdminIds = parseAssignedAdminIds(body);
+    if (assignedAdminIds === null) return emptyResponse(400);
+    if (assignedAdminIds !== undefined) {
+      if (!(await validateAssignedAdminIds(admin, assignedAdminIds))) {
+        return emptyResponse(400);
+      }
+      update.assigned_admin_ids = assignedAdminIds;
     }
     if (Object.keys(update).length === 0) return emptyResponse(400);
 
@@ -2523,12 +2563,20 @@ export async function handleContactRoute(
   }
 
   if (ctx.request.method === "GET" && !action && ctx.session) {
+    if (!requireAdmin(ctx)) return emptyResponse(403);
+    const listQuery = parseLeadListQuery(ctx);
     const { data, error } = await admin
       .from("contact_request")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) return emptyResponse(500);
-    return jsonResponse(data ?? []);
+    const rows = filterLeadRows(
+      (data ?? []) as Record<string, unknown>[],
+      listQuery,
+      ctx.session.user_id,
+      "contact",
+    );
+    return jsonResponse(rows);
   }
 
   const contactPacksMatch = action.match(/^([^/]+)\/packs$/);
@@ -2627,6 +2675,7 @@ export async function handleContactRoute(
     const body = (ctx.body ?? {}) as {
       status?: string;
       qualityScore?: unknown;
+      assignedAdminIds?: unknown;
     };
     const update: Record<string, unknown> = {};
     if (body.status !== undefined) {
@@ -2637,6 +2686,14 @@ export async function handleContactRoute(
       const score = parseQualityScore(body.qualityScore);
       if (score === undefined) return emptyResponse(400);
       update.quality_score = score;
+    }
+    const assignedAdminIds = parseAssignedAdminIds(body);
+    if (assignedAdminIds === null) return emptyResponse(400);
+    if (assignedAdminIds !== undefined) {
+      if (!(await validateAssignedAdminIds(admin, assignedAdminIds))) {
+        return emptyResponse(400);
+      }
+      update.assigned_admin_ids = assignedAdminIds;
     }
     if (Object.keys(update).length === 0) return emptyResponse(400);
 

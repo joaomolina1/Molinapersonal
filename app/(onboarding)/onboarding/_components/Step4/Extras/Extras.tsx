@@ -8,7 +8,7 @@ import Button from "@/_design_system/Button";
 import IconUserInterfaceActionsAdd from "@/_design_system/_icons/UserInterface/Actions/Add.svg";
 import ExtraModal from "./ExtraModal";
 import ExtraCard from "./ExtraCard";
-import { ExtraDraft, getExtraDraftError } from "./utils";
+import { cloneExtraDraft, ExtraDraft, getExtraDraftError } from "./utils";
 
 const Extras = ({
   extras = [],
@@ -56,6 +56,10 @@ const Extras = ({
     setExtras?.(extras.filter((extra) => extra.id !== id));
   };
 
+  const copyExtra = (extra: ExtraDraft) => {
+    setExtras?.([...extras, cloneExtraDraft(extra)]);
+  };
+
   return (
     <Stack gap="1.5rem" alignItems="flex-start">
       <div className="hide-desktop-large">
@@ -71,6 +75,7 @@ const Extras = ({
             key={extra.id}
             extra={extra}
             onEdit={() => openEditModal(extra)}
+            onCopy={() => copyExtra(extra)}
             onDelete={() => deleteExtra(extra.id)}
             showError={!!error && !!getExtraDraftError(extra)}
           />
