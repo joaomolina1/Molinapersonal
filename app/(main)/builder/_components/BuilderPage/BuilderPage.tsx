@@ -604,7 +604,7 @@ const SpaceStep = ({
         Estes são os espaços mais adequados ao seu evento. Qual prefere?
         {!searchResults ? (
           <div className={element("loading")}>
-            <CircleLoader />
+            <CircleLoader size={48} />
           </div>
         ) : options.length === 0 ? (
           <p className={element("empty")}>
@@ -736,7 +736,7 @@ const PackStep = ({
         Packs disponíveis em {space.spaceName}:
         {isLoading ? (
           <div className={element("loading")}>
-            <CircleLoader />
+            <CircleLoader size={48} />
           </div>
         ) : packs.length === 0 ? (
           <p className={element("empty")}>

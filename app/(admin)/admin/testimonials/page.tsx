@@ -53,7 +53,7 @@ export default function AdminTestimonials() {
           />
         </Stack>
         {isLoading ? (
-          <CircleLoader />
+          <CircleLoader size={48} />
         ) : testimonials.length ? (
           <TestimonialsTable testimonials={testimonials} />
         ) : (
