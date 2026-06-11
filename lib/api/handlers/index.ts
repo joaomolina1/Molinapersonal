@@ -2011,14 +2011,41 @@ export async function handleQuoteRoute(
 
   if (ctx.request.method === "POST" && !action) {
     const body = (ctx.body ?? {}) as Record<string, unknown>;
-    const { error } = await admin.from("quote").insert({
-      ...body,
-      user_id: ctx.session?.user_id ?? null,
-      created_at: new Date().toISOString(),
-      status: "new",
-    });
-    if (error) return emptyResponse(500);
-    return emptyResponse(201);
+    const { packs, ...quoteFields } = body;
+    const { data: quote, error } = await admin
+      .from("quote")
+      .insert({
+        ...quoteFields,
+        user_id: ctx.session?.user_id ?? null,
+        created_at: new Date().toISOString(),
+        status: "new",
+      })
+      .select("id")
+      .single();
+    if (error || !quote) return emptyResponse(500);
+
+    // Event builder requests can attach the selected packs to the new lead.
+    if (Array.isArray(packs)) {
+      for (const rawPack of packs.slice(0, MAX_LEAD_PACKS)) {
+        if (typeof rawPack !== "object" || rawPack === null) continue;
+        const packBody = rawPack as Record<string, unknown>;
+        const packId = String(packBody.packID ?? "");
+        if (!packId) continue;
+        const { error: packError } = await insertLeadPack(admin, {
+          table: "quote_packs",
+          parentKey: "quote_id",
+          parentId: String(quote.id),
+          packId,
+          createdBy: ctx.session?.user_id ?? null,
+          body: packBody,
+        });
+        if (packError) {
+          console.error("quote pack insert error", packError);
+        }
+      }
+    }
+
+    return jsonResponse({ id: quote.id }, 201);
   }
 
   if (ctx.request.method === "GET" && !action && ctx.session) {

@@ -63,13 +63,13 @@ export default async function Home() {
           <HomeQuoteRequestSection />
         </ErrorBoundary>
         <ErrorBoundary>
-          <Clients />
-        </ErrorBoundary>
-        <ErrorBoundary>
           <EventTypes />
         </ErrorBoundary>
         <ErrorBoundary>
           <Categories />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Clients />
         </ErrorBoundary>
         <ErrorBoundary>
           <Testimonials />

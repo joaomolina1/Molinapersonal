@@ -351,6 +351,11 @@ type CreateQuoteBody = Partial<
     event_date: string; // ISO Datetime string at 00:00:00
     start_at: string; // TimeDuration string
     end_at: string; // TimeDuration string
+    packs: {
+      packID: string;
+      extraIDs?: string[];
+      extraParams?: LeadPackExtraParam[];
+    }[];
   }
 >;
 
