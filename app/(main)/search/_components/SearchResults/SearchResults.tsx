@@ -13,8 +13,14 @@ import { SearchResult } from "@/_models/search";
 import QuoteRequestBannerCarousel from "@/_components/QuoteRequestBanner";
 import Pagination from "@/_design_system/Pagination";
 import { useQuoteRequestContext } from "@/(main)/_components/QuoteRequest";
+import { IconButton } from "@/_design_system/Button";
+import IconUserInterfaceMiscellaneousDashboardBlocks from "@/_design_system/_icons/UserInterface/Miscellaneous/DashboardBlocks.svg";
+import IconUserInterfaceNavigationMenuHamburguer from "@/_design_system/_icons/UserInterface/Navigation/MenuHamburguer.svg";
+import { useLocalStorage } from "@/_services/localStorage";
 
 const { block, element } = createBEMClasses("search-results");
+
+type ResultsLayout = "grid" | "list";
 
 const SearchResults = () => {
   const search = useSearchContext();
@@ -33,7 +39,20 @@ const SearchResults = () => {
   const showSkeleton = !searchResults || isFetchingSearchResults;
   const skeletonList = [...Array(searchResults?.length ?? 1)];
 
+  const layoutStorage = useLocalStorage<ResultsLayout>("search-results-layout");
+  const layout: ResultsLayout = layoutStorage.value ?? "grid";
+
   const pathname = usePathname();
+
+  const handleLayoutChange = (newLayout: ResultsLayout) => {
+    layoutStorage.setValue(newLayout);
+    sendGAEvent("event", "Rinu_CustomClick", {
+      Rinu_ScreenName: pathname,
+      Rinu_ItemCategory: "Standard",
+      Rinu_ItemType: "results_layout",
+      Rinu_eLabel1: newLayout,
+    });
+  };
   const handleSearchResultClick = (searchResult: SearchResult) => {
     sendGAEvent("event", "Rinu_CustomClick", {
       Rinu_ScreenName: pathname,
@@ -75,6 +94,27 @@ const SearchResults = () => {
             }
           />
         )}
+        <Stack
+          row
+          gap="0.25rem"
+          alignItems="center"
+          className={element("layout-toggle", { list: layout === "list" })}
+        >
+          <IconButton
+            ariaLabel="Ver em mosaico"
+            icon={<IconUserInterfaceMiscellaneousDashboardBlocks />}
+            type={layout === "grid" ? "primary" : "neutral"}
+            onClick={() => handleLayoutChange("grid")}
+            showTooltip={false}
+          />
+          <IconButton
+            ariaLabel="Ver em lista"
+            icon={<IconUserInterfaceNavigationMenuHamburguer />}
+            type={layout === "list" ? "primary" : "neutral"}
+            onClick={() => handleLayoutChange("list")}
+            showTooltip={false}
+          />
+        </Stack>
       </Stack>
 
       {!showSkeleton && totalFilteredResults === 0 && (
@@ -84,7 +124,7 @@ const SearchResults = () => {
         </div>
       )}
 
-      <div className={element("grid")}>
+      <div className={element("grid", { list: layout === "list" })}>
         {showSkeleton ? (
           skeletonList.map((_, index) => <SpaceCardSkeleton key={index} />)
         ) : (
@@ -105,6 +145,7 @@ const SearchResults = () => {
                 <SpaceCard
                   key={searchResult.id}
                   searchResult={searchResult}
+                  variant={layout}
                   searchParams={{
                     date: searchParams.get("date"),
                     start: searchParams.get("start"),

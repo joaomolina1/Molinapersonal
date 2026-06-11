@@ -21,6 +21,7 @@ const { block, element } = createBEMClasses("search-space-card");
 const SpaceCard = ({
   searchResult,
   searchParams,
+  variant = "grid",
   onHoverChange,
   onClick,
 }: {
@@ -31,6 +32,7 @@ const SpaceCard = ({
     end: string | null;
     numPeople: string | null;
   };
+  variant?: "grid" | "list";
   onHoverChange?: (isHovering: boolean) => void;
   onClick?: () => void;
 }) => {
@@ -104,7 +106,10 @@ const SpaceCard = ({
 
   return (
     <div
-      className={block({ recommended: searchResult.recommended })}
+      className={block({
+        recommended: searchResult.recommended,
+        list: variant === "list",
+      })}
       onMouseEnter={() => handleHover(true)}
       onMouseLeave={() => handleHover(false)}
       onFocus={() => handleFocus(true)}
