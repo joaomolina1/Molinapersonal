@@ -1,0 +1,398 @@
+@use "app/_styles/abstract" as *;
+
+.builder-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+
+  main {
+    flex: 1;
+  }
+}
+
+.builder-page {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 24px;
+
+  &__header {
+    margin-bottom: 1.5rem;
+
+    h1 {
+      @include font-h3;
+    }
+
+    p {
+      @include font-body;
+      color: $color-neutral-7;
+      margin-top: 0.5rem;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  &__chat {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__exchange {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__bubble {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 100%;
+
+    &__avatar {
+      @include font-action-s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      background: $color-brand-primary;
+      color: $color-neutral-0;
+    }
+
+    &__content {
+      @include font-body;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      min-width: 0;
+    }
+
+    &--assistant &__content {
+      background: $color-neutral-1;
+      border-top-left-radius: 4px;
+      flex: 1;
+    }
+
+    &--user {
+      justify-content: flex-end;
+
+      .builder-page__bubble__content {
+        background: $color-brand-primary;
+        color: $color-neutral-0;
+        border-top-right-radius: 4px;
+        @include font-action-s;
+      }
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__chip {
+    @include font-action-s;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid $color-neutral-4;
+    background: $color-neutral-0;
+    cursor: pointer;
+    transition: all 150ms ease-in-out;
+
+    &:hover,
+    &--selected {
+      border-color: $color-brand-primary;
+      color: $color-brand-primary;
+    }
+  }
+
+  &__inline-input {
+    max-width: 24rem;
+  }
+
+  &__form-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+
+    @include mq(medium) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0;
+  }
+
+  &__empty {
+    color: $color-neutral-7;
+  }
+
+  &__options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__option {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid $color-neutral-3;
+    background: $color-neutral-0;
+    align-items: center;
+
+    &__photo {
+      position: relative;
+      width: 6.5rem;
+      height: 5rem;
+      flex-shrink: 0;
+      border-radius: 6px;
+      overflow: hidden;
+      background: $color-neutral-3;
+
+      img {
+        object-fit: cover;
+      }
+    }
+
+    &__info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    &__title {
+      @include font-action;
+    }
+
+    &__detail {
+      @include font-body-s;
+      color: $color-neutral-7;
+
+      .icon-svg {
+        font-size: 1rem;
+        vertical-align: text-bottom;
+      }
+    }
+
+    &__price {
+      @include font-body-s;
+
+      b {
+        @include font-action-s;
+      }
+    }
+
+    &__actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    @include mq-max(medium) {
+      flex-wrap: wrap;
+
+      &__photo {
+        width: 100%;
+        height: 9rem;
+      }
+
+      &__actions {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  }
+
+  &__extras {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    &__item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid $color-neutral-3;
+      background: $color-neutral-0;
+
+      &__details {
+        padding-left: 1.75rem;
+      }
+
+      &__price {
+        @include font-action-s;
+        color: $color-brand-primary;
+      }
+    }
+  }
+
+  &__restart {
+    margin-top: 0.5rem;
+  }
+
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid $color-neutral-3;
+    background: $color-neutral-0;
+    box-shadow: $elevation-1;
+    height: max-content;
+
+    h2 {
+      @include font-h5;
+    }
+
+    &__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+
+    &__empty {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
+
+    &__items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    &__item {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+
+      &__photo {
+        position: relative;
+        width: 4rem;
+        height: 3.25rem;
+        flex-shrink: 0;
+        border-radius: 6px;
+        overflow: hidden;
+        background: $color-neutral-3;
+
+        img {
+          object-fit: cover;
+        }
+      }
+
+      &__info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      &__title {
+        @include font-action-s;
+      }
+
+      &__detail {
+        @include font-body-xs;
+        color: $color-neutral-7;
+      }
+
+      &__side {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+
+        span {
+          @include font-action-s;
+        }
+      }
+    }
+
+    &__total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1rem;
+      border-top: 1px solid $color-neutral-3;
+
+      span {
+        @include font-body-s;
+        color: $color-neutral-7;
+      }
+
+      strong {
+        @include font-h5;
+        color: $color-brand-primary;
+      }
+    }
+
+    &__disclaimer {
+      @include font-body-xs;
+      color: $color-neutral-6;
+    }
+  }
+
+  &__total-bar {
+    position: sticky;
+    bottom: 0;
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    background: $color-neutral-9;
+    color: $color-neutral-0;
+
+    span {
+      @include font-body-s;
+    }
+
+    strong {
+      @include font-h5;
+    }
+
+    @include mq(large) {
+      display: none;
+    }
+  }
+
+  @include mq(large) {
+    padding: 40px 32px;
+
+    &__content {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+
+    &__summary {
+      width: 22rem;
+      flex-shrink: 0;
+      position: sticky;
+      top: 6rem;
+    }
+  }
+}

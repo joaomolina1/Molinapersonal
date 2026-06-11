@@ -8,7 +8,8 @@ $animation-duration: 100s;
   background: $color-neutral-1;
 
   &__title,
-  &__grid {
+  &__tabs,
+  &__spaces {
     padding-left: 24px;
     padding-right: 24px;
   }
@@ -17,25 +18,34 @@ $animation-duration: 100s;
     margin-bottom: 1.5rem;
   }
 
-  &__grid {
+  &__tabs,
+  &__spaces {
     position: relative;
     overflow-x: auto;
     @include utils.hide-scrollbar;
+  }
 
-    display: flex;
-    gap: 1.5rem;
-    margin-top: -3px;
+  &__spaces {
+    margin-top: 1.5rem;
     padding-top: 3px;
     padding-bottom: 3px;
 
-    &__item {
-      height: 22.25rem;
-      flex: 0 0 17.5rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+
+    > div {
+      flex: 0 0 17.125rem;
     }
   }
 
+  &__see-all {
+    margin: 1.5rem auto 0;
+    width: max-content;
+  }
+
   &__all {
-    margin-top: 1.5rem;
+    margin-top: 2.5rem;
   }
 
   @include mq(large) {
@@ -48,33 +58,36 @@ $animation-duration: 100s;
     }
 
     &__title,
-    &__grid,
     &__all {
       padding-left: 32px;
       padding-right: 32px;
+    }
+
+    &__tabs-scrollable {
+      position: relative;
+      margin: 0 32px;
+    }
+
+    &__spaces {
+      margin: 1rem 0 0;
+      padding-left: 32px;
+      padding-right: 32px;
+
+      display: grid;
+      gap: 2.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
     }
 
     &__title {
       margin-bottom: 2.5rem;
     }
 
-    &__grid {
-      display: grid;
-      grid-template-rows: repeat(2, 18.75rem);
-      grid-template-columns: 1.5fr 1fr 1fr;
-      gap: 2.5rem;
-
-      &__item {
-        height: unset;
-
-        &:first-of-type {
-          grid-row: 1 / -1;
-        }
-      }
+    &__see-all {
+      margin-top: 2rem;
     }
 
     &__all {
-      margin-top: 2.5rem;
+      margin-top: 3rem;
     }
   }
 }

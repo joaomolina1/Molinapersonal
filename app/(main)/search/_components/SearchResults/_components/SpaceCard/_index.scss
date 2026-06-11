@@ -98,6 +98,38 @@
     }
   }
 
+  &--list {
+    display: flex;
+    gap: 1rem;
+
+    .search-space-card__photo {
+      width: 40%;
+      min-width: 9.5rem;
+      max-width: 22rem;
+      height: 11rem;
+      flex-shrink: 0;
+    }
+
+    .search-space-card__content {
+      flex: 1;
+      min-width: 0;
+      padding: 4px 0;
+      justify-content: center;
+    }
+
+    @include mq(large) {
+      gap: 1.5rem;
+
+      .search-space-card__photo {
+        height: 14rem;
+      }
+
+      .search-space-card__content {
+        gap: 0.75rem;
+      }
+    }
+  }
+
   &__content {
     display: flex;
     flex-direction: column;

@@ -19,6 +19,7 @@ import {
   handleSearchRoute,
   handleSpacesRoute,
   handleSubscriptionsRoute,
+  handleTestimonialsRoute,
   handleUsersRoute,
   handleVenuesRoute,
   handleWatchlistRoute,
@@ -50,6 +51,8 @@ export async function dispatchApi(
         return handleBookingsRoute(ctx, action);
       case "reviews":
         return handleReviewsRoute(ctx, action);
+      case "testimonials":
+        return handleTestimonialsRoute(ctx, action, isPublic);
       case "dashboard":
         return handleDashboardRoute(ctx);
       case "users":

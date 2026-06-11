@@ -55,7 +55,7 @@ export async function insertLeadPack(
     parentKey: "quote_id" | "contact_id";
     parentId: string;
     packId: string;
-    createdBy: string;
+    createdBy: string | null;
     body: Record<string, unknown>;
   },
 ) {

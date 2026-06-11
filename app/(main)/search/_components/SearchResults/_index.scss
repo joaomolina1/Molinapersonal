@@ -27,5 +27,18 @@
         @include font-action;
       }
     }
+
+    &--list {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+
+      @include mq-max(x-large) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+
+  &__layout-toggle {
+    flex-shrink: 0;
   }
 }
