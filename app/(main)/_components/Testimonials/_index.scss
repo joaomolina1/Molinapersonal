@@ -10,7 +10,25 @@
   &__title {
     text-align: center;
     padding: 0 42px;
+    margin-bottom: 1rem;
+  }
+
+  &__summary {
     margin-bottom: 2.5rem;
+
+    .icon-svg {
+      font-size: 1.25rem;
+      color: $color-brand-primary;
+    }
+
+    &__average {
+      @include font-action;
+    }
+
+    &__count {
+      @include font-body-s;
+      color: $color-neutral-7;
+    }
   }
 
   &__carousel {
@@ -107,24 +125,49 @@
     .icon-svg {
       font-size: 2rem;
       color: $color-brand-primary;
-
-      &:last-child {
-        align-self: flex-end;
-        transform: rotate(180deg);
-      }
     }
 
     &__text {
       @include font-body-s;
     }
 
+    &__rating {
+      @include font-action-s;
+      color: $color-brand-primary;
+      letter-spacing: 0.125rem;
+    }
+
     hr {
       border: none;
       border-top: 1px solid $color-neutral-5;
+      width: 100%;
+    }
+
+    &__avatar {
+      @include font-action-s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      background: $color-brand-primary;
+      color: $color-neutral-0;
     }
 
     &__author {
-      @include font-action-s;
+      flex: 1;
+      min-width: 0;
+
+      &__name {
+        @include font-action-s;
+      }
+
+      &__detail {
+        @include font-body-xs;
+        color: $color-neutral-7;
+      }
     }
   }
 

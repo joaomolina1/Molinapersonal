@@ -72,13 +72,13 @@ export default async function Home() {
           <Categories />
         </ErrorBoundary>
         <ErrorBoundary>
+          <Testimonials />
+        </ErrorBoundary>
+        <ErrorBoundary>
           <Partners />
         </ErrorBoundary>
         <ErrorBoundary>
           <Locations />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <Testimonials />
         </ErrorBoundary>
         <ErrorBoundary>
           <Footer />

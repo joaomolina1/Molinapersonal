@@ -8,6 +8,7 @@ import IconUserInterfaceMiscellaneousChat from "@/_design_system/_icons/UserInte
 import IconUserInterfaceMiscellaneousDashboardBlocks from "@/_design_system/_icons/UserInterface/Miscellaneous/DashboardBlocks.svg";
 import IconUserInterfaceMiscellaneousPromote from "@/_design_system/_icons/UserInterface/Miscellaneous/Promote.svg";
 import IconUserInterfaceMiscellaneousUser from "@/_design_system/_icons/UserInterface/Miscellaneous/User.svg";
+import IconUserInterfaceMiscellaneousQuoteSign from "@/_design_system/_icons/UserInterface/Miscellaneous/Quote.svg";
 import { createBEMClasses } from "@/_utils/classname";
 import { usePathname } from "next/navigation";
 
@@ -73,6 +74,18 @@ const AdminHeader = () => {
             leftIcon={<IconUserInterfaceMiscellaneousPromote />}
             label="Subscrições"
             href="/admin/subscriptions"
+          />
+        </div>
+        <div
+          className={element("nav-link", {
+            active: pathname === "/admin/testimonials",
+          })}
+        >
+          <Button
+            type="link-inverted"
+            leftIcon={<IconUserInterfaceMiscellaneousQuoteSign />}
+            label="Testemunhos"
+            href="/admin/testimonials"
           />
         </div>
         <div

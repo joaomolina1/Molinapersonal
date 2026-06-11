@@ -30,6 +30,7 @@ import {
   mapAttachment,
   mapPhoto,
   mapSubscriptionRow,
+  mapTestimonial,
   mapSpace,
   mapStatus,
   mapVenue,
@@ -58,6 +59,11 @@ import {
   packUnavailabilityReason,
   type PriceFilter,
 } from "@lib/api/pricing";
+import {
+  importGoogleReviews,
+  parseBulkTestimonials,
+  testimonialInsertFromBody,
+} from "@lib/api/testimonials";
 import {
   createBookingCheckoutSession,
   createSubscriptionCheckoutSession,
@@ -1278,6 +1284,92 @@ export async function handleReviewsRoute(
     const { data, error } = await query;
     if (error) return emptyResponse(500);
     return jsonResponse(data ?? []);
+  }
+
+  return emptyResponse(501);
+}
+
+export async function handleTestimonialsRoute(
+  ctx: ApiContext,
+  action: string,
+  isPublic: boolean,
+): Promise<Response> {
+  const admin = createAdminClient();
+  const isAdmin = !isPublic && !!ctx.session?.roles.includes("admin");
+
+  if (ctx.request.method === "GET" && !action) {
+    let query = admin
+      .from("testimonials")
+      .select("*")
+      .order("priority", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (!isAdmin) query = query.eq("published", true);
+    const { data, error } = await query;
+    if (error) return emptyResponse(500);
+    return jsonResponse((data ?? []).map(mapTestimonial));
+  }
+
+  if (!isAdmin) return emptyResponse(403);
+
+  if (ctx.request.method === "POST" && !action) {
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
+    const insert = testimonialInsertFromBody(body);
+    if (!insert) return errorResponse("Dados inválidos", 400);
+    const { data, error } = await admin
+      .from("testimonials")
+      .insert({ ...insert, created_at: new Date().toISOString() })
+      .select()
+      .single();
+    if (error) return emptyResponse(500);
+    return jsonResponse(mapTestimonial(data), 201);
+  }
+
+  if (ctx.request.method === "POST" && action === "import/google") {
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
+    const result = await importGoogleReviews(admin, String(body.input ?? ""));
+    if ("error" in result) return errorResponse(result.error, result.status);
+    return jsonResponse(result);
+  }
+
+  if (ctx.request.method === "POST" && action === "import/bulk") {
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
+    const parsed = parseBulkTestimonials(body);
+    if (!parsed) return errorResponse("Lista de testemunhos inválida", 400);
+    let imported = 0;
+    let skipped = parsed.invalid;
+    for (const row of parsed.rows) {
+      const { error } = await admin
+        .from("testimonials")
+        .insert({ ...row, created_at: new Date().toISOString() });
+      // Unique index on (source, source_id) makes re-imports idempotent.
+      if (error?.code === "23505") skipped += 1;
+      else if (error) return emptyResponse(500);
+      else imported += 1;
+    }
+    return jsonResponse({ imported, skipped, total: parsed.rows.length + parsed.invalid });
+  }
+
+  if (ctx.request.method === "PUT" && action && !action.includes("/")) {
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
+    const update = testimonialInsertFromBody(body);
+    if (!update) return errorResponse("Dados inválidos", 400);
+    const { data, error } = await admin
+      .from("testimonials")
+      .update({ ...update, updated_at: new Date().toISOString() })
+      .eq("id", action)
+      .select()
+      .single();
+    if (error || !data) return emptyResponse(500);
+    return jsonResponse(mapTestimonial(data));
+  }
+
+  if (ctx.request.method === "DELETE" && action && !action.includes("/")) {
+    const { error } = await admin
+      .from("testimonials")
+      .delete()
+      .eq("id", action);
+    if (error) return emptyResponse(500);
+    return emptyResponse(204);
   }
 
   return emptyResponse(501);

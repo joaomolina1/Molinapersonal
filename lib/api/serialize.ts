@@ -594,6 +594,22 @@ export function mapHighlight(row: DbRow) {
   };
 }
 
+export function mapTestimonial(row: DbRow) {
+  return {
+    id: str(row.id),
+    createdAt: ts(row.created_at),
+    updatedAt: ts(row.updated_at),
+    authorName: str(row.author_name),
+    authorDetail: row.author_detail ? str(row.author_detail) : null,
+    text: str(row.text),
+    rating: row.rating != null ? num(row.rating) : null,
+    source: str(row.source),
+    photoURL: row.photo_url ? str(row.photo_url) : null,
+    published: Boolean(row.published),
+    priority: num(row.priority),
+  };
+}
+
 export const QUOTE_STATUSES = [
   "new",
   "in_follow_up",

@@ -37,6 +37,7 @@ type ApiService =
   | "subscriptions"
   | "ical"
   | "reviews"
+  | "testimonials"
   | "quote"
   | "event-hub"
   | "contact"
@@ -44,7 +45,8 @@ type ApiService =
   | "public/venues"
   | "public/spaces"
   | "public/packs"
-  | "public/search";
+  | "public/search"
+  | "public/testimonials";
 
 export const getFetchApiForSession =
   (session: Session | undefined | null) =>
