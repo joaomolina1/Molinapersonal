@@ -10,6 +10,7 @@ import { SpaceCatering } from "@/_constants/space/catering";
 import { SpaceSound } from "@/_constants/space/sound";
 import { SpaceAccessibility } from "@/_constants/space/accessibilities";
 import { PackFeature } from "@/_constants/pack/features";
+import type { ServiceType } from "@/_constants/space/serviceTypes";
 import {
   AttributeFilterKey,
   TabFilterKey,
@@ -25,6 +26,8 @@ export class SearchResult {
 
     this.photoURLs = (photoURLs as string[]).filter((url) => !!url);
     this.subscription = data.subscription ?? "basic";
+    this.journey = data.journey ?? "venues";
+    this.attributes = data.attributes ?? [];
   }
 
   id!: string;
@@ -34,6 +37,9 @@ export class SearchResult {
   venueName!: string;
   venueID!: string;
   status!: Status;
+
+  journey!: "venues" | "services";
+  attributes!: string[];
 
   subscription!: Subscription;
 
@@ -86,6 +92,7 @@ export class SearchResult {
 
 type SearchQuery = {
   eventType?: SpaceEventType;
+  journey?: "venues" | "services" | "all";
   date?: string;
   start?: string;
   end?: string;
@@ -202,7 +209,8 @@ export type Attribute =
   | SpaceAccessibility
   | SpaceCatering
   | SpaceSound
-  | PackFeature;
+  | PackFeature
+  | ServiceType;
 
 export const useAttributes = () => {
   const fetchApi = useFetch();

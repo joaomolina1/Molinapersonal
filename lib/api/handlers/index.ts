@@ -132,6 +132,8 @@ function mapSearchRow(
     spaceName: row.space_name,
     venueName: row.venue_name,
     createdAt: row.created_at,
+    journey: row.journey ?? "venues",
+    attributes: row.attributes ?? [],
     address: {
       country: row.country,
       street1: row.street1,
@@ -292,6 +294,8 @@ const SPACE_SEARCH_SELECT = `
   primary_photo,
   created_at,
   venue_id,
+  journey,
+  attributes,
   venues!inner (
     id,
     name,
@@ -441,6 +445,33 @@ export async function handleSearchRoute(
 
       let qualifyingRows = rows;
 
+      // Spaces and services are different journeys; regular search only
+      // shows venues unless services are explicitly requested.
+      const journeyParam = ctx.query.get("journey");
+      const wantedJourney = journeyParam === "services" ? "services" : "venues";
+      if (journeyParam !== "all") {
+        qualifyingRows = qualifyingRows.filter(
+          (row) => mapJourney(row.journey) === wantedJourney,
+        );
+      }
+
+      const eventType = ctx.query.get("eventType");
+      const attributeFilters = ctx.query
+        .getAll("attributes")
+        .flatMap((value) => value.split(","))
+        .filter(Boolean);
+      const requiredAttributes = [
+        ...new Set([...(eventType ? [eventType] : []), ...attributeFilters]),
+      ];
+      if (requiredAttributes.length > 0) {
+        qualifyingRows = qualifyingRows.filter((row) => {
+          const spaceAttributes = (row.attributes as string[] | null) ?? [];
+          return requiredAttributes.every((attribute) =>
+            spaceAttributes.includes(attribute),
+          );
+        });
+      }
+
       if (venueID) {
         qualifyingRows = qualifyingRows.filter(
           (row) => row.venue_id === venueID,
@@ -524,6 +555,8 @@ export async function handleSearchRoute(
             latitude: venue.latitude,
             longitude: venue.longitude,
             created_at: row.created_at,
+            journey: mapJourney(row.journey),
+            attributes: (row.attributes as string[] | null) ?? [],
           },
           photoURLs,
           metrics,
