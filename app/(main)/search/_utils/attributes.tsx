@@ -8,6 +8,7 @@ import { SPACE_KINDS } from "@/_constants/space/kinds";
 import { SPACE_PRIVACIES } from "@/_constants/space/privacies";
 import { SPACE_SOUND } from "@/_constants/space/sound";
 import IconUserInterfaceMiscellaneousVenues from "@/_design_system/_icons/UserInterface/Miscellaneous/Venues.svg";
+import { SERVICE_TYPES } from "@/_constants/space/serviceTypes";
 import { Attribute } from "@/_models/search";
 
 export const allEventTypeOptions = SPACE_EVENT_TYPES_FLAT.map(
@@ -119,5 +120,20 @@ export const getTabFilters = (availableAttributes: Attribute[]) => [
   ...getAllSpaceCategories(availableAttributes),
 ];
 
+// Service categories (top-level service types) present in the catalogue,
+// used as tab filters when searching services instead of spaces.
+export const getServiceTabFilters = (availableAttributes: Attribute[]) => [
+  {
+    id: "all",
+    label: "Todos",
+    icon: <IconUserInterfaceMiscellaneousVenues />,
+  } as const,
+  ...SERVICE_TYPES.filter(({ id }) => availableAttributes.includes(id)).map(
+    ({ id, label, icon }) => ({ id, label, icon }),
+  ),
+];
+
 export type TabFilters = ReturnType<typeof getTabFilters>;
-export type TabFilterKey = ReturnType<typeof getTabFilters>[number]["id"];
+export type TabFilterKey =
+  | ReturnType<typeof getTabFilters>[number]["id"]
+  | ReturnType<typeof getServiceTabFilters>[number]["id"];

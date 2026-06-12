@@ -1,15 +1,13 @@
 @use "app/_styles/abstract" as *;
 @use "app/_styles/base/_utils" as utils;
 
-$animation-duration: 100s;
-
-.home-event-types {
+.home-services {
   padding: 40px 0;
   background: $color-neutral-1;
 
   &__title,
   &__tabs,
-  &__spaces {
+  &__services {
     padding-left: 24px;
     padding-right: 24px;
   }
@@ -19,13 +17,13 @@ $animation-duration: 100s;
   }
 
   &__tabs,
-  &__spaces {
+  &__services {
     position: relative;
     overflow-x: auto;
     @include utils.hide-scrollbar;
   }
 
-  &__spaces {
+  &__services {
     margin-top: 1.5rem;
     padding-top: 3px;
     padding-bottom: 3px;
@@ -44,10 +42,6 @@ $animation-duration: 100s;
     width: max-content;
   }
 
-  &__all {
-    margin-top: 2.5rem;
-  }
-
   @include mq(large) {
     padding: 100px 0;
 
@@ -57,10 +51,10 @@ $animation-duration: 100s;
       margin: 0 auto;
     }
 
-    &__title,
-    &__all {
+    &__title {
       padding-left: 32px;
       padding-right: 32px;
+      margin-bottom: 2.5rem;
     }
 
     &__tabs-scrollable {
@@ -68,7 +62,7 @@ $animation-duration: 100s;
       margin: 0 32px;
     }
 
-    &__spaces {
+    &__services {
       margin: 1rem 0 0;
       padding-left: 32px;
       padding-right: 32px;
@@ -78,16 +72,8 @@ $animation-duration: 100s;
       grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
     }
 
-    &__title {
-      margin-bottom: 2.5rem;
-    }
-
     &__see-all {
       margin-top: 2rem;
-    }
-
-    &__all {
-      margin-top: 3rem;
     }
   }
 }

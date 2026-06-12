@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { SPACE_EVENT_TYPES_FLAT } from "@/_constants/space/eventTypes";
 import Stack from "@/_design_system/Stack";
 import KeywordSearch from "../KeywordSearch";
+import SearchJourneyToggle from "../SearchJourneyToggle";
 import { ModalSearchFilters } from "../SearchFilters";
 
 const { block, element } = createBEMClasses("search-page");
@@ -28,15 +29,16 @@ const SearchPage = () => {
       ({ id }) => id === search.eventType,
     )?.label.toLowerCase();
     const city = search.city;
+    const noun = search.journey === "services" ? "Serviços" : "Espaços";
 
     document.title = `${
       city && eventTypeLabel
-        ? `Espaços para ${eventTypeLabel} em ${city}`
+        ? `${noun} para ${eventTypeLabel} em ${city}`
         : city
-          ? `Espaços em ${city}`
+          ? `${noun} em ${city}`
           : eventTypeLabel
-            ? `Espaços para ${eventTypeLabel}`
-            : `Espaços para eventos`
+            ? `${noun} para ${eventTypeLabel}`
+            : `${noun} para eventos`
     } | RINU`;
 
     document
@@ -69,6 +71,7 @@ const SearchPage = () => {
             <KeywordSearch />
             {!isMobile && <ModalSearchFilters />}
           </Stack>
+          <SearchJourneyToggle />
           <SearchTabFilters />
           <SearchResults />
         </div>

@@ -9,7 +9,7 @@ import { getAttributesQueryFn, getSearchQueryFn } from "@/_models/search";
 import { getFetchApiForSession } from "@/_services/apiServer";
 import Recommendations from "./_components/Recommendations";
 import Categories from "./_components/Categories";
-import EventTypes from "./_components/EventTypes";
+import HomeServices from "./_components/HomeServices";
 import Locations from "./_components/Locations";
 import HomeLayout from "./_components/HomeLayout";
 import Testimonials from "./_components/Testimonials";
@@ -63,7 +63,7 @@ export default async function Home() {
           <HomeQuoteRequestSection />
         </ErrorBoundary>
         <ErrorBoundary>
-          <EventTypes />
+          <HomeServices />
         </ErrorBoundary>
         <ErrorBoundary>
           <Categories />
