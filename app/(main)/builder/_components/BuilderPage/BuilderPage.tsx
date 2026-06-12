@@ -111,6 +111,7 @@ const BuilderPage = () => {
     end: TimeDuration | null;
   }>({ start: null, end: null });
   const [numPeople, setNumPeople] = useState<number | undefined>(undefined);
+  const [budget, setBudget] = useState<number | undefined>(undefined);
 
   // Selection
   const [selectedSpace, setSelectedSpace] = useState<SearchResult | null>(null);
@@ -217,6 +218,7 @@ const BuilderPage = () => {
     setDate(null);
     setStartEnd({ start: null, end: null });
     setNumPeople(undefined);
+    setBudget(undefined);
     setSelectedSpace(null);
     setSelectedPackID(null);
     setExtraSelection({});
@@ -271,9 +273,11 @@ const BuilderPage = () => {
                 setStartEnd={setStartEnd}
                 numPeople={numPeople}
                 setNumPeople={setNumPeople}
+                budget={budget}
+                setBudget={setBudget}
                 onContinue={(answer) => {
                   pushHistory(
-                    "Para quando, a que horas e para quantas pessoas?",
+                    "Para quando, a que horas, para quantas pessoas e com que budget?",
                     answer,
                   );
                   setStep("space");
@@ -288,6 +292,7 @@ const BuilderPage = () => {
                 date={date}
                 startEnd={startEnd}
                 numPeople={numPeople}
+                budget={budget}
                 basePacksQuery={basePacksQuery}
                 onSelect={(searchResult, availablePacks) => {
                   setSelectedSpace(searchResult);
@@ -459,6 +464,7 @@ const BuilderPage = () => {
             date={date}
             startEnd={startEnd}
             numPeople={numPeople}
+            budget={budget}
             space={selectedSpace}
             pack={selectedPack}
             extraSelection={extraSelection}
@@ -584,6 +590,8 @@ const EventTypeStep = ({
   );
 };
 
+const MIN_TOTAL_BUDGET = 200;
+
 const DetailsStep = ({
   date,
   setDate,
@@ -591,6 +599,8 @@ const DetailsStep = ({
   setStartEnd,
   numPeople,
   setNumPeople,
+  budget,
+  setBudget,
   onContinue,
 }: {
   date: CalendarDate | null;
@@ -602,23 +612,36 @@ const DetailsStep = ({
   }) => void;
   numPeople: number | undefined;
   setNumPeople: (numPeople: number | undefined) => void;
+  budget: number | undefined;
+  setBudget: (budget: number | undefined) => void;
   onContinue: (answer: string) => void;
 }) => {
   const [showErrors, setShowErrors] = useState(false);
 
+  const hasInvalidBudget = !!budget && budget < MIN_TOTAL_BUDGET;
+
   const submit = () => {
     setShowErrors(true);
-    if (!date || !startEnd.start || !startEnd.end || !numPeople) return;
+    if (
+      !date ||
+      !startEnd.start ||
+      !startEnd.end ||
+      !numPeople ||
+      !budget ||
+      hasInvalidBudget
+    ) {
+      return;
+    }
 
     onContinue(
-      `${date.toString()} · ${startEnd.start.timeLabel}–${startEnd.end.timeLabel} · ${formatInt(numPeople)} pessoas`,
+      `${date.toString()} · ${startEnd.start.timeLabel}–${startEnd.end.timeLabel} · ${formatInt(numPeople)} pessoas · até ${money(budget)}`,
     );
   };
 
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Para quando, a que horas e para quantas pessoas?
+        Para quando, a que horas, para quantas pessoas e com que budget?
         <div className={element("form-grid")}>
           <InputDate
             label="Data do evento"
@@ -642,6 +665,20 @@ const DetailsStep = ({
             decimalScale={0}
             suffix={numPeople === 1 ? " pessoa" : " pessoas"}
             invalid={showErrors && !numPeople}
+          />
+          <InputNumber
+            label="Budget total"
+            value={budget}
+            onChange={setBudget}
+            allowNegative={false}
+            decimalScale={0}
+            suffix=" €"
+            invalid={showErrors && (!budget || hasInvalidBudget)}
+            error={
+              hasInvalidBudget
+                ? "O budget deve ser o valor total do evento e não o valor por pessoa"
+                : undefined
+            }
           />
         </div>
         <Button
@@ -736,6 +773,7 @@ const SpaceStep = ({
   date,
   startEnd,
   numPeople,
+  budget,
   basePacksQuery,
   onSelect,
 }: {
@@ -743,6 +781,7 @@ const SpaceStep = ({
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
+  budget: number | undefined;
   basePacksQuery: BasePacksQuery;
   onSelect: (searchResult: SearchResult, availablePacks: Pack[]) => void;
 }) => {
@@ -757,7 +796,19 @@ const SpaceStep = ({
     basePacksQuery,
   });
 
-  const options = availableSpaces.slice(0, visibleCount);
+  // Spaces within the budget come first, but the rest stay reachable.
+  const sortedSpaces = useMemo(() => {
+    if (!budget) return availableSpaces;
+    const minPriceOf = (packs: Pack[]) =>
+      Math.min(...packs.map((pack) => pack.price?.value ?? Infinity));
+    return [...availableSpaces].sort((a, b) => {
+      const aOver = minPriceOf(a.packs) > budget ? 1 : 0;
+      const bOver = minPriceOf(b.packs) > budget ? 1 : 0;
+      return aOver - bOver;
+    });
+  }, [availableSpaces, budget]);
+
+  const options = sortedSpaces.slice(0, visibleCount);
 
   return (
     <div className={element("exchange")}>
@@ -785,12 +836,13 @@ const SpaceStep = ({
                   minPrice={Math.min(
                     ...packs.map((pack) => pack.price?.value ?? Infinity),
                   )}
+                  budget={budget}
                   numPacks={packs.length}
                   onSelect={() => onSelect(searchResult, packs)}
                 />
               ))}
             </div>
-            {availableSpaces.length > visibleCount && (
+            {sortedSpaces.length > visibleCount && (
               <TextButton
                 text="Mostrar mais espaços"
                 onClick={() => setVisibleCount((count) => count + 3)}
@@ -806,11 +858,13 @@ const SpaceStep = ({
 const SpaceOption = ({
   searchResult,
   minPrice,
+  budget,
   numPacks,
   onSelect,
 }: {
   searchResult: SearchResult;
   minPrice: number;
+  budget: number | undefined;
   numPacks: number;
   onSelect: () => void;
 }) => {
@@ -843,6 +897,9 @@ const SpaceOption = ({
           {searchResult.spaceName}
           {searchResult.recommended && (
             <Tag text="Recomendado" type="info" size="small" />
+          )}
+          {!!budget && Number.isFinite(minPrice) && minPrice > budget && (
+            <Tag text="Acima do budget" type="warning" size="small" />
           )}
         </p>
         <p className={element("space-card__detail")}>
@@ -1514,6 +1571,7 @@ const BuilderSummary = ({
   date,
   startEnd,
   numPeople,
+  budget,
   space,
   pack,
   extraSelection,
@@ -1525,6 +1583,7 @@ const BuilderSummary = ({
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
+  budget: number | undefined;
   space: SearchResult | null;
   pack: Pack | null;
   extraSelection: ExtraSelectionMap;
@@ -1553,6 +1612,7 @@ const BuilderSummary = ({
         {!!numPeople && (
           <Tag text={`${formatInt(numPeople)} pessoas`} size="small" />
         )}
+        {!!budget && <Tag text={`Budget ${money(budget)}`} size="small" />}
       </div>
       {!space || !pack ? (
         <p className={element("summary__empty")}>
@@ -1601,7 +1661,15 @@ const BuilderSummary = ({
         </div>
       )}
       <div className={element("summary__total")}>
-        <span>Total</span>
+        <span>
+          Total
+          {!!budget && total > budget && (
+            <>
+              {" "}
+              <Tag text="Acima do budget" type="warning" size="small" />
+            </>
+          )}
+        </span>
         <strong>{money(total)}</strong>
       </div>
       {paymentBreakdown?.isPartial && (
