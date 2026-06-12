@@ -211,6 +211,33 @@ export const BookingPriceDetail = ({
   </BookingDetailsSection>
 );
 
+export const BookingServicePacks = ({
+  servicePacks,
+}: {
+  servicePacks: NonNullable<Booking["servicePacks"]>;
+}) => (
+  <BookingDetailsSection label="Serviços externos">
+    <Stack gap="0.5rem">
+      {servicePacks.map((servicePack) => (
+        <Stack
+          row
+          justifyContent="space-between"
+          gap="0.75rem"
+          key={servicePack.packID}
+        >
+          <span>
+            {servicePack.spaceName || servicePack.packName}
+            {servicePack.spaceName && servicePack.packName
+              ? ` · ${servicePack.packName}`
+              : ""}
+          </span>
+          <span>{formatMoney(servicePack.amount)}</span>
+        </Stack>
+      ))}
+    </Stack>
+  </BookingDetailsSection>
+);
+
 export const BookingTotalPrice = ({
   amount,
   label = "Total c/ IVA",

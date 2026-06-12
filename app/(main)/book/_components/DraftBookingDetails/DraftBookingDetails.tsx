@@ -5,6 +5,7 @@ import {
   BookingPaymentSummary,
   BookingPhotoName,
   BookingPriceDetail,
+  BookingServicePacks,
   BookingSpaceAttributes,
   BookingVenueAttributes,
 } from "@/_components/BookingDetails";
@@ -93,6 +94,12 @@ const DraftBookingDetails = ({ booking }: { booking: Booking }) => {
         <>
           <hr />
           <BookingPriceDetail priceDetail={priceDetail} start={booking.start} />
+        </>
+      )}
+      {!!booking.servicePacks?.length && (
+        <>
+          <hr />
+          <BookingServicePacks servicePacks={booking.servicePacks} />
         </>
       )}
       <hr />

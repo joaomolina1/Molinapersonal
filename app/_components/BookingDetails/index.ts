@@ -6,6 +6,7 @@ export {
   BookingVenueAttributes,
   BookingCancellation,
   BookingPriceDetail,
+  BookingServicePacks,
   BookingTotalPrice,
   BookingPaymentSummary,
   BookingBillingContent,

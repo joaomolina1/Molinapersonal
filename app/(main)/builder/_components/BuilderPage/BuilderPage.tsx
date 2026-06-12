@@ -7,7 +7,7 @@ import { sendGAEvent } from "@next/third-parties/google";
 import { useQueries } from "@tanstack/react-query";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 
-import Button, { TextButton } from "@/_design_system/Button";
+import Button, { IconButton, TextButton } from "@/_design_system/Button";
 import Stack from "@/_design_system/Stack";
 import Tag from "@/_design_system/Tag";
 import Tooltip from "@/_design_system/Tooltip";
@@ -18,14 +18,23 @@ import CircleLoader from "@/_design_system/CircleLoader";
 import { InputError } from "@/_design_system/_utils/InputWrapper";
 import IconUserInterfaceMiscellaneousUsers from "@/_design_system/_icons/UserInterface/Miscellaneous/Users.svg";
 import IconUserInterfaceMiscellaneousInfo from "@/_design_system/_icons/UserInterface/Miscellaneous/Info.svg";
+import IconUserInterfaceActionsDelete from "@/_design_system/_icons/UserInterface/Actions/Delete.svg";
+import PhotoCarousel from "@/_components/SpacePage/PhotoCarousel";
 
 import EventTypeSelect from "@/(main)/_components/EventTypeSelect";
-import { allEventTypeOptions } from "@/(main)/search/_utils/attributes";
+import {
+  allEventTypeOptions,
+  getServiceTabFilters,
+} from "@/(main)/search/_utils/attributes";
 import {
   SPACE_EVENT_TYPES_FLAT,
   SpaceEventType,
 } from "@/_constants/space/eventTypes";
-import { SearchResult, useSearchResults } from "@/_models/search";
+import {
+  SearchResult,
+  useAttributes,
+  useSearchResults,
+} from "@/_models/search";
 import { Pack, usePacks } from "@/_models/pack";
 import { useCreateBooking } from "@/_models/booking";
 import { Extra } from "@/(onboarding)/onboarding/_components/Step4/Extras/utils";
@@ -38,7 +47,7 @@ import {
   usesExtraHours,
   usesExtraPax,
 } from "@lib/extras/quantities";
-import { getPackPaymentBreakdown } from "@/_utils/packPayment";
+import { computePackPaymentBreakdown } from "@lib/payment/upfront";
 
 import { createBEMClasses } from "@/_utils/classname";
 import { TimeDuration, formatInt, formatMoney } from "@/_utils/number";
@@ -51,12 +60,15 @@ import { ErrorBoundary } from "@/_services/sentry";
 
 const { block, element } = createBEMClasses("builder-page");
 
+const MAX_SERVICE_PACKS = 5;
+
 type Step =
   | "event-type"
   | "details"
   | "space"
   | "pack"
   | "services"
+  | "external-services"
   | "review";
 
 type ChatEntry = {
@@ -64,7 +76,15 @@ type ChatEntry = {
   answer: string;
 };
 
-type ExtraSelectionMap = Record<string, { hours: number | null; pax: number | null }>;
+type ExtraSelectionMap = Record<
+  string,
+  { hours: number | null; pax: number | null }
+>;
+
+type ServicePackSelection = {
+  pack: Pack;
+  space: SearchResult;
+};
 
 const money = (value: number) =>
   formatMoney(value, { maximumFractionDigits: 0 });
@@ -96,6 +116,7 @@ const BuilderPage = () => {
   const [selectedSpace, setSelectedSpace] = useState<SearchResult | null>(null);
   const [selectedPackID, setSelectedPackID] = useState<string | null>(null);
   const [extraSelection, setExtraSelection] = useState<ExtraSelectionMap>({});
+  const [servicePacks, setServicePacks] = useState<ServicePackSelection[]>([]);
   const [layout, setLayout] = useState<string | null>(null);
 
   const eventTypeLabel = useMemo(
@@ -157,12 +178,24 @@ const BuilderPage = () => {
   const selectedPack =
     pricedPacks?.find((pack) => pack.id === selectedPackID) ?? null;
 
-  const paymentBreakdown =
-    selectedPack && date
-      ? getPackPaymentBreakdown(selectedPack, new Date(date.toString()))
-      : null;
+  const servicePacksTotal = servicePacks.reduce(
+    (sum, { pack }) => sum + (pack.price?.value ?? 0),
+    0,
+  );
 
-  const total = selectedPack?.price?.value ?? 0;
+  const total = (selectedPack?.price?.value ?? 0) + servicePacksTotal;
+
+  // The upfront percentage of the main pack applies to the whole booking,
+  // mirroring the server-side computation.
+  const paymentBreakdown =
+    selectedPack?.price && selectedPack.cancellationPeriod && date
+      ? computePackPaymentBreakdown({
+          totalAmount: total,
+          cancellationPeriod: selectedPack.cancellationPeriod,
+          upfrontPercentage: selectedPack.upfrontPercentage,
+          eventDate: new Date(date.toString()),
+        })
+      : null;
 
   const trackStep = (stepName: string, label?: string) => {
     sendGAEvent("event", "Rinu_CustomClick", {
@@ -187,6 +220,7 @@ const BuilderPage = () => {
     setSelectedSpace(null);
     setSelectedPackID(null);
     setExtraSelection({});
+    setServicePacks([]);
     setLayout(null);
     trackStep("restart");
   };
@@ -197,9 +231,10 @@ const BuilderPage = () => {
         <header className={element("header")}>
           <h1>Monte o seu evento</h1>
           <p>
-            Responda passo a passo: mostramos apenas espaços com disponibilidade
-            real e o preço atualiza-se a cada escolha. No final reserva já, com
-            sinal de apenas {selectedPack?.upfrontPercentage ?? 20}%.
+            Responda passo a passo: mostramos apenas espaços e serviços com
+            disponibilidade real e o preço atualiza-se a cada escolha. No final
+            reserva já, com sinal de apenas{" "}
+            {selectedPack?.upfrontPercentage ?? 20}%.
           </p>
         </header>
         <div className={element("content")}>
@@ -257,7 +292,7 @@ const BuilderPage = () => {
                 onSelect={(searchResult, availablePacks) => {
                   setSelectedSpace(searchResult);
                   pushHistory(
-                    "Estes espaços têm disponibilidade real para o seu evento. Qual prefere?",
+                    "Estes são os 3 melhores espaços com disponibilidade real para o seu evento:",
                     `${searchResult.spaceName} · ${searchResult.address.city}`,
                   );
                   if (availablePacks.length === 1) {
@@ -268,7 +303,7 @@ const BuilderPage = () => {
                     setStep(
                       availablePacks[0].extras.length > 0
                         ? "services"
-                        : "review",
+                        : "external-services",
                     );
                   } else {
                     setStep("pack");
@@ -295,22 +330,27 @@ const BuilderPage = () => {
                     `Packs disponíveis em ${selectedSpace.spaceName}:`,
                     `${pack.name}${pack.price ? ` · ${money(pack.price.value)}` : ""}`,
                   );
-                  setStep(pack.extras.length > 0 ? "services" : "review");
+                  setStep(
+                    pack.extras.length > 0 ? "services" : "external-services",
+                  );
                   trackStep("pack_selected", pack.name);
                 }}
               />
             )}
 
-            {(step === "services" || step === "review") && !selectedPack && (
-              <div className={element("exchange")}>
-                <AssistantBubble>
-                  <div className={element("loading")}>
-                    <CircleLoader size={48} />
-                    <p>A calcular o preço…</p>
-                  </div>
-                </AssistantBubble>
-              </div>
-            )}
+            {(step === "services" ||
+              step === "review" ||
+              step === "external-services") &&
+              !selectedPack && (
+                <div className={element("exchange")}>
+                  <AssistantBubble>
+                    <div className={element("loading")}>
+                      <CircleLoader size={48} />
+                      <p>A calcular o preço…</p>
+                    </div>
+                  </AssistantBubble>
+                </div>
+              )}
 
             {step === "services" && selectedPack && (
               <ServicesStep
@@ -325,13 +365,52 @@ const BuilderPage = () => {
                     (extra) => !!extraSelection[extra.id],
                   );
                   pushHistory(
-                    "Que serviços quer adicionar?",
+                    `Que serviços do pack quer incluir?`,
                     chosen.length > 0
                       ? chosen.map((extra) => extra.description).join(", ")
-                      : "Sem serviços adicionais",
+                      : "Sem serviços do pack",
+                  );
+                  setStep("external-services");
+                  trackStep("services_confirmed", String(chosen.length));
+                }}
+              />
+            )}
+
+            {step === "external-services" && selectedPack && basePacksQuery && (
+              <ExternalServicesStep
+                basePacksQuery={basePacksQuery}
+                eventType={eventType}
+                date={date}
+                startEnd={startEnd}
+                numPeople={numPeople}
+                servicePacks={servicePacks}
+                excludedSpaceIDs={[selectedSpace?.id ?? ""]}
+                onAdd={(selection) => {
+                  setServicePacks((current) => [...current, selection]);
+                  trackStep("external_service_added", selection.pack.name);
+                }}
+                onRemove={(packID) => {
+                  setServicePacks((current) =>
+                    current.filter(({ pack }) => pack.id !== packID),
+                  );
+                }}
+                onContinue={() => {
+                  pushHistory(
+                    "Quer adicionar serviços externos (catering, DJ, fotografia…)?",
+                    servicePacks.length > 0
+                      ? servicePacks
+                          .map(
+                            ({ pack, space }) =>
+                              `${space.spaceName} (${money(pack.price?.value ?? 0)})`,
+                          )
+                          .join(", ")
+                      : "Sem serviços externos",
                   );
                   setStep("review");
-                  trackStep("services_confirmed", String(chosen.length));
+                  trackStep(
+                    "external_services_confirmed",
+                    String(servicePacks.length),
+                  );
                 }}
               />
             )}
@@ -346,6 +425,8 @@ const BuilderPage = () => {
                 numPeople={numPeople}
                 layout={layout}
                 setLayout={setLayout}
+                total={total}
+                servicePacks={servicePacks}
                 paymentBreakdown={paymentBreakdown}
                 isFetchingPrice={isFetchingPricedPacks}
                 isLoggedIn={!!session}
@@ -381,6 +462,7 @@ const BuilderPage = () => {
             space={selectedSpace}
             pack={selectedPack}
             extraSelection={extraSelection}
+            servicePacks={servicePacks}
             total={total}
             paymentBreakdown={paymentBreakdown}
           />
@@ -388,7 +470,10 @@ const BuilderPage = () => {
         {total > 0 && (
           <div className={element("total-bar")}>
             <span>
-              Total{paymentBreakdown?.isPartial ? ` · hoje ${money(paymentBreakdown.todayAmount)}` : ""}
+              Total
+              {paymentBreakdown?.isPartial
+                ? ` · hoje ${money(paymentBreakdown.todayAmount)}`
+                : ""}
             </span>
             <strong>{money(total)}</strong>
           </div>
@@ -578,24 +663,31 @@ type BasePacksQuery = {
 };
 
 const useAvailableSpaces = ({
+  journey,
   eventType,
+  attributes,
   date,
   startEnd,
   numPeople,
   basePacksQuery,
+  enabled = true,
 }: {
+  journey: "venues" | "services";
   eventType: SpaceEventType | null;
+  attributes?: string[];
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
   basePacksQuery: BasePacksQuery;
+  enabled?: boolean;
 }) => {
   const fetchApi = useFetch();
 
   const searchResults = useSearchResults({
     query: {
       eventType: eventType ?? undefined,
-      journey: "venues",
+      journey,
+      attributes: attributes as never,
       date: date?.toString(),
       start: startEnd.start?.string,
       end: startEnd.end?.string,
@@ -603,10 +695,11 @@ const useAvailableSpaces = ({
       pageSize: 18,
       mode: "search",
     },
+    options: { enabled },
   });
 
   const packQueries = useQueries({
-    queries: (searchResults ?? []).map((searchResult) => ({
+    queries: (enabled ? (searchResults ?? []) : []).map((searchResult) => ({
       queryKey: ["builder-space-packs", searchResult.id, basePacksQuery],
       queryFn: () =>
         fetchApi(
@@ -622,10 +715,10 @@ const useAvailableSpaces = ({
   });
 
   const isLoading =
-    !searchResults || packQueries.some((query) => query.isLoading);
+    enabled && (!searchResults || packQueries.some((query) => query.isLoading));
 
   const availableSpaces = useMemo(() => {
-    if (!searchResults) return [];
+    if (!enabled || !searchResults) return [];
     return searchResults
       .map((searchResult, index) => {
         const packs = (packQueries[index]?.data ?? []).filter(isPackBookable);
@@ -633,7 +726,7 @@ const useAvailableSpaces = ({
       })
       .filter(({ packs }) => packs.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchResults, ...packQueries.map((query) => query.data)]);
+  }, [enabled, searchResults, ...packQueries.map((query) => query.data)]);
 
   return { isLoading, availableSpaces };
 };
@@ -653,9 +746,10 @@ const SpaceStep = ({
   basePacksQuery: BasePacksQuery;
   onSelect: (searchResult: SearchResult, availablePacks: Pack[]) => void;
 }) => {
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(3);
 
   const { isLoading, availableSpaces } = useAvailableSpaces({
+    journey: "venues",
     eventType,
     date,
     startEnd,
@@ -668,7 +762,8 @@ const SpaceStep = ({
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Estes espaços têm disponibilidade real para o seu evento. Qual prefere?
+        Estes são os {Math.min(availableSpaces.length || 3, 3)} melhores
+        espaços com disponibilidade real para o seu evento:
         {isLoading ? (
           <div className={element("loading")}>
             <CircleLoader size={48} />
@@ -698,7 +793,7 @@ const SpaceStep = ({
             {availableSpaces.length > visibleCount && (
               <TextButton
                 text="Mostrar mais espaços"
-                onClick={() => setVisibleCount((count) => count + 6)}
+                onClick={() => setVisibleCount((count) => count + 3)}
               />
             )}
           </>
@@ -718,44 +813,63 @@ const SpaceOption = ({
   minPrice: number;
   numPacks: number;
   onSelect: () => void;
-}) => (
-  <div className={element("option")}>
-    <div className={element("option__photo")}>
-      {searchResult.photoURLs?.[0] && (
-        <Image alt="" src={searchResult.photoURLs[0]} fill sizes="10rem" />
-      )}
-    </div>
-    <div className={element("option__info")}>
-      <p className={element("option__title")}>{searchResult.spaceName}</p>
-      <p className={element("option__detail")}>
-        {searchResult.address.city}
-        {" · "}
-        <IconUserInterfaceMiscellaneousUsers />{" "}
-        {formatInt(searchResult.capacity)}
-        {" · "}
-        {numPacks} {numPacks === 1 ? "pack disponível" : "packs disponíveis"}
-      </p>
-      <Stack row gap="0.5rem" alignItems="center" flexWrap="wrap">
+}) => {
+  const description =
+    searchResult.description.length > 600
+      ? `${searchResult.description.slice(0, 600)}…`
+      : searchResult.description;
+
+  return (
+    <div className={element("space-card")}>
+      <div className={element("space-card__media")}>
+        <div className={element("space-card__media__photo")}>
+          {searchResult.photoURLs.length > 0 && (
+            <PhotoCarousel
+              photoURLs={searchResult.photoURLs}
+              showPrevNextButtons
+              lazyLoading
+            />
+          )}
+        </div>
+        <TextButton
+          text="Ver mais fotos"
+          href={`/space/${searchResult.id}`}
+          target="_blank"
+          size="small"
+        />
+      </div>
+      <div className={element("space-card__info")}>
+        <p className={element("space-card__title")}>
+          {searchResult.spaceName}
+          {searchResult.recommended && (
+            <Tag text="Recomendado" type="info" size="small" />
+          )}
+        </p>
+        <p className={element("space-card__detail")}>
+          {searchResult.address.city}
+          {" · "}
+          <IconUserInterfaceMiscellaneousUsers />{" "}
+          {formatInt(searchResult.capacity)}
+          {" · "}
+          {numPacks} {numPacks === 1 ? "pack disponível" : "packs disponíveis"}
+        </p>
+        {!!description && (
+          <p className={element("space-card__description")}>{description}</p>
+        )}
+      </div>
+      <div className={element("space-card__side")}>
         {Number.isFinite(minPrice) && (
-          <p className={element("option__price")}>
-            desde <b>{money(minPrice)}</b> para o seu evento
-          </p>
+          <div className={element("space-card__price")}>
+            <span>desde</span>
+            <strong>{money(minPrice)}</strong>
+            <span>para o seu evento</span>
+          </div>
         )}
-        {searchResult.recommended && (
-          <Tag text="Recomendado" type="info" size="small" />
-        )}
-      </Stack>
+        <Button type="primary" label="Escolher" onClick={onSelect} />
+      </div>
     </div>
-    <div className={element("option__actions")}>
-      <Button type="primary" label="Escolher" onClick={onSelect} />
-      <TextButton
-        text="Ver espaço"
-        href={`/space/${searchResult.id}`}
-        target="_blank"
-      />
-    </div>
-  </div>
-);
+  );
+};
 
 const PackStep = ({
   space,
@@ -800,19 +914,18 @@ const PackStep = ({
                   <p className={element("option__title")}>{pack.name}</p>
                   {!!pack.description && (
                     <p className={element("option__detail")}>
-                      {pack.description.length > 140
-                        ? `${pack.description.slice(0, 140)}…`
+                      {pack.description.length > 240
+                        ? `${pack.description.slice(0, 240)}…`
                         : pack.description}
-                    </p>
-                  )}
-                  {!!pack.price && (
-                    <p className={element("option__price")}>
-                      <b>{money(pack.price.value)}</b>
-                      {pack.extras.length > 0 && " + serviços opcionais"}
                     </p>
                   )}
                 </div>
                 <div className={element("option__actions")}>
+                  {!!pack.price && (
+                    <p className={element("option__price")}>
+                      <b>{money(pack.price.value)}</b>
+                    </p>
+                  )}
                   <Button
                     type="primary"
                     label="Escolher"
@@ -899,7 +1012,7 @@ const ServicesStep = ({
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Que serviços quer adicionar? O preço atualiza-se a cada escolha.
+        Este pack inclui serviços opcionais. Quais quer adicionar?
         <div className={element("chips")}>
           {pack.extras.map((extra) => {
             const selected = !!extraSelection[extra.id];
@@ -999,9 +1112,7 @@ const ServicesStep = ({
         <Button
           type="primary"
           label={
-            pack.price
-              ? `Continuar · ${money(pack.price.value)}`
-              : "Continuar"
+            pack.price ? `Continuar · ${money(pack.price.value)}` : "Continuar"
           }
           loading={isFetchingPrice}
           onClick={onContinue}
@@ -1031,6 +1142,180 @@ function extraPriceExplanation(
   return extra.tooltip ? `${extra.tooltip} — ${formula}` : formula;
 }
 
+const ExternalServicesStep = ({
+  basePacksQuery,
+  eventType,
+  date,
+  startEnd,
+  numPeople,
+  servicePacks,
+  excludedSpaceIDs,
+  onAdd,
+  onRemove,
+  onContinue,
+}: {
+  basePacksQuery: BasePacksQuery;
+  eventType: SpaceEventType | null;
+  date: CalendarDate | null;
+  startEnd: { start: TimeDuration | null; end: TimeDuration | null };
+  numPeople: number | undefined;
+  servicePacks: ServicePackSelection[];
+  excludedSpaceIDs: string[];
+  onAdd: (selection: ServicePackSelection) => void;
+  onRemove: (packID: string) => void;
+  onContinue: () => void;
+}) => {
+  const { data: availableAttributes = [] } = useAttributes();
+  const categories = getServiceTabFilters(availableAttributes).filter(
+    ({ id }) => id !== "all",
+  );
+
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const { isLoading, availableSpaces } = useAvailableSpaces({
+    journey: "services",
+    eventType,
+    attributes: activeCategory ? [activeCategory] : undefined,
+    date,
+    startEnd,
+    numPeople,
+    basePacksQuery,
+    enabled: !!activeCategory,
+  });
+
+  const addedPackIDs = new Set(servicePacks.map(({ pack }) => pack.id));
+  const addedSpaceIDs = new Set(servicePacks.map(({ space }) => space.id));
+
+  const offers = availableSpaces.filter(
+    ({ searchResult }) =>
+      !excludedSpaceIDs.includes(searchResult.id) &&
+      !addedSpaceIDs.has(searchResult.id),
+  );
+
+  const canAddMore = servicePacks.length < MAX_SERVICE_PACKS;
+
+  return (
+    <div className={element("exchange")}>
+      <AssistantBubble>
+        Quer adicionar serviços externos (catering, DJ, fotografia…)? Pode
+        juntar vários ao mesmo booking.
+        <div className={element("chips")}>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              type="button"
+              className={element("chip", {
+                selected: activeCategory === category.id,
+              })}
+              onClick={() =>
+                setActiveCategory(
+                  activeCategory === category.id ? null : category.id,
+                )
+              }
+            >
+              {category.label}
+            </button>
+          ))}
+        </div>
+        {!!activeCategory &&
+          (isLoading ? (
+            <div className={element("loading")}>
+              <CircleLoader size={48} />
+              <p>A confirmar disponibilidade…</p>
+            </div>
+          ) : offers.length === 0 ? (
+            <p className={element("empty")}>
+              Sem serviços disponíveis nesta categoria para a data e horário do
+              evento.
+            </p>
+          ) : (
+            <div className={element("options")}>
+              {offers.slice(0, 4).map(({ searchResult, packs }) => {
+                const cheapestPack = packs.reduce((cheapest, pack) =>
+                  (pack.price?.value ?? Infinity) <
+                  (cheapest.price?.value ?? Infinity)
+                    ? pack
+                    : cheapest,
+                );
+                return (
+                  <div key={searchResult.id} className={element("option")}>
+                    <div className={element("option__photo")}>
+                      {searchResult.photoURLs[0] && (
+                        <Image
+                          alt=""
+                          src={searchResult.photoURLs[0]}
+                          fill
+                          sizes="10rem"
+                        />
+                      )}
+                    </div>
+                    <div className={element("option__info")}>
+                      <p className={element("option__title")}>
+                        {searchResult.spaceName}
+                      </p>
+                      <p className={element("option__detail")}>
+                        {cheapestPack.name}
+                      </p>
+                    </div>
+                    <div className={element("option__actions")}>
+                      {!!cheapestPack.price && (
+                        <p className={element("option__price")}>
+                          <b>{money(cheapestPack.price.value)}</b>
+                        </p>
+                      )}
+                      <Button
+                        type="primary"
+                        label="Adicionar"
+                        disabled={
+                          !canAddMore || addedPackIDs.has(cheapestPack.id)
+                        }
+                        onClick={() =>
+                          onAdd({ pack: cheapestPack, space: searchResult })
+                        }
+                      />
+                      <TextButton
+                        text="Ver detalhes"
+                        href={`/space/${searchResult.id}`}
+                        target="_blank"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        {servicePacks.length > 0 && (
+          <div className={element("added-services")}>
+            <p>Serviços adicionados:</p>
+            {servicePacks.map(({ pack, space }) => (
+              <div key={pack.id} className={element("added-services__item")}>
+                <span>
+                  {space.spaceName} · {money(pack.price?.value ?? 0)}
+                </span>
+                <IconButton
+                  ariaLabel="Remover serviço"
+                  icon={<IconUserInterfaceActionsDelete />}
+                  onClick={() => onRemove(pack.id)}
+                  showTooltip={false}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <Button
+          type="primary"
+          label={
+            servicePacks.length > 0
+              ? "Continuar com estes serviços"
+              : "Continuar sem serviços externos"
+          }
+          onClick={onContinue}
+        />
+      </AssistantBubble>
+    </div>
+  );
+};
+
 const ReviewStep = ({
   space,
   pack,
@@ -1040,6 +1325,8 @@ const ReviewStep = ({
   numPeople,
   layout,
   setLayout,
+  total,
+  servicePacks,
   paymentBreakdown,
   isFetchingPrice,
   isLoggedIn,
@@ -1055,7 +1342,9 @@ const ReviewStep = ({
   numPeople: number | undefined;
   layout: string | null;
   setLayout: (layout: string | null) => void;
-  paymentBreakdown: ReturnType<typeof getPackPaymentBreakdown>;
+  total: number;
+  servicePacks: ServicePackSelection[];
+  paymentBreakdown: ReturnType<typeof computePackPaymentBreakdown> | null;
   isFetchingPrice: boolean;
   isLoggedIn: boolean;
   extraSelection: ExtraSelectionMap;
@@ -1071,10 +1360,8 @@ const ReviewStep = ({
     availableCapacities.find((capacity) => capacity.id === layout)?.id ??
     (availableCapacities.length === 1 ? availableCapacities[0].id : null);
 
-  const {
-    mutateAsync: createBooking,
-    isPending: isPendingCreateBooking,
-  } = useCreateBooking();
+  const { mutateAsync: createBooking, isPending: isPendingCreateBooking } =
+    useCreateBooking();
 
   const book = async () => {
     setError(null);
@@ -1107,12 +1394,19 @@ const ReviewStep = ({
           ...(quantities.hours != null ? { hours: quantities.hours } : {}),
           ...(quantities.pax != null ? { pax: quantities.pax } : {}),
         })),
+        servicePacks: servicePacks.map(({ pack: servicePack }) => ({
+          packID: servicePack.id,
+        })),
       });
       onBooked(bookingID);
     } catch (e) {
       if ((e as Error).message.includes("already_booked")) {
         setError(
           "Este espaço acabou de ser reservado para este horário. Escolha outro horário ou espaço.",
+        );
+      } else if ((e as Error).message.includes("service_pack_unavailable")) {
+        setError(
+          "Um dos serviços externos deixou de estar disponível. Remova-o e tente novamente.",
         );
       } else {
         setError("Ocorreu um erro ao criar a reserva. Tente novamente.");
@@ -1133,14 +1427,24 @@ const ReviewStep = ({
             <b>{pack.name}</b> — {space.spaceName} · {space.address.city}
           </p>
           <p className={element("review__detail")}>
-            {eventTypeLabel} · {date?.toString()} ·{" "}
-            {startEnd.start?.timeLabel}–{startEnd.end?.timeLabel} ·{" "}
-            {formatInt(numPeople ?? 0)} pessoas
+            {eventTypeLabel} · {date?.toString()} · {startEnd.start?.timeLabel}
+            –{startEnd.end?.timeLabel} · {formatInt(numPeople ?? 0)} pessoas
           </p>
           {selectedExtras.length > 0 && (
             <p className={element("review__detail")}>
-              Serviços:{" "}
+              Serviços do pack:{" "}
               {selectedExtras.map((extra) => extra.description).join(", ")}
+            </p>
+          )}
+          {servicePacks.length > 0 && (
+            <p className={element("review__detail")}>
+              Serviços externos:{" "}
+              {servicePacks
+                .map(
+                  ({ pack: servicePack, space: serviceSpace }) =>
+                    `${serviceSpace.spaceName} (${money(servicePack.price?.value ?? 0)})`,
+                )
+                .join(", ")}
             </p>
           )}
         </div>
@@ -1163,40 +1467,34 @@ const ReviewStep = ({
             </div>
           </>
         )}
-        {!!pack.price && (
-          <div className={element("review__payment")}>
-            <Stack row justifyContent="space-between">
-              <span>Total do evento</span>
-              <b>{money(pack.price.value)}</b>
-            </Stack>
-            {paymentBreakdown?.isPartial && (
-              <>
-                <Stack row justifyContent="space-between">
-                  <span>
-                    Paga hoje ({paymentBreakdown.upfrontPercentage}%)
-                  </span>
-                  <b>{money(paymentBreakdown.todayAmount)}</b>
-                </Stack>
-                <Stack row justifyContent="space-between">
-                  <span>
-                    Restante até{" "}
-                    {formatDate(paymentBreakdown.freeCancellationUntil)}
-                  </span>
-                  <span>{money(paymentBreakdown.laterAmount)}</span>
-                </Stack>
-              </>
-            )}
-          </div>
-        )}
+        <div className={element("review__payment")}>
+          <Stack row justifyContent="space-between">
+            <span>Total do evento</span>
+            <b>{money(total)}</b>
+          </Stack>
+          {paymentBreakdown?.isPartial && (
+            <>
+              <Stack row justifyContent="space-between">
+                <span>Paga hoje ({paymentBreakdown.upfrontPercentage}%)</span>
+                <b>{money(paymentBreakdown.todayAmount)}</b>
+              </Stack>
+              <Stack row justifyContent="space-between">
+                <span>
+                  Restante até{" "}
+                  {formatDate(paymentBreakdown.freeCancellationUntil)}
+                </span>
+                <span>{money(paymentBreakdown.laterAmount)}</span>
+              </Stack>
+            </>
+          )}
+        </div>
         {error && <InputError error={error} />}
         <Button
           type="primary"
           label={
             paymentBreakdown?.isPartial
               ? `Reservar agora · paga ${money(paymentBreakdown.todayAmount)} hoje`
-              : pack.price
-                ? `Reservar agora · ${money(pack.price.value)}`
-                : "Reservar agora"
+              : `Reservar agora · ${money(total)}`
           }
           loading={isPendingCreateBooking || isFetchingPrice}
           onClick={() => void book()}
@@ -1219,6 +1517,7 @@ const BuilderSummary = ({
   space,
   pack,
   extraSelection,
+  servicePacks,
   total,
   paymentBreakdown,
 }: {
@@ -1229,8 +1528,9 @@ const BuilderSummary = ({
   space: SearchResult | null;
   pack: Pack | null;
   extraSelection: ExtraSelectionMap;
+  servicePacks: ServicePackSelection[];
   total: number;
-  paymentBreakdown: ReturnType<typeof getPackPaymentBreakdown>;
+  paymentBreakdown: ReturnType<typeof computePackPaymentBreakdown> | null;
 }) => {
   const baseValue =
     pack?.price != null
@@ -1292,6 +1592,12 @@ const BuilderSummary = ({
                 </div>
               );
             })}
+          {servicePacks.map(({ pack: servicePack, space: serviceSpace }) => (
+            <div key={servicePack.id} className={element("summary__line")}>
+              <span>{serviceSpace.spaceName}</span>
+              <span>{money(servicePack.price?.value ?? 0)}</span>
+            </div>
+          ))}
         </div>
       )}
       <div className={element("summary__total")}>
@@ -1315,7 +1621,8 @@ const BuilderSummary = ({
       )}
       <p className={element("summary__disclaimer")}>
         Preços calculados em tempo real com base na oferta publicada. Reserva
-        com pagamento seguro e sinal de {paymentBreakdown?.upfrontPercentage ?? 20}%.
+        com pagamento seguro e sinal de{" "}
+        {paymentBreakdown?.upfrontPercentage ?? 20}%.
       </p>
     </aside>
   );
