@@ -11,6 +11,7 @@ import { sendGAEvent } from "@next/third-parties/google";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Stack from "@/_design_system/Stack";
+import AIPlannerButton from "../AIPlannerButton";
 
 const { block, element } = createBEMClasses("home-quote-request-section");
 
@@ -63,20 +64,7 @@ const HomeQuoteRequestSection = () => {
               href={isMobile ? "/quote-request" : undefined}
               onClick={() => handleQuoteRequestClick()}
             />
-            <div className={element("ai-planner")}>
-              <Button
-                type="secondary"
-                label="AI Planner"
-                href="/builder"
-                onClick={() => {
-                  sendGAEvent("event", "Rinu_CustomClick", {
-                    Rinu_ScreenName: pathname,
-                    Rinu_ItemCategory: "Standard",
-                    Rinu_ItemType: "event_builder_entry",
-                  });
-                }}
-              />
-            </div>
+            <AIPlannerButton source="home-team-section" />
           </Stack>
         </Stack>
         <div className={element("photos")}>

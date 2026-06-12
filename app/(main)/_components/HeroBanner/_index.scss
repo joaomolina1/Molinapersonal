@@ -43,6 +43,24 @@
     margin-top: 1.5rem;
   }
 
+  &__ai-planner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+
+    p {
+      @include font-body-s;
+      color: $color-neutral-2;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+
+      b {
+        color: $color-neutral-0;
+      }
+    }
+  }
+
   &__banner {
     display: none;
   }
@@ -69,7 +87,7 @@
 
     h1 {
       @include font-hero-banner;
-      margin-top: 10rem;
+      margin-top: 8rem;
     }
 
     h2 {
@@ -77,8 +95,16 @@
       margin-top: 1rem;
     }
 
+    &__ai-planner {
+      flex-direction: row;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
     &__banner {
       display: initial;
+      margin-top: 2.5rem;
     }
   }
 }
