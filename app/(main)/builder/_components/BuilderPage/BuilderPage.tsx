@@ -4,23 +4,20 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { sendGAEvent } from "@next/third-parties/google";
+import { useQueries } from "@tanstack/react-query";
 import { CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 
 import Button, { TextButton } from "@/_design_system/Button";
 import Stack from "@/_design_system/Stack";
 import Tag from "@/_design_system/Tag";
+import Tooltip from "@/_design_system/Tooltip";
 import InputDate from "@/_design_system/InputDate";
 import InputTimeRange from "@/_design_system/InputTimeRange";
 import InputNumber from "@/_design_system/InputNumber";
-import InputText from "@/_design_system/InputText";
-import InputTextArea from "@/_design_system/InputTextArea";
-import InputPhone, { isValidPhone } from "@/_design_system/InputPhone";
-import InputCheckbox from "@/_design_system/InputCheckbox";
 import CircleLoader from "@/_design_system/CircleLoader";
 import { InputError } from "@/_design_system/_utils/InputWrapper";
 import IconUserInterfaceMiscellaneousUsers from "@/_design_system/_icons/UserInterface/Miscellaneous/Users.svg";
-import IconUserInterfaceActionsDelete from "@/_design_system/_icons/UserInterface/Actions/Delete.svg";
-import { IconButton } from "@/_design_system/Button";
+import IconUserInterfaceMiscellaneousInfo from "@/_design_system/_icons/UserInterface/Miscellaneous/Info.svg";
 
 import EventTypeSelect from "@/(main)/_components/EventTypeSelect";
 import { allEventTypeOptions } from "@/(main)/search/_utils/attributes";
@@ -30,70 +27,58 @@ import {
 } from "@/_constants/space/eventTypes";
 import { SearchResult, useSearchResults } from "@/_models/search";
 import { Pack, usePacks } from "@/_models/pack";
-import { useCreateQuote } from "@/_models/quote";
+import { useCreateBooking } from "@/_models/booking";
 import { Extra } from "@/(onboarding)/onboarding/_components/Step4/Extras/utils";
 import {
   computeExtraPrice,
+  extraParamsFromRecord,
   resolveExtraHours,
   resolveExtraPax,
+  serializeExtraParamsQuery,
   usesExtraHours,
   usesExtraPax,
 } from "@lib/extras/quantities";
+import { getPackPaymentBreakdown } from "@/_utils/packPayment";
 
 import { createBEMClasses } from "@/_utils/classname";
 import { TimeDuration, formatInt, formatMoney } from "@/_utils/number";
+import { formatDate } from "@/_utils/date";
+import { useFetch } from "@/_services/api";
 import { useSession } from "@/_services/session";
+import { useSessionSearchParams } from "@/_components/Header";
+import { useRouterPush } from "@/_services/navigation";
 import { ErrorBoundary } from "@/_services/sentry";
 
 const { block, element } = createBEMClasses("builder-page");
-
-const MAX_PLAN_ITEMS = 5;
 
 type Step =
   | "event-type"
   | "details"
   | "space"
   | "pack"
-  | "extras"
-  | "more"
-  | "contact"
-  | "success";
+  | "services"
+  | "review";
 
 type ChatEntry = {
   question: string;
   answer: string;
 };
 
-type PlanExtra = {
-  id: string;
-  description: string;
-  value: number;
-  hours: number | null;
-  pax: number | null;
-};
-
-type PlanItem = {
-  key: string;
-  packID: string;
-  packName: string;
-  spaceID: string;
-  spaceName: string;
-  venueID: string;
-  venueName: string;
-  city: string;
-  photoURL: string | null;
-  baseValue: number;
-  extras: PlanExtra[];
-};
-
-const planItemTotal = (item: PlanItem) =>
-  item.baseValue + item.extras.reduce((sum, extra) => sum + extra.value, 0);
+type ExtraSelectionMap = Record<string, { hours: number | null; pax: number | null }>;
 
 const money = (value: number) =>
   formatMoney(value, { maximumFractionDigits: 0 });
 
+const isPackBookable = (pack: Pack) =>
+  pack.prices.some((price) => new Date(price.to) > new Date()) &&
+  !pack.unavailabilityReason &&
+  !!pack.price?.value;
+
 const BuilderPage = () => {
   const pathname = usePathname();
+  const [session] = useSession();
+  const [, setSessionSearchParams] = useSessionSearchParams();
+  const routerPush = useRouterPush();
 
   const [step, setStep] = useState<Step>("event-type");
   const [history, setHistory] = useState<ChatEntry[]>([]);
@@ -106,14 +91,12 @@ const BuilderPage = () => {
     end: TimeDuration | null;
   }>({ start: null, end: null });
   const [numPeople, setNumPeople] = useState<number | undefined>(undefined);
-  const [budget, setBudget] = useState<number | undefined>(undefined);
 
-  // Current selection
+  // Selection
   const [selectedSpace, setSelectedSpace] = useState<SearchResult | null>(null);
-  const [selectedPack, setSelectedPack] = useState<Pack | null>(null);
-
-  // The plan being built
-  const [plan, setPlan] = useState<PlanItem[]>([]);
+  const [selectedPackID, setSelectedPackID] = useState<string | null>(null);
+  const [extraSelection, setExtraSelection] = useState<ExtraSelectionMap>({});
+  const [layout, setLayout] = useState<string | null>(null);
 
   const eventTypeLabel = useMemo(
     () =>
@@ -121,6 +104,65 @@ const BuilderPage = () => {
       "",
     [eventType],
   );
+
+  const basePacksQuery = useMemo(() => {
+    if (!date || !startEnd.start || !startEnd.end || !numPeople) {
+      return undefined;
+    }
+    return {
+      date: date.toDate("Etc/UTC").toISOString(),
+      start: startEnd.start.string,
+      end: startEnd.end.string,
+      num_persons: numPeople,
+      extras: "",
+    };
+  }, [date, startEnd, numPeople]);
+
+  const selectedExtraIDs = Object.keys(extraSelection);
+
+  // The selected pack re-priced with the chosen services, so totals always
+  // come from the same pricing engine used at checkout.
+  const pricedPacksQuery = useMemo(() => {
+    if (!basePacksQuery) return undefined;
+    const selections = extraParamsFromRecord(
+      Object.fromEntries(
+        Object.entries(extraSelection).map(([id, quantities]) => [
+          id,
+          {
+            ...(quantities.hours != null ? { hours: quantities.hours } : {}),
+            ...(quantities.pax != null ? { pax: quantities.pax } : {}),
+          },
+        ]),
+      ),
+    );
+    return {
+      ...basePacksQuery,
+      extras: selectedExtraIDs.join(","),
+      ...(selections.length > 0
+        ? { extra_params: serializeExtraParamsQuery(selections) }
+        : {}),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [basePacksQuery, extraSelection]);
+
+  const { data: pricedPacks, isFetching: isFetchingPricedPacks } = usePacks(
+    {
+      spaceID: selectedSpace?.id,
+      query: pricedPacksQuery,
+      mode: "public",
+    },
+    { enabled: !!selectedSpace && !!selectedPackID, keepPreviousData: true },
+  );
+
+  const selectedPack =
+    pricedPacks?.find((pack) => pack.id === selectedPackID) ?? null;
+
+  const paymentBreakdown =
+    selectedPack && date
+      ? getPackPaymentBreakdown(selectedPack, new Date(date.toString()))
+      : null;
+
+  const total = selectedPack?.price?.value ?? 0;
 
   const trackStep = (stepName: string, label?: string) => {
     sendGAEvent("event", "Rinu_CustomClick", {
@@ -142,14 +184,12 @@ const BuilderPage = () => {
     setDate(null);
     setStartEnd({ start: null, end: null });
     setNumPeople(undefined);
-    setBudget(undefined);
     setSelectedSpace(null);
-    setSelectedPack(null);
-    setPlan([]);
+    setSelectedPackID(null);
+    setExtraSelection({});
+    setLayout(null);
     trackStep("restart");
   };
-
-  const total = plan.reduce((sum, item) => sum + planItemTotal(item), 0);
 
   return (
     <ErrorBoundary>
@@ -157,15 +197,16 @@ const BuilderPage = () => {
         <header className={element("header")}>
           <h1>Monte o seu evento</h1>
           <p>
-            Responda passo a passo e vamos sugerindo os melhores espaços e
-            serviços — com o preço sempre à vista.
+            Responda passo a passo: mostramos apenas espaços com disponibilidade
+            real e o preço atualiza-se a cada escolha. No final reserva já, com
+            sinal de apenas {selectedPack?.upfrontPercentage ?? 20}%.
           </p>
         </header>
         <div className={element("content")}>
           <div className={element("chat")}>
             <AssistantBubble>
               Olá! 👋 Sou o assistente de eventos da RINU. Vou ajudá-lo a
-              montar o seu evento em poucos passos.
+              montar e reservar o seu evento em poucos passos.
             </AssistantBubble>
 
             {history.map((entry, index) => (
@@ -195,8 +236,6 @@ const BuilderPage = () => {
                 setStartEnd={setStartEnd}
                 numPeople={numPeople}
                 setNumPeople={setNumPeople}
-                budget={budget}
-                setBudget={setBudget}
                 onContinue={(answer) => {
                   pushHistory(
                     "Para quando, a que horas e para quantas pessoas?",
@@ -208,192 +247,178 @@ const BuilderPage = () => {
               />
             )}
 
-            {step === "space" && (
+            {step === "space" && basePacksQuery && (
               <SpaceStep
                 eventType={eventType}
                 date={date}
                 startEnd={startEnd}
                 numPeople={numPeople}
-                budget={budget}
-                excludedSpaceIDs={plan.map((item) => item.spaceID)}
-                onSelect={(searchResult) => {
+                basePacksQuery={basePacksQuery}
+                onSelect={(searchResult, availablePacks) => {
                   setSelectedSpace(searchResult);
                   pushHistory(
-                    "Estes são os espaços mais adequados ao seu evento. Qual prefere?",
+                    "Estes espaços têm disponibilidade real para o seu evento. Qual prefere?",
                     `${searchResult.spaceName} · ${searchResult.address.city}`,
                   );
-                  setStep("pack");
+                  if (availablePacks.length === 1) {
+                    setSelectedPackID(availablePacks[0].id);
+                    setExtraSelection(
+                      mandatorySelection(availablePacks[0], startEnd, numPeople),
+                    );
+                    setStep(
+                      availablePacks[0].extras.length > 0
+                        ? "services"
+                        : "review",
+                    );
+                  } else {
+                    setStep("pack");
+                  }
                   trackStep("space_selected", searchResult.spaceName);
                 }}
               />
             )}
 
-            {step === "pack" && selectedSpace && date && (
+            {step === "pack" && selectedSpace && basePacksQuery && (
               <PackStep
                 space={selectedSpace}
-                date={date}
-                startEnd={startEnd}
-                numPeople={numPeople}
+                basePacksQuery={basePacksQuery}
                 onBack={() => {
                   setSelectedSpace(null);
                   setStep("space");
                 }}
                 onSelect={(pack) => {
-                  setSelectedPack(pack);
+                  setSelectedPackID(pack.id);
+                  setExtraSelection(
+                    mandatorySelection(pack, startEnd, numPeople),
+                  );
                   pushHistory(
                     `Packs disponíveis em ${selectedSpace.spaceName}:`,
                     `${pack.name}${pack.price ? ` · ${money(pack.price.value)}` : ""}`,
                   );
-                  setStep(pack.extras.length > 0 ? "extras" : "more");
-                  if (pack.extras.length === 0) {
-                    addToPlan(pack, []);
-                  }
+                  setStep(pack.extras.length > 0 ? "services" : "review");
                   trackStep("pack_selected", pack.name);
                 }}
               />
             )}
 
-            {step === "extras" && selectedPack && (
-              <ExtrasStep
+            {(step === "services" || step === "review") && !selectedPack && (
+              <div className={element("exchange")}>
+                <AssistantBubble>
+                  <div className={element("loading")}>
+                    <CircleLoader size={48} />
+                    <p>A calcular o preço…</p>
+                  </div>
+                </AssistantBubble>
+              </div>
+            )}
+
+            {step === "services" && selectedPack && (
+              <ServicesStep
                 pack={selectedPack}
                 startEnd={startEnd}
                 numPeople={numPeople}
-                onConfirm={(extras) => {
-                  addToPlan(selectedPack, extras);
+                extraSelection={extraSelection}
+                setExtraSelection={setExtraSelection}
+                isFetchingPrice={isFetchingPricedPacks}
+                onContinue={() => {
+                  const chosen = selectedPack.extras.filter(
+                    (extra) => !!extraSelection[extra.id],
+                  );
                   pushHistory(
-                    "Quer adicionar serviços a este pack?",
-                    extras.length > 0
-                      ? extras
-                          .map(
-                            (extra) =>
-                              `${extra.description} (${money(extra.value)})`,
-                          )
-                          .join(", ")
+                    "Que serviços quer adicionar?",
+                    chosen.length > 0
+                      ? chosen.map((extra) => extra.description).join(", ")
                       : "Sem serviços adicionais",
                   );
-                  trackStep("extras_confirmed", String(extras.length));
+                  setStep("review");
+                  trackStep("services_confirmed", String(chosen.length));
                 }}
               />
             )}
 
-            {step === "more" && (
-              <MoreStep
-                canAddMore={plan.length < MAX_PLAN_ITEMS}
-                onAddMore={() => {
-                  pushHistory(
-                    "Quer adicionar mais alguma coisa ao plano?",
-                    "Sim, adicionar outro espaço ou serviço",
-                  );
-                  setSelectedSpace(null);
-                  setSelectedPack(null);
-                  setStep("space");
-                  trackStep("add_more");
-                }}
-                onFinish={() => {
-                  pushHistory(
-                    "Quer adicionar mais alguma coisa ao plano?",
-                    "Não, concluir o pedido",
-                  );
-                  setStep("contact");
-                  trackStep("finish_plan", String(plan.length));
-                }}
-              />
-            )}
-
-            {step === "contact" && (
-              <ContactStep
-                plan={plan}
-                total={total}
-                eventType={eventType}
+            {step === "review" && selectedSpace && selectedPack && (
+              <ReviewStep
+                space={selectedSpace}
+                pack={selectedPack}
                 eventTypeLabel={eventTypeLabel}
                 date={date}
                 startEnd={startEnd}
                 numPeople={numPeople}
-                budget={budget}
-                onSuccess={() => {
-                  setStep("success");
-                  trackStep("quote_sent", String(plan.length));
+                layout={layout}
+                setLayout={setLayout}
+                paymentBreakdown={paymentBreakdown}
+                isFetchingPrice={isFetchingPricedPacks}
+                isLoggedIn={!!session}
+                extraSelection={extraSelection}
+                onLoginNeeded={() => {
+                  trackStep("booking_forceLogIn");
+                  setSessionSearchParams({
+                    action: "login",
+                    source: "builder",
+                    otp: null,
+                    username: null,
+                  });
+                }}
+                onBooked={(bookingID) => {
+                  trackStep("booking_created", bookingID);
+                  routerPush(`/book?bookingID=${bookingID}`);
                 }}
               />
             )}
 
-            {step === "success" && (
-              <div className={element("exchange")}>
-                <AssistantBubble>
-                  Pedido enviado com sucesso! 🎉 A nossa equipa vai analisar o
-                  seu plano e entra em contacto em 12h úteis com a proposta
-                  final.
-                </AssistantBubble>
-                <Stack row gap="0.75rem" flexWrap="wrap">
-                  <Button type="primary" label="Voltar à página inicial" href="/" />
-                  <Button
-                    type="secondary"
-                    label="Montar outro evento"
-                    onClick={restart}
-                  />
-                </Stack>
-              </div>
-            )}
-
-            {step !== "event-type" && step !== "success" && (
+            {step !== "event-type" && (
               <div className={element("restart")}>
                 <TextButton text="Recomeçar do início" onClick={restart} />
               </div>
             )}
           </div>
 
-          <PlanSummary
-            plan={plan}
-            total={total}
+          <BuilderSummary
             eventTypeLabel={eventTypeLabel}
             date={date}
             startEnd={startEnd}
             numPeople={numPeople}
-            onRemove={(key) => {
-              setPlan((items) => items.filter((item) => item.key !== key));
-              trackStep("plan_item_removed");
-            }}
-            showCTA={step === "more" && plan.length > 0}
-            onFinish={() => {
-              pushHistory(
-                "Quer adicionar mais alguma coisa ao plano?",
-                "Não, concluir o pedido",
-              );
-              setStep("contact");
-            }}
+            space={selectedSpace}
+            pack={selectedPack}
+            extraSelection={extraSelection}
+            total={total}
+            paymentBreakdown={paymentBreakdown}
           />
         </div>
-        {plan.length > 0 && step !== "success" && (
+        {total > 0 && (
           <div className={element("total-bar")}>
-            <span>Total estimado</span>
+            <span>
+              Total{paymentBreakdown?.isPartial ? ` · hoje ${money(paymentBreakdown.todayAmount)}` : ""}
+            </span>
             <strong>{money(total)}</strong>
           </div>
         )}
       </div>
     </ErrorBoundary>
   );
-
-  function addToPlan(pack: Pack, extras: PlanExtra[]) {
-    if (!selectedSpace) return;
-    setPlan((items) => [
-      ...items,
-      {
-        key: `${pack.id}-${Date.now()}`,
-        packID: pack.id,
-        packName: pack.name,
-        spaceID: selectedSpace.id,
-        spaceName: selectedSpace.spaceName,
-        venueID: selectedSpace.venueID,
-        venueName: selectedSpace.venueName,
-        city: selectedSpace.address.city,
-        photoURL: selectedSpace.photoURLs?.[0] ?? null,
-        baseValue: pack.price?.value ?? 0,
-        extras,
-      },
-    ]);
-    setStep("more");
-  }
 };
+
+function mandatorySelection(
+  pack: Pack,
+  startEnd: { start: TimeDuration | null; end: TimeDuration | null },
+  numPeople: number | undefined,
+): ExtraSelectionMap {
+  const eventHours =
+    startEnd.start && startEnd.end
+      ? Math.max(startEnd.end.number - startEnd.start.number, 0)
+      : 0;
+  return Object.fromEntries(
+    pack.extras
+      .filter((extra) => extra.mandatory)
+      .map((extra) => [
+        extra.id,
+        {
+          hours: resolveExtraHours(extra, eventHours, null),
+          pax: resolveExtraPax(extra, numPeople ?? 0, null),
+        },
+      ]),
+  );
+}
 
 const AssistantBubble = ({ children }: { children: React.ReactNode }) => (
   <div className={element("bubble", { assistant: true })}>
@@ -481,8 +506,6 @@ const DetailsStep = ({
   setStartEnd,
   numPeople,
   setNumPeople,
-  budget,
-  setBudget,
   onContinue,
 }: {
   date: CalendarDate | null;
@@ -494,8 +517,6 @@ const DetailsStep = ({
   }) => void;
   numPeople: number | undefined;
   setNumPeople: (numPeople: number | undefined) => void;
-  budget: number | undefined;
-  setBudget: (budget: number | undefined) => void;
   onContinue: (answer: string) => void;
 }) => {
   const [showErrors, setShowErrors] = useState(false);
@@ -504,8 +525,9 @@ const DetailsStep = ({
     setShowErrors(true);
     if (!date || !startEnd.start || !startEnd.end || !numPeople) return;
 
-    const answer = `${date.toString()} · ${startEnd.start.timeLabel}–${startEnd.end.timeLabel} · ${formatInt(numPeople)} pessoas${budget ? ` · até ${money(budget)}` : ""}`;
-    onContinue(answer);
+    onContinue(
+      `${date.toString()} · ${startEnd.start.timeLabel}–${startEnd.end.timeLabel} · ${formatInt(numPeople)} pessoas`,
+    );
   };
 
   return (
@@ -536,19 +558,84 @@ const DetailsStep = ({
             suffix={numPeople === 1 ? " pessoa" : " pessoas"}
             invalid={showErrors && !numPeople}
           />
-          <InputNumber
-            label="Orçamento total (opcional)"
-            value={budget}
-            onChange={setBudget}
-            allowNegative={false}
-            decimalScale={0}
-            suffix=" €"
-          />
         </div>
-        <Button type="primary" label="Ver sugestões" onClick={submit} />
+        <Button
+          type="primary"
+          label="Ver espaços disponíveis"
+          onClick={submit}
+        />
       </AssistantBubble>
     </div>
   );
+};
+
+type BasePacksQuery = {
+  date: string;
+  start: string;
+  end: string;
+  num_persons: number;
+  extras: string;
+};
+
+const useAvailableSpaces = ({
+  eventType,
+  date,
+  startEnd,
+  numPeople,
+  basePacksQuery,
+}: {
+  eventType: SpaceEventType | null;
+  date: CalendarDate | null;
+  startEnd: { start: TimeDuration | null; end: TimeDuration | null };
+  numPeople: number | undefined;
+  basePacksQuery: BasePacksQuery;
+}) => {
+  const fetchApi = useFetch();
+
+  const searchResults = useSearchResults({
+    query: {
+      eventType: eventType ?? undefined,
+      journey: "venues",
+      date: date?.toString(),
+      start: startEnd.start?.string,
+      end: startEnd.end?.string,
+      numPeople,
+      pageSize: 18,
+      mode: "search",
+    },
+  });
+
+  const packQueries = useQueries({
+    queries: (searchResults ?? []).map((searchResult) => ({
+      queryKey: ["builder-space-packs", searchResult.id, basePacksQuery],
+      queryFn: () =>
+        fetchApi(
+          "public/packs",
+          `space/${searchResult.id}`,
+          undefined,
+          undefined,
+          basePacksQuery,
+        ).then((packs: any[]) => packs.map((pack) => new Pack(pack))),
+      staleTime: 5 * 60_000,
+      retry: 1,
+    })),
+  });
+
+  const isLoading =
+    !searchResults || packQueries.some((query) => query.isLoading);
+
+  const availableSpaces = useMemo(() => {
+    if (!searchResults) return [];
+    return searchResults
+      .map((searchResult, index) => {
+        const packs = (packQueries[index]?.data ?? []).filter(isPackBookable);
+        return { searchResult, packs };
+      })
+      .filter(({ packs }) => packs.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchResults, ...packQueries.map((query) => query.data)]);
+
+  return { isLoading, availableSpaces };
 };
 
 const SpaceStep = ({
@@ -556,80 +643,62 @@ const SpaceStep = ({
   date,
   startEnd,
   numPeople,
-  budget,
-  excludedSpaceIDs,
+  basePacksQuery,
   onSelect,
 }: {
   eventType: SpaceEventType | null;
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
-  budget: number | undefined;
-  excludedSpaceIDs: string[];
-  onSelect: (searchResult: SearchResult) => void;
+  basePacksQuery: BasePacksQuery;
+  onSelect: (searchResult: SearchResult, availablePacks: Pack[]) => void;
 }) => {
-  const [pageSize, setPageSize] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(6);
 
-  const searchResults = useSearchResults({
-    query: {
-      eventType: eventType ?? undefined,
-      date: date?.toString(),
-      start: startEnd.start?.string,
-      end: startEnd.end?.string,
-      numPeople,
-      pageSize: pageSize + excludedSpaceIDs.length,
-    },
+  const { isLoading, availableSpaces } = useAvailableSpaces({
+    eventType,
+    date,
+    startEnd,
+    numPeople,
+    basePacksQuery,
   });
 
-  const options = useMemo(() => {
-    const list = (searchResults ?? []).filter(
-      (searchResult) => !excludedSpaceIDs.includes(searchResult.id),
-    );
-
-    if (!budget) return list.slice(0, pageSize);
-
-    // Soft budget ordering: affordable spaces first, but keep all visible.
-    return [...list]
-      .sort((a, b) => {
-        const aOver = (a.price.min ?? 0) > budget ? 1 : 0;
-        const bOver = (b.price.min ?? 0) > budget ? 1 : 0;
-        return aOver - bOver;
-      })
-      .slice(0, pageSize);
-  }, [searchResults, excludedSpaceIDs, budget, pageSize]);
+  const options = availableSpaces.slice(0, visibleCount);
 
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Estes são os espaços mais adequados ao seu evento. Qual prefere?
-        {!searchResults ? (
+        Estes espaços têm disponibilidade real para o seu evento. Qual prefere?
+        {isLoading ? (
           <div className={element("loading")}>
             <CircleLoader size={48} />
+            <p>A confirmar disponibilidade e preços…</p>
           </div>
         ) : options.length === 0 ? (
           <p className={element("empty")}>
-            Não encontrámos espaços disponíveis para estes critérios.
-            Experimente alterar a data ou o número de pessoas, ou{" "}
+            Não encontrámos espaços com packs disponíveis para estes critérios.
+            Experimente alterar a data, o horário ou o número de pessoas, ou{" "}
             <TextButton text="peça um orçamento" href="/quote-request" />.
           </p>
         ) : (
           <>
             <div className={element("options")}>
-              {options.map((searchResult) => (
+              {options.map(({ searchResult, packs }) => (
                 <SpaceOption
                   key={searchResult.id}
                   searchResult={searchResult}
-                  overBudget={
-                    !!budget && (searchResult.price.min ?? 0) > budget
-                  }
-                  onSelect={() => onSelect(searchResult)}
+                  minPrice={Math.min(
+                    ...packs.map((pack) => pack.price?.value ?? Infinity),
+                  )}
+                  numPacks={packs.length}
+                  onSelect={() => onSelect(searchResult, packs)}
                 />
               ))}
             </div>
-            {options.length >= pageSize && (
+            {availableSpaces.length > visibleCount && (
               <TextButton
                 text="Mostrar mais espaços"
-                onClick={() => setPageSize((size) => size + 6)}
+                onClick={() => setVisibleCount((count) => count + 6)}
               />
             )}
           </>
@@ -641,11 +710,13 @@ const SpaceStep = ({
 
 const SpaceOption = ({
   searchResult,
-  overBudget,
+  minPrice,
+  numPacks,
   onSelect,
 }: {
   searchResult: SearchResult;
-  overBudget: boolean;
+  minPrice: number;
+  numPacks: number;
   onSelect: () => void;
 }) => (
   <div className={element("option")}>
@@ -661,19 +732,17 @@ const SpaceOption = ({
         {" · "}
         <IconUserInterfaceMiscellaneousUsers />{" "}
         {formatInt(searchResult.capacity)}
+        {" · "}
+        {numPacks} {numPacks === 1 ? "pack disponível" : "packs disponíveis"}
       </p>
       <Stack row gap="0.5rem" alignItems="center" flexWrap="wrap">
-        {!!searchResult.formattedPrice && (
+        {Number.isFinite(minPrice) && (
           <p className={element("option__price")}>
-            desde <b>{money(searchResult.formattedPrice.amount)}</b>/
-            {searchResult.formattedPrice.type}
+            desde <b>{money(minPrice)}</b> para o seu evento
           </p>
         )}
         {searchResult.recommended && (
           <Tag text="Recomendado" type="info" size="small" />
-        )}
-        {overBudget && (
-          <Tag text="Acima do orçamento" type="warning" size="small" />
         )}
       </Stack>
     </div>
@@ -690,43 +759,23 @@ const SpaceOption = ({
 
 const PackStep = ({
   space,
-  date,
-  startEnd,
-  numPeople,
+  basePacksQuery,
   onBack,
   onSelect,
 }: {
   space: SearchResult;
-  date: CalendarDate;
-  startEnd: { start: TimeDuration | null; end: TimeDuration | null };
-  numPeople: number | undefined;
+  basePacksQuery: BasePacksQuery;
   onBack: () => void;
   onSelect: (pack: Pack) => void;
 }) => {
-  const packsQuery = useMemo(() => {
-    if (!startEnd.start || !startEnd.end || !numPeople) return undefined;
-    return {
-      date: date.toDate("Etc/UTC").toISOString(),
-      start: startEnd.start.string,
-      end: startEnd.end.string,
-      num_persons: numPeople,
-      extras: "",
-    };
-  }, [date, startEnd, numPeople]);
-
   const { data: allPacks, isLoading } = usePacks({
     spaceID: space.id,
-    query: packsQuery,
+    query: basePacksQuery,
     mode: "public",
   });
 
   const packs = useMemo(
-    () =>
-      (allPacks ?? [])
-        .filter((pack) =>
-          pack.prices.some((price) => new Date(price.to) > new Date()),
-        )
-        .filter((pack) => !pack.unavailabilityReason),
+    () => (allPacks ?? []).filter(isPackBookable),
     [allPacks],
   );
 
@@ -740,8 +789,7 @@ const PackStep = ({
           </div>
         ) : packs.length === 0 ? (
           <p className={element("empty")}>
-            Este espaço não tem packs disponíveis para a data e horário
-            escolhidos.{" "}
+            Este espaço deixou de ter packs disponíveis.{" "}
             <TextButton text="Escolher outro espaço" onClick={onBack} />
           </p>
         ) : (
@@ -783,16 +831,24 @@ const PackStep = ({
   );
 };
 
-const ExtrasStep = ({
+const ServicesStep = ({
   pack,
   startEnd,
   numPeople,
-  onConfirm,
+  extraSelection,
+  setExtraSelection,
+  isFetchingPrice,
+  onContinue,
 }: {
   pack: Pack;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
-  onConfirm: (extras: PlanExtra[]) => void;
+  extraSelection: ExtraSelectionMap;
+  setExtraSelection: (
+    update: (current: ExtraSelectionMap) => ExtraSelectionMap,
+  ) => void;
+  isFetchingPrice: boolean;
+  onContinue: () => void;
 }) => {
   const eventHours =
     startEnd.start && startEnd.end
@@ -800,37 +856,17 @@ const ExtrasStep = ({
       : 0;
   const eventPax = numPeople ?? 0;
 
-  const buildPlanExtra = (
-    extra: Extra,
-    hours?: number | null,
-    pax?: number | null,
-  ): PlanExtra => {
-    const resolvedHours = resolveExtraHours(extra, eventHours, hours);
-    const resolvedPax = resolveExtraPax(extra, eventPax, pax);
-    return {
-      id: extra.id,
-      description: extra.description,
-      hours: resolvedHours,
-      pax: resolvedPax,
-      value: computeExtraPrice(extra, resolvedHours, resolvedPax),
-    };
-  };
-
-  const [selected, setSelected] = useState<Record<string, PlanExtra>>(() =>
-    Object.fromEntries(
-      pack.extras
-        .filter((extra) => extra.mandatory)
-        .map((extra) => [extra.id, buildPlanExtra(extra)]),
-    ),
-  );
-
-  const toggleExtra = (extra: Extra, checked: boolean) => {
-    setSelected((current) => {
+  const toggleExtra = (extra: Extra) => {
+    if (extra.mandatory) return;
+    setExtraSelection((current) => {
       const next = { ...current };
-      if (checked) {
-        next[extra.id] = buildPlanExtra(extra);
-      } else {
+      if (next[extra.id]) {
         delete next[extra.id];
+      } else {
+        next[extra.id] = {
+          hours: resolveExtraHours(extra, eventHours, null),
+          pax: resolveExtraPax(extra, eventPax, null),
+        };
       }
       return next;
     });
@@ -841,359 +877,448 @@ const ExtrasStep = ({
     field: "hours" | "pax",
     value: number | undefined,
   ) => {
-    setSelected((current) => {
+    setExtraSelection((current) => {
       const existing = current[extra.id];
       if (!existing) return current;
-      return {
-        ...current,
-        [extra.id]: buildPlanExtra(
-          extra,
-          field === "hours" ? (value ?? null) : existing.hours,
-          field === "pax" ? (value ?? null) : existing.pax,
-        ),
-      };
+      const hours =
+        field === "hours"
+          ? resolveExtraHours(extra, eventHours, value ?? null)
+          : existing.hours;
+      const pax =
+        field === "pax"
+          ? resolveExtraPax(extra, eventPax, value ?? null)
+          : existing.pax;
+      return { ...current, [extra.id]: { hours, pax } };
     });
   };
+
+  const serverExtraValues = new Map(
+    (pack.price?.extras ?? []).map((extra) => [extra.id, extra.value]),
+  );
 
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Quer adicionar serviços a este pack?
-        <div className={element("extras")}>
+        Que serviços quer adicionar? O preço atualiza-se a cada escolha.
+        <div className={element("chips")}>
           {pack.extras.map((extra) => {
-            const planExtra = selected[extra.id];
+            const selected = !!extraSelection[extra.id];
             return (
-              <div key={extra.id} className={element("extras__item")}>
-                <Stack row gap="0.5rem" alignItems="center">
-                  <InputCheckbox
-                    checked={!!planExtra}
-                    onChange={(checked) => toggleExtra(extra, checked)}
-                    label={extra.description}
-                    disabled={extra.mandatory}
-                  />
-                  {extra.mandatory && (
-                    <Tag text="Incluído" type="neutral" size="small" />
-                  )}
-                </Stack>
-                {!!planExtra && (
+              <button
+                key={extra.id}
+                type="button"
+                className={element("chip", {
+                  selected,
+                  locked: extra.mandatory,
+                })}
+                onClick={() => toggleExtra(extra)}
+                aria-pressed={selected}
+              >
+                {extra.description}
+                {extra.mandatory && " · incluído"}
+              </button>
+            );
+          })}
+        </div>
+        <div className={element("extras")}>
+          {pack.extras
+            .filter((extra) => !!extraSelection[extra.id])
+            .map((extra) => {
+              const quantities = extraSelection[extra.id];
+              const value =
+                serverExtraValues.get(extra.id) ??
+                computeExtraPrice(extra, quantities.hours, quantities.pax);
+              return (
+                <div key={extra.id} className={element("extras__item")}>
                   <Stack
                     row
                     gap="0.75rem"
                     alignItems="center"
-                    className={element("extras__item__details")}
                     flexWrap="wrap"
+                    justifyContent="space-between"
                   >
-                    {usesExtraHours(extra) && (
-                      <InputNumber
-                        label="Horas"
-                        value={planExtra.hours ?? undefined}
-                        onChange={(value) =>
-                          updateQuantity(extra, "hours", value)
-                        }
-                        allowNegative={false}
-                        suffix=" h"
-                      />
-                    )}
-                    {usesExtraPax(extra) && (
-                      <InputNumber
-                        label="Pessoas"
-                        value={planExtra.pax ?? undefined}
-                        onChange={(value) => updateQuantity(extra, "pax", value)}
-                        allowNegative={false}
-                        decimalScale={0}
-                        suffix=" pax"
-                      />
-                    )}
+                    <Stack row gap="0.375rem" alignItems="center">
+                      <span className={element("extras__item__name")}>
+                        {extra.description}
+                      </span>
+                      <Tooltip
+                        content={extraPriceExplanation(extra, quantities)}
+                        visibleOnTouchDevice
+                      >
+                        <span
+                          className={element("extras__item__info")}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`Como é calculado o preço de ${extra.description}`}
+                        >
+                          <IconUserInterfaceMiscellaneousInfo />
+                        </span>
+                      </Tooltip>
+                    </Stack>
                     <span className={element("extras__item__price")}>
-                      {money(planExtra.value)}
+                      {money(value)}
                     </span>
                   </Stack>
-                )}
-              </div>
-            );
-          })}
+                  {(usesExtraHours(extra) || usesExtraPax(extra)) && (
+                    <Stack
+                      row
+                      gap="0.75rem"
+                      alignItems="center"
+                      flexWrap="wrap"
+                      className={element("extras__item__details")}
+                    >
+                      {usesExtraHours(extra) && (
+                        <InputNumber
+                          label="Horas"
+                          value={quantities.hours ?? undefined}
+                          onChange={(value) =>
+                            updateQuantity(extra, "hours", value)
+                          }
+                          allowNegative={false}
+                          suffix=" h"
+                        />
+                      )}
+                      {usesExtraPax(extra) && (
+                        <InputNumber
+                          label="Pessoas"
+                          value={quantities.pax ?? undefined}
+                          onChange={(value) =>
+                            updateQuantity(extra, "pax", value)
+                          }
+                          allowNegative={false}
+                          decimalScale={0}
+                          suffix=" pax"
+                        />
+                      )}
+                    </Stack>
+                  )}
+                </div>
+              );
+            })}
         </div>
         <Button
           type="primary"
-          label="Adicionar ao plano"
-          onClick={() => onConfirm(Object.values(selected))}
+          label={
+            pack.price
+              ? `Continuar · ${money(pack.price.value)}`
+              : "Continuar"
+          }
+          loading={isFetchingPrice}
+          onClick={onContinue}
         />
       </AssistantBubble>
     </div>
   );
 };
 
-const MoreStep = ({
-  canAddMore,
-  onAddMore,
-  onFinish,
-}: {
-  canAddMore: boolean;
-  onAddMore: () => void;
-  onFinish: () => void;
-}) => (
-  <div className={element("exchange")}>
-    <AssistantBubble>
-      Adicionado ao plano! ✅ Quer adicionar mais alguma coisa?
-      <Stack row gap="0.75rem" flexWrap="wrap">
-        {canAddMore && (
-          <Button
-            type="secondary"
-            label="Adicionar outro espaço ou serviço"
-            onClick={onAddMore}
-          />
-        )}
-        <Button type="primary" label="Concluir e enviar pedido" onClick={onFinish} />
-      </Stack>
-    </AssistantBubble>
-  </div>
-);
+function extraPriceExplanation(
+  extra: Extra,
+  quantities: { hours: number | null; pax: number | null },
+) {
+  const parts: string[] = [];
+  if (extra.fixedPrice > 0) parts.push(`${money(extra.fixedPrice)} fixo`);
+  if (extra.priceHour > 0) {
+    parts.push(
+      `${money(extra.priceHour)}/hora${quantities.hours != null ? ` × ${quantities.hours}h` : ""}`,
+    );
+  }
+  if (extra.pricePax > 0) {
+    parts.push(
+      `${money(extra.pricePax)}/pessoa${quantities.pax != null ? ` × ${quantities.pax}` : ""}`,
+    );
+  }
+  const formula = parts.length > 0 ? parts.join(" + ") : "Incluído no pack";
+  return extra.tooltip ? `${extra.tooltip} — ${formula}` : formula;
+}
 
-const ContactStep = ({
-  plan,
-  total,
-  eventType,
+const ReviewStep = ({
+  space,
+  pack,
   eventTypeLabel,
   date,
   startEnd,
   numPeople,
-  budget,
-  onSuccess,
+  layout,
+  setLayout,
+  paymentBreakdown,
+  isFetchingPrice,
+  isLoggedIn,
+  extraSelection,
+  onLoginNeeded,
+  onBooked,
 }: {
-  plan: PlanItem[];
-  total: number;
-  eventType: SpaceEventType | null;
+  space: SearchResult;
+  pack: Pack;
   eventTypeLabel: string;
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
-  budget: number | undefined;
-  onSuccess: () => void;
+  layout: string | null;
+  setLayout: (layout: string | null) => void;
+  paymentBreakdown: ReturnType<typeof getPackPaymentBreakdown>;
+  isFetchingPrice: boolean;
+  isLoggedIn: boolean;
+  extraSelection: ExtraSelectionMap;
+  onLoginNeeded: () => void;
+  onBooked: (bookingID: string) => void;
 }) => {
-  const [session] = useSession();
+  const [error, setError] = useState<string | null>(null);
 
-  const [name, setName] = useState(session?.name ?? "");
-  const [email, setEmail] = useState(session?.email ?? "");
-  const [phone, setPhone] = useState<{ extension?: number; number?: number }>(
-    {},
+  const availableCapacities = pack.formattedCapacities.filter(
+    (capacity) => capacity.people >= (numPeople ?? 0),
   );
-  const [notes, setNotes] = useState("");
-  const [showErrors, setShowErrors] = useState(false);
+  const chosenLayout =
+    availableCapacities.find((capacity) => capacity.id === layout)?.id ??
+    (availableCapacities.length === 1 ? availableCapacities[0].id : null);
 
   const {
-    mutateAsync: createQuote,
-    isPending,
-    isError,
-  } = useCreateQuote();
+    mutateAsync: createBooking,
+    isPending: isPendingCreateBooking,
+  } = useCreateBooking();
 
-  const hasInvalidPhone =
-    !!phone.extension &&
-    !!phone.number &&
-    !isValidPhone({ ...phone, fullCheck: true });
+  const book = async () => {
+    setError(null);
 
-  const submit = async () => {
-    setShowErrors(true);
-    if (!name || !email || !phone.extension || !phone.number || hasInvalidPhone) {
+    if (!isLoggedIn) {
+      onLoginNeeded();
       return;
     }
 
-    const planSummary = plan
-      .map(
-        (item) =>
-          `- ${item.packName} — ${item.spaceName} (${item.venueName}, ${item.city}): ${money(planItemTotal(item))}` +
-          (item.extras.length > 0
-            ? ` [serviços: ${item.extras.map((extra) => extra.description).join(", ")}]`
-            : ""),
-      )
-      .join("\n");
+    if (!chosenLayout) {
+      setError("Escolha a disposição do espaço");
+      return;
+    }
 
-    await createQuote({
-      user_id: session?.user_id,
-      name,
-      email,
-      phone_extension: phone.extension,
-      phone_number: phone.number,
-      event_kind: eventType ?? undefined,
-      area: plan[0]?.city ?? "",
-      country: "Portugal",
-      event_date: date?.toString(),
-      start_at: startEnd.start?.string,
-      end_at: startEnd.end?.string,
-      timezone: getLocalTimeZone(),
-      budget: budget ?? undefined,
-      currency: "EUR",
-      num_people: numPeople ?? undefined,
-      notes: [
-        "Pedido criado pelo Event Builder.",
-        `Tipo de evento: ${eventTypeLabel}`,
-        "Plano escolhido:",
-        planSummary,
-        `Total estimado: ${money(total)}`,
-        notes ? `Notas do cliente: ${notes}` : null,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-      venue_id: plan[0]?.venueID,
-      space_id: plan[0]?.spaceID,
-      pack_id: plan[0]?.packID,
-      packs: plan.map((item) => ({
-        packID: item.packID,
-        extraIDs: item.extras.map((extra) => extra.id),
-        extraParams: item.extras
-          .filter((extra) => extra.hours != null || extra.pax != null)
-          .map((extra) => ({
-            id: extra.id,
-            hours: extra.hours,
-            pax: extra.pax,
-          })),
-      })),
-    });
+    if (!date || !startEnd.start || !startEnd.end || !numPeople) return;
 
-    onSuccess();
+    try {
+      const bookingID = await createBooking({
+        spaceID: pack.spaceIDs?.[0] ?? space.id,
+        packID: pack.id,
+        layout: chosenLayout,
+        numPeople,
+        date: date.toString(),
+        start: startEnd.start.string,
+        end: startEnd.end.string,
+        kind: "internal",
+        extras: Object.keys(extraSelection),
+        extraParams: Object.entries(extraSelection).map(([id, quantities]) => ({
+          id,
+          ...(quantities.hours != null ? { hours: quantities.hours } : {}),
+          ...(quantities.pax != null ? { pax: quantities.pax } : {}),
+        })),
+      });
+      onBooked(bookingID);
+    } catch (e) {
+      if ((e as Error).message.includes("already_booked")) {
+        setError(
+          "Este espaço acabou de ser reservado para este horário. Escolha outro horário ou espaço.",
+        );
+      } else {
+        setError("Ocorreu um erro ao criar a reserva. Tente novamente.");
+      }
+    }
   };
+
+  const selectedExtras = pack.extras.filter(
+    (extra) => !!extraSelection[extra.id],
+  );
 
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Excelente escolha! Só faltam os seus contactos para enviarmos o pedido
-        à nossa equipa.
-        <div className={element("form-grid")}>
-          <InputText
-            label="Nome"
-            value={name}
-            onChange={setName}
-            invalid={showErrors && !name}
-          />
-          <InputText
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            invalid={showErrors && !email}
-          />
-          <InputPhone
-            extension={phone.extension}
-            number={phone.number}
-            onChange={(extension, number) => setPhone({ extension, number })}
-            invalid={showErrors && (!phone.extension || !phone.number)}
-            error={
-              showErrors && hasInvalidPhone
-                ? "Insira um telemóvel válido"
-                : undefined
-            }
-          />
+        Está quase! Confirme os detalhes da reserva:
+        <div className={element("review")}>
+          <p>
+            <b>{pack.name}</b> — {space.spaceName} · {space.address.city}
+          </p>
+          <p className={element("review__detail")}>
+            {eventTypeLabel} · {date?.toString()} ·{" "}
+            {startEnd.start?.timeLabel}–{startEnd.end?.timeLabel} ·{" "}
+            {formatInt(numPeople ?? 0)} pessoas
+          </p>
+          {selectedExtras.length > 0 && (
+            <p className={element("review__detail")}>
+              Serviços:{" "}
+              {selectedExtras.map((extra) => extra.description).join(", ")}
+            </p>
+          )}
         </div>
-        <InputTextArea
-          label="Notas adicionais (opcional)"
-          showLabel
-          value={notes}
-          onChange={setNotes}
-          height="small"
-        />
-        {showErrors && isError && (
-          <InputError error="Ocorreu um erro ao enviar o pedido. Tente novamente." />
+        {availableCapacities.length > 1 && (
+          <>
+            <p>Como prefere a disposição do espaço?</p>
+            <div className={element("chips")}>
+              {availableCapacities.map((capacity) => (
+                <button
+                  key={capacity.id}
+                  type="button"
+                  className={element("chip", {
+                    selected: chosenLayout === capacity.id,
+                  })}
+                  onClick={() => setLayout(capacity.id)}
+                >
+                  {capacity.text} · até {formatInt(capacity.people)}
+                </button>
+              ))}
+            </div>
+          </>
         )}
+        {!!pack.price && (
+          <div className={element("review__payment")}>
+            <Stack row justifyContent="space-between">
+              <span>Total do evento</span>
+              <b>{money(pack.price.value)}</b>
+            </Stack>
+            {paymentBreakdown?.isPartial && (
+              <>
+                <Stack row justifyContent="space-between">
+                  <span>
+                    Paga hoje ({paymentBreakdown.upfrontPercentage}%)
+                  </span>
+                  <b>{money(paymentBreakdown.todayAmount)}</b>
+                </Stack>
+                <Stack row justifyContent="space-between">
+                  <span>
+                    Restante até{" "}
+                    {formatDate(paymentBreakdown.freeCancellationUntil)}
+                  </span>
+                  <span>{money(paymentBreakdown.laterAmount)}</span>
+                </Stack>
+              </>
+            )}
+          </div>
+        )}
+        {error && <InputError error={error} />}
         <Button
           type="primary"
-          label={`Enviar pedido · ${money(total)}`}
-          loading={isPending}
-          onClick={() => void submit()}
+          label={
+            paymentBreakdown?.isPartial
+              ? `Reservar agora · paga ${money(paymentBreakdown.todayAmount)} hoje`
+              : pack.price
+                ? `Reservar agora · ${money(pack.price.value)}`
+                : "Reservar agora"
+          }
+          loading={isPendingCreateBooking || isFetchingPrice}
+          onClick={() => void book()}
         />
+        {!isLoggedIn && (
+          <p className={element("review__detail")}>
+            Vai precisar de iniciar sessão para concluir a reserva.
+          </p>
+        )}
       </AssistantBubble>
     </div>
   );
 };
 
-const PlanSummary = ({
-  plan,
-  total,
+const BuilderSummary = ({
   eventTypeLabel,
   date,
   startEnd,
   numPeople,
-  onRemove,
-  showCTA,
-  onFinish,
+  space,
+  pack,
+  extraSelection,
+  total,
+  paymentBreakdown,
 }: {
-  plan: PlanItem[];
-  total: number;
   eventTypeLabel: string;
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
-  onRemove: (key: string) => void;
-  showCTA: boolean;
-  onFinish: () => void;
-}) => (
-  <aside className={element("summary")}>
-    <h2>O seu evento</h2>
-    <div className={element("summary__meta")}>
-      {!!eventTypeLabel && <Tag text={eventTypeLabel} size="small" />}
-      {!!date && <Tag text={date.toString()} size="small" />}
-      {!!startEnd.start && !!startEnd.end && (
-        <Tag
-          text={`${startEnd.start.timeLabel}–${startEnd.end.timeLabel}`}
-          size="small"
-        />
-      )}
-      {!!numPeople && <Tag text={`${formatInt(numPeople)} pessoas`} size="small" />}
-    </div>
-    {plan.length === 0 ? (
-      <p className={element("summary__empty")}>
-        O seu plano ainda está vazio. À medida que escolher espaços e serviços,
-        eles aparecem aqui com o preço.
-      </p>
-    ) : (
-      <div className={element("summary__items")}>
-        {plan.map((item) => (
-          <div key={item.key} className={element("summary__item")}>
+  space: SearchResult | null;
+  pack: Pack | null;
+  extraSelection: ExtraSelectionMap;
+  total: number;
+  paymentBreakdown: ReturnType<typeof getPackPaymentBreakdown>;
+}) => {
+  const baseValue =
+    pack?.price != null
+      ? pack.price.value -
+        pack.price.extras.reduce((sum, extra) => sum + extra.value, 0)
+      : null;
+
+  return (
+    <aside className={element("summary")}>
+      <h2>O seu evento</h2>
+      <div className={element("summary__meta")}>
+        {!!eventTypeLabel && <Tag text={eventTypeLabel} size="small" />}
+        {!!date && <Tag text={date.toString()} size="small" />}
+        {!!startEnd.start && !!startEnd.end && (
+          <Tag
+            text={`${startEnd.start.timeLabel}–${startEnd.end.timeLabel}`}
+            size="small"
+          />
+        )}
+        {!!numPeople && (
+          <Tag text={`${formatInt(numPeople)} pessoas`} size="small" />
+        )}
+      </div>
+      {!space || !pack ? (
+        <p className={element("summary__empty")}>
+          À medida que escolher o espaço e os serviços, o resumo e o preço
+          aparecem aqui.
+        </p>
+      ) : (
+        <div className={element("summary__items")}>
+          <div className={element("summary__item")}>
             <div className={element("summary__item__photo")}>
-              {item.photoURL && (
-                <Image alt="" src={item.photoURL} fill sizes="6rem" />
+              {space.photoURLs?.[0] && (
+                <Image alt="" src={space.photoURLs[0]} fill sizes="6rem" />
               )}
             </div>
             <div className={element("summary__item__info")}>
-              <p className={element("summary__item__title")}>{item.packName}</p>
+              <p className={element("summary__item__title")}>{pack.name}</p>
               <p className={element("summary__item__detail")}>
-                {item.spaceName} · {item.city}
+                {space.spaceName} · {space.address.city}
               </p>
-              {item.extras.length > 0 && (
-                <p className={element("summary__item__detail")}>
-                  {item.extras.length}{" "}
-                  {item.extras.length === 1 ? "serviço" : "serviços"} incluído
-                  {item.extras.length === 1 ? "" : "s"}
-                </p>
-              )}
             </div>
-            <div className={element("summary__item__side")}>
-              <span>{money(planItemTotal(item))}</span>
-              <IconButton
-                ariaLabel="Remover do plano"
-                icon={<IconUserInterfaceActionsDelete />}
-                onClick={() => onRemove(item.key)}
-                showTooltip={false}
-              />
-            </div>
+            {baseValue != null && (
+              <span className={element("summary__item__value")}>
+                {money(baseValue)}
+              </span>
+            )}
           </div>
-        ))}
+          {pack.extras
+            .filter((extra) => !!extraSelection[extra.id])
+            .map((extra) => {
+              const value = pack.price?.extras.find(
+                ({ id }) => id === extra.id,
+              )?.value;
+              return (
+                <div key={extra.id} className={element("summary__line")}>
+                  <span>{extra.description}</span>
+                  <span>{value != null ? money(value) : "—"}</span>
+                </div>
+              );
+            })}
+        </div>
+      )}
+      <div className={element("summary__total")}>
+        <span>Total</span>
+        <strong>{money(total)}</strong>
       </div>
-    )}
-    <div className={element("summary__total")}>
-      <span>Total estimado</span>
-      <strong>{money(total)}</strong>
-    </div>
-    <p className={element("summary__disclaimer")}>
-      Valores estimados com base nos preços publicados. A proposta final é
-      confirmada pela nossa equipa.
-    </p>
-    {showCTA && (
-      <Button
-        type="primary"
-        label="Concluir e enviar pedido"
-        onClick={onFinish}
-      />
-    )}
-  </aside>
-);
+      {paymentBreakdown?.isPartial && (
+        <div className={element("summary__breakdown")}>
+          <div>
+            <span>Paga hoje ({paymentBreakdown.upfrontPercentage}%)</span>
+            <b>{money(paymentBreakdown.todayAmount)}</b>
+          </div>
+          <div>
+            <span>
+              Restante até{" "}
+              {formatDate(paymentBreakdown.freeCancellationUntil)}
+            </span>
+            <span>{money(paymentBreakdown.laterAmount)}</span>
+          </div>
+        </div>
+      )}
+      <p className={element("summary__disclaimer")}>
+        Preços calculados em tempo real com base na oferta publicada. Reserva
+        com pagamento seguro e sinal de {paymentBreakdown?.upfrontPercentage ?? 20}%.
+      </p>
+    </aside>
+  );
+};
 
 export default BuilderPage;
