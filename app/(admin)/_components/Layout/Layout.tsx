@@ -3,15 +3,17 @@
 import { createBEMClasses } from "@/_utils/classname";
 import { useSession } from "@/_services/session";
 import { useRouter } from "next/navigation";
-import AdminHeader from "../Header";
-import Footer from "@/_components/Footer";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Sidebar from "../Sidebar";
+import Topbar from "../Topbar";
 
-const { block } = createBEMClasses("admin-layout");
+const { block, element } = createBEMClasses("admin-shell");
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const [session] = useSession();
   const router = useRouter();
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (session === null || (!!session && !session.roles.includes("admin"))) {
@@ -24,11 +26,24 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <>
-      <AdminHeader />
-      <div className={block()}>{children}</div>
-      <Footer />
-    </>
+    <div className={block()}>
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onNavigate={() => setIsSidebarOpen(false)}
+      />
+      {isSidebarOpen && (
+        <button
+          type="button"
+          className={element("backdrop")}
+          aria-label="Fechar menu"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      <div className={element("main")}>
+        <Topbar onMenuToggle={() => setIsSidebarOpen((open) => !open)} />
+        <main className={element("content")}>{children}</main>
+      </div>
+    </div>
   );
 };
 
