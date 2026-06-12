@@ -63,18 +63,20 @@ const HomeQuoteRequestSection = () => {
               href={isMobile ? "/quote-request" : undefined}
               onClick={() => handleQuoteRequestClick()}
             />
-            <Button
-              type="secondary"
-              label="Montar o meu evento"
-              href="/builder"
-              onClick={() => {
-                sendGAEvent("event", "Rinu_CustomClick", {
-                  Rinu_ScreenName: pathname,
-                  Rinu_ItemCategory: "Standard",
-                  Rinu_ItemType: "event_builder_entry",
-                });
-              }}
-            />
+            <div className={element("ai-planner")}>
+              <Button
+                type="secondary"
+                label="AI Planner"
+                href="/builder"
+                onClick={() => {
+                  sendGAEvent("event", "Rinu_CustomClick", {
+                    Rinu_ScreenName: pathname,
+                    Rinu_ItemCategory: "Standard",
+                    Rinu_ItemType: "event_builder_entry",
+                  });
+                }}
+              />
+            </div>
           </Stack>
         </Stack>
         <div className={element("photos")}>

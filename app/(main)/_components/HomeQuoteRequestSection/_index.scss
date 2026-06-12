@@ -21,6 +21,47 @@
     color: $color-brand-primary;
   }
 
+  // Rotating metallic-blue glow around the AI Planner button.
+  &__ai-planner {
+    position: relative;
+    border-radius: 10px;
+    padding: 2px;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: 0 0 12px rgba($color-brand-primary, 0.45);
+
+    &::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: 50%;
+      top: 50%;
+      width: 300%;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      background: conic-gradient(
+        from 0deg,
+        $color-brand-primary,
+        #dff1ff,
+        $color-brand-secondary,
+        #f4faff,
+        #8ecdf7,
+        $color-brand-primary
+      );
+      animation: home-ai-planner-spin 3s linear infinite;
+    }
+
+    .button {
+      background: $color-neutral-0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &::before {
+        animation: none;
+      }
+    }
+  }
+
   &__photos {
     position: relative;
     overflow-x: auto;
@@ -91,5 +132,11 @@
     &__photos {
       overflow-x: unset;
     }
+  }
+}
+
+@keyframes home-ai-planner-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
