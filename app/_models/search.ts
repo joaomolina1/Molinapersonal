@@ -28,6 +28,7 @@ export class SearchResult {
     this.subscription = data.subscription ?? "basic";
     this.journey = data.journey ?? "venues";
     this.attributes = data.attributes ?? [];
+    this.description = data.description ?? "";
   }
 
   id!: string;
@@ -40,6 +41,7 @@ export class SearchResult {
 
   journey!: "venues" | "services";
   attributes!: string[];
+  description!: string;
 
   subscription!: Subscription;
 

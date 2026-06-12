@@ -134,6 +134,7 @@ function mapSearchRow(
     createdAt: row.created_at,
     journey: row.journey ?? "venues",
     attributes: row.attributes ?? [],
+    description: row.description ?? "",
     address: {
       country: row.country,
       street1: row.street1,
@@ -290,6 +291,7 @@ async function loadOwnedRow(
 const SPACE_SEARCH_SELECT = `
   id,
   name,
+  description,
   photos,
   primary_photo,
   created_at,
@@ -557,6 +559,7 @@ export async function handleSearchRoute(
             created_at: row.created_at,
             journey: mapJourney(row.journey),
             attributes: (row.attributes as string[] | null) ?? [],
+            description: String(row.description ?? "").slice(0, 600),
           },
           photoURLs,
           metrics,
@@ -1617,7 +1620,30 @@ export async function handleBookingsRoute(
       .eq("id", action)
       .maybeSingle();
     if (error || !data) return emptyResponse(404);
-    return jsonResponse(mapBooking(data));
+
+    const { data: servicePackRows } = await admin
+      .from("booking_packs")
+      .select(
+        "pack_id, space_id, amount, extra_ids, extra_params, packs(name), spaces(name)",
+      )
+      .eq("booking_id", action)
+      .order("created_at", { ascending: true });
+
+    const servicePacks = (servicePackRows ?? []).map((row) => ({
+      packID: String(row.pack_id),
+      spaceID: row.space_id ? String(row.space_id) : null,
+      packName: String(
+        (row.packs as unknown as { name?: string } | null)?.name ?? "",
+      ),
+      spaceName: String(
+        (row.spaces as unknown as { name?: string } | null)?.name ?? "",
+      ),
+      amount: Number(row.amount ?? 0),
+      extraIDs: (row.extra_ids as string[] | null) ?? [],
+      extraParams: row.extra_params ?? [],
+    }));
+
+    return jsonResponse({ ...mapBooking(data), servicePacks });
   }
 
   if (ctx.request.method === "POST" && !action) {
@@ -1650,6 +1676,78 @@ export async function handleBookingsRoute(
     let upfrontAmount = 0;
     let upfrontPercentage = 100;
     let currency = "eur";
+
+    // Additional service packs (multi-pack booking): price each one with the
+    // same event filter and add it to the booking total.
+    type ServicePackInsert = {
+      pack_id: string;
+      space_id: string | null;
+      amount: number;
+      extra_ids: string[];
+      extra_params: ReturnType<typeof parseExtraParams>;
+    };
+    const servicePackInserts: ServicePackInsert[] = [];
+    const rawServicePacks = Array.isArray(body.servicePacks)
+      ? (body.servicePacks as Record<string, unknown>[])
+      : [];
+
+    if (rawServicePacks.length > 0 && dateStr && startStr && endStr) {
+      for (const rawServicePack of rawServicePacks.slice(0, MAX_LEAD_PACKS)) {
+        if (typeof rawServicePack !== "object" || rawServicePack === null) {
+          continue;
+        }
+        const servicePackId = String(rawServicePack.packID ?? "");
+        if (!servicePackId || servicePackId === packId) continue;
+
+        const { data: servicePack } = await admin
+          .from("packs")
+          .select("*")
+          .eq("id", servicePackId)
+          .is("deleted_at", null)
+          .maybeSingle();
+        if (!servicePack || servicePack.status !== PUBLISHED_STATUS) {
+          return errorResponse("service_pack_unavailable", 409);
+        }
+
+        const serviceExtraIDs = parseExtraIDs(rawServicePack);
+        const serviceExtraParams = parseExtraParams(rawServicePack);
+        const serviceFilter: PriceFilter = {
+          date: new Date(dateStr),
+          start: parseGoDuration(startStr),
+          end: parseGoDuration(endStr),
+          pax: body.numPeople != null ? Number(body.numPeople) : null,
+          extraIDs: serviceExtraIDs,
+          extraParams: extraParamsMap(serviceExtraParams),
+        };
+
+        let servicePrice: ReturnType<typeof computePackPrice> = null;
+        try {
+          servicePrice = computePackPrice(servicePack as never, serviceFilter);
+        } catch {
+          servicePrice = null;
+        }
+        if (
+          !servicePrice?.value ||
+          packUnavailabilityReason(servicePack as never, serviceFilter)
+        ) {
+          return errorResponse("service_pack_unavailable", 409);
+        }
+
+        const serviceSpaceIds = await packSpaceIds(admin, servicePackId);
+        servicePackInserts.push({
+          pack_id: servicePackId,
+          space_id: serviceSpaceIds[0] ?? null,
+          amount: servicePrice.value,
+          extra_ids: serviceExtraIDs,
+          extra_params: serviceExtraParams,
+        });
+      }
+    }
+
+    const servicePacksAmount = servicePackInserts.reduce(
+      (sum, servicePack) => sum + servicePack.amount,
+      0,
+    );
 
     // For internal (RINU) bookings with a pack, compute the price server-side.
     if (packId && dateStr && startStr && endStr) {
@@ -1684,7 +1782,10 @@ export async function handleBookingsRoute(
           extraParams,
         };
         const price = computePackPrice(pack as never, filter);
-        totalAmount = price?.value ?? 0;
+        const mainAmount = price?.value ?? 0;
+        // The upfront percentage of the main pack applies to the whole
+        // booking, including attached service packs.
+        totalAmount = mainAmount + servicePacksAmount;
 
         const period = String(pack.cancellation_period ?? "");
         const payment = computePackPaymentBreakdown({
@@ -1699,7 +1800,7 @@ export async function handleBookingsRoute(
         upfrontAmount = payment.todayAmount;
         upfrontPercentage = payment.upfrontPercentage;
 
-        commission = (totalAmount * Number(venue?.commission ?? 0)) / 100;
+        commission = (mainAmount * Number(venue?.commission ?? 0)) / 100;
         currency = String(venue?.currency ?? "eur");
       }
     } else if (body.totalAmount != null) {
@@ -1753,6 +1854,25 @@ export async function handleBookingsRoute(
       console.error("booking insert error", error);
       return emptyResponse(500);
     }
+
+    if (servicePackInserts.length > 0) {
+      const { error: servicePacksError } = await admin
+        .from("booking_packs")
+        .insert(
+          servicePackInserts.map((servicePack) => ({
+            booking_id: data.id,
+            ...servicePack,
+          })),
+        );
+      if (servicePacksError) {
+        // The price already includes the services; a booking without the
+        // attached rows would charge for services it does not record.
+        console.error("booking packs insert error", servicePacksError);
+        await admin.from("bookings").delete().eq("id", data.id);
+        return emptyResponse(500);
+      }
+    }
+
     return jsonResponse(mapBooking(data), 201);
   }
 
