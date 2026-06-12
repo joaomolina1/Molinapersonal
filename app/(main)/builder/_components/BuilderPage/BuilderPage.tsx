@@ -1228,6 +1228,14 @@ const ExternalServicesStep = ({
   );
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+
+  const handleAdd = (selection: ServicePackSelection) => {
+    onAdd(selection);
+    // Reset the category picker and ask whether to add another service.
+    setActiveCategory(null);
+    setJustAdded(selection.space.spaceName);
+  };
 
   const { isLoading, availableSpaces } = useAvailableSpaces({
     journey: "services",
@@ -1254,8 +1262,17 @@ const ExternalServicesStep = ({
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Quer adicionar serviços externos (catering, DJ, fotografia…)? Pode
-        juntar vários ao mesmo booking.
+        {justAdded ? (
+          <>
+            ✅ <b>{justAdded}</b> adicionado ao seu evento! Quer adicionar mais
+            algum serviço externo? Escolha outra categoria ou continue.
+          </>
+        ) : (
+          <>
+            Quer adicionar serviços externos (catering, DJ, fotografia…)? Pode
+            juntar vários ao mesmo booking.
+          </>
+        )}
         <div className={element("chips")}>
           {categories.map((category) => (
             <button
@@ -1264,11 +1281,12 @@ const ExternalServicesStep = ({
               className={element("chip", {
                 selected: activeCategory === category.id,
               })}
-              onClick={() =>
+              onClick={() => {
+                setJustAdded(null);
                 setActiveCategory(
                   activeCategory === category.id ? null : category.id,
-                )
-              }
+                );
+              }}
             >
               {category.label}
             </button>
@@ -1327,7 +1345,7 @@ const ExternalServicesStep = ({
                           !canAddMore || addedPackIDs.has(cheapestPack.id)
                         }
                         onClick={() =>
-                          onAdd({ pack: cheapestPack, space: searchResult })
+                          handleAdd({ pack: cheapestPack, space: searchResult })
                         }
                       />
                       <TextButton
@@ -1653,9 +1671,28 @@ const BuilderSummary = ({
               );
             })}
           {servicePacks.map(({ pack: servicePack, space: serviceSpace }) => (
-            <div key={servicePack.id} className={element("summary__line")}>
-              <span>{serviceSpace.spaceName}</span>
-              <span>{money(servicePack.price?.value ?? 0)}</span>
+            <div key={servicePack.id} className={element("summary__item")}>
+              <div className={element("summary__item__photo")}>
+                {serviceSpace.photoURLs?.[0] && (
+                  <Image
+                    alt=""
+                    src={serviceSpace.photoURLs[0]}
+                    fill
+                    sizes="6rem"
+                  />
+                )}
+              </div>
+              <div className={element("summary__item__info")}>
+                <p className={element("summary__item__title")}>
+                  {serviceSpace.spaceName}
+                </p>
+                <p className={element("summary__item__detail")}>
+                  {servicePack.name}
+                </p>
+              </div>
+              <span className={element("summary__item__value")}>
+                {money(servicePack.price?.value ?? 0)}
+              </span>
             </div>
           ))}
         </div>
