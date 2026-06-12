@@ -12,6 +12,8 @@ import IconUserInterfaceMiscellaneousGraphUp from "@/_design_system/_icons/UserI
 import IconUserInterfaceMiscellaneousQuote from "@/_design_system/_icons/UserInterface/Miscellaneous/Quote.svg";
 import IconUserInterfaceMiscellaneousUser from "@/_design_system/_icons/UserInterface/Miscellaneous/User.svg";
 import IconUserInterfaceMiscellaneousTip from "@/_design_system/_icons/UserInterface/Miscellaneous/Tip.svg";
+import IconUserInterfaceActionsMoveLeft from "@/_design_system/_icons/UserInterface/Actions/MoveLeft.svg";
+import IconUserInterfaceActionsMoveRight from "@/_design_system/_icons/UserInterface/Actions/MoveRight.svg";
 import type { ReactNode } from "react";
 
 const { block, element } = createBEMClasses("admin-sidebar");
@@ -97,25 +99,29 @@ export const isAdminNavItemActive = (pathname: string, href: string) =>
 
 const Sidebar = ({
   isOpen,
+  isCollapsed,
+  onToggleCollapsed,
   onNavigate,
 }: {
   isOpen: boolean;
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
   onNavigate: () => void;
 }) => {
   const pathname = usePathname();
 
   return (
-    <aside className={block({ open: isOpen })}>
+    <aside className={block({ open: isOpen, collapsed: isCollapsed })}>
       <div className={element("brand")}>
         <Link href="/admin" onClick={onNavigate}>
           <Logo />
-          <span>Backoffice</span>
+          {!isCollapsed && <span>Backoffice</span>}
         </Link>
       </div>
       <nav className={element("nav")}>
         {ADMIN_NAV_GROUPS.map((group, index) => (
           <div key={index} className={element("group")}>
-            {group.label && (
+            {group.label && !isCollapsed && (
               <p className={element("group__label")}>{group.label}</p>
             )}
             {group.items.map((item) => (
@@ -123,21 +129,37 @@ const Sidebar = ({
                 key={item.href}
                 href={item.href}
                 onClick={onNavigate}
+                title={isCollapsed ? item.label : undefined}
                 className={element("link", {
                   active: isAdminNavItemActive(pathname, item.href),
                 })}
               >
                 {item.icon}
-                {item.label}
+                {!isCollapsed && item.label}
               </Link>
             ))}
           </div>
         ))}
       </nav>
       <div className={element("footer")}>
-        <Link href="/" onClick={onNavigate}>
-          Ver site →
-        </Link>
+        {!isCollapsed && (
+          <Link href="/" onClick={onNavigate}>
+            Ver site →
+          </Link>
+        )}
+        <button
+          type="button"
+          className={element("collapse")}
+          onClick={onToggleCollapsed}
+          aria-label={isCollapsed ? "Expandir menu" : "Comprimir menu"}
+          title={isCollapsed ? "Expandir menu" : "Comprimir menu"}
+        >
+          {isCollapsed ? (
+            <IconUserInterfaceActionsMoveRight />
+          ) : (
+            <IconUserInterfaceActionsMoveLeft />
+          )}
+        </button>
       </div>
     </aside>
   );

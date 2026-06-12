@@ -2,6 +2,7 @@
 
 import { createBEMClasses } from "@/_utils/classname";
 import { useSession } from "@/_services/session";
+import { useLocalStorage } from "@/_services/localStorage";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Sidebar from "../Sidebar";
@@ -14,6 +15,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const collapsedStorage = useLocalStorage<boolean>("admin-sidebar-collapsed");
+  const isCollapsed = collapsedStorage.value === true;
 
   useEffect(() => {
     if (session === null || (!!session && !session.roles.includes("admin"))) {
@@ -29,6 +32,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     <div className={block()}>
       <Sidebar
         isOpen={isSidebarOpen}
+        isCollapsed={isCollapsed}
+        onToggleCollapsed={() => collapsedStorage.setValue(!isCollapsed)}
         onNavigate={() => setIsSidebarOpen(false)}
       />
       {isSidebarOpen && (
