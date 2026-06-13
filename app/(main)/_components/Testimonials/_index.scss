@@ -119,13 +119,8 @@
 
   &__testimonial {
     transition: all 300ms ease-in-out;
-    padding: 32px 16px 16px;
+    padding: 24px 16px 16px;
     border-radius: 8px;
-
-    .icon-svg {
-      font-size: 2rem;
-      color: $color-brand-primary;
-    }
 
     &__text {
       @include font-body-s;
@@ -135,6 +130,7 @@
       @include font-action-s;
       color: $color-brand-primary;
       letter-spacing: 0.125rem;
+      text-align: left;
     }
 
     hr {
