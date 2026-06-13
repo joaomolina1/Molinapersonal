@@ -1,13 +1,11 @@
 @use "app/_styles/abstract" as *;
 
-// Highlighted pill matching the recommended-space treatment (brand ring +
-// soft drop shadow), slightly thinner.
+// Highlighted pill with the shared rotating metallic-blue ring.
 .ai-planner-button {
   width: max-content;
 
   .button {
-    box-shadow:
-      0 0 0 1px $color-brand-primary,
-      0 8px 20px -14px rgba(0, 0, 0, 0.3);
+    @include rinu-rotating-glow(2px, 8px);
+    box-shadow: 0 0 14px rgba($color-brand-primary, 0.45);
   }
 }

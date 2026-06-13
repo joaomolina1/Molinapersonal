@@ -14,7 +14,6 @@ import { useEffect } from "react";
 import { SPACE_EVENT_TYPES_FLAT } from "@/_constants/space/eventTypes";
 import Stack from "@/_design_system/Stack";
 import KeywordSearch from "../KeywordSearch";
-import SearchJourneyToggle from "../SearchJourneyToggle";
 import { ModalSearchFilters } from "../SearchFilters";
 
 const { block, element } = createBEMClasses("search-page");
@@ -71,7 +70,6 @@ const SearchPage = () => {
             <KeywordSearch />
             {!isMobile && <ModalSearchFilters />}
           </Stack>
-          <SearchJourneyToggle />
           <SearchTabFilters />
           <SearchResults />
         </div>
