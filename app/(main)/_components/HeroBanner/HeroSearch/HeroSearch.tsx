@@ -21,6 +21,7 @@ import {
 } from "@/(main)/search/_utils/attributes";
 import { sendGAEvent } from "@next/third-parties/google";
 import EventTypeSelect from "../../EventTypeSelect";
+import AIPlannerButton from "../../AIPlannerButton";
 import { usePathname } from "next/navigation";
 import { ErrorBoundary } from "@/_services/sentry";
 import { useSession } from "@/_services/session";
@@ -386,6 +387,9 @@ const HeroSearchContent = ({
             onClick={handleHeroSearch}
             loading={isSearchLoading}
           />
+        )}
+        {mode === "hero" && (
+          <AIPlannerButton source="hero" className={element("ai-planner")} />
         )}
       </div>
     </ErrorBoundary>

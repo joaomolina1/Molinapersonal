@@ -1,6 +1,5 @@
 import { createBEMClasses } from "@/_utils/classname";
 import Header from "@/_components/Header";
-import AIPlannerButton from "../AIPlannerButton";
 import { HeroSearch } from "./HeroSearch";
 import { Fragment } from "react";
 import { ErrorBoundary } from "@/_services/sentry";
@@ -56,13 +55,6 @@ const HeroBanner = ({
                   defaultEventType={defaultEventType}
                   listenOnEnter
                 />
-                <div className={element("ai-planner")}>
-                  <AIPlannerButton source="hero" />
-                  <p>
-                    <b>Novo</b> — o nosso assistente monta e reserva o seu
-                    evento em minutos
-                  </p>
-                </div>
               </div>
               {showBanner && (
                 <div className={element("banner")}>

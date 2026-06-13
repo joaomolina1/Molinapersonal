@@ -4,7 +4,6 @@ import { IconButton } from "@/_design_system/Button";
 import Stack from "@/_design_system/Stack";
 import TextBlock from "@/_design_system/TextBlock";
 import Tag from "@/_design_system/Tag";
-import IconUserInterfaceMiscellaneousQuote from "@/_design_system/_icons/UserInterface/Miscellaneous/Quote.svg";
 import IconUserInterfaceMiscellaneousRating from "@/_design_system/_icons/UserInterface/Miscellaneous/Rating.svg";
 import IconUserInterfaceNavigationArrowLeft from "@/_design_system/_icons/UserInterface/Navigation/ArrowLeft.svg";
 import IconUserInterfaceNavigationArrowRight from "@/_design_system/_icons/UserInterface/Navigation/ArrowRight.svg";
@@ -133,18 +132,15 @@ const Testimonials = () => {
 const TestimonialCard = ({ testimonial }: { testimonial: Testimonial }) => (
   <Stack gap="1rem" className={element("testimonial")}>
     <Stack gap="0.5rem">
-      <Stack row justifyContent="space-between" alignItems="center">
-        <IconUserInterfaceMiscellaneousQuote />
-        {testimonial.rating != null && (
-          <span
-            className={element("testimonial__rating")}
-            aria-label={`${testimonial.rating} em 5 estrelas`}
-          >
-            {"★".repeat(testimonial.rating)}
-            {"☆".repeat(5 - testimonial.rating)}
-          </span>
-        )}
-      </Stack>
+      {testimonial.rating != null && (
+        <span
+          className={element("testimonial__rating")}
+          aria-label={`${testimonial.rating} em 5 estrelas`}
+        >
+          {"★".repeat(testimonial.rating)}
+          {"☆".repeat(5 - testimonial.rating)}
+        </span>
+      )}
       <p className={element("testimonial__text")}>{testimonial.text}</p>
     </Stack>
     <hr />

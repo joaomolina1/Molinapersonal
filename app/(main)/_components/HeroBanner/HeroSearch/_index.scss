@@ -62,6 +62,15 @@
   flex-direction: column;
   gap: 0.5rem;
 
+  // On mobile the AI Planner sits inside the blur, full-width like Pesquisar.
+  .hero-search__ai-planner {
+    width: 100%;
+
+    .button {
+      width: 100%;
+    }
+  }
+
   .input-select,
   .input-date,
   .input-number,
@@ -91,6 +100,16 @@
 
     > button {
       margin-left: 0.5rem;
+    }
+
+    // Beside Pesquisar on desktop, back to its natural width.
+    .hero-search__ai-planner {
+      width: max-content;
+      margin-left: 0.5rem;
+
+      .button {
+        width: auto;
+      }
     }
 
     .input-select,
