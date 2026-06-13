@@ -14,6 +14,7 @@ import Tooltip from "@/_design_system/Tooltip";
 import InputDate from "@/_design_system/InputDate";
 import InputTimeRange from "@/_design_system/InputTimeRange";
 import InputNumber from "@/_design_system/InputNumber";
+import InputSelect from "@/_design_system/InputSelect";
 import CircleLoader from "@/_design_system/CircleLoader";
 import { InputError } from "@/_design_system/_utils/InputWrapper";
 import IconUserInterfaceMiscellaneousUsers from "@/_design_system/_icons/UserInterface/Miscellaneous/Users.svg";
@@ -31,8 +32,10 @@ import {
   SpaceEventType,
 } from "@/_constants/space/eventTypes";
 import {
+  City,
   SearchResult,
   useAttributes,
+  useCities,
   useSearchResults,
 } from "@/_models/search";
 import { Pack, usePacks } from "@/_models/pack";
@@ -103,8 +106,11 @@ const BuilderPage = () => {
   const [step, setStep] = useState<Step>("event-type");
   const [history, setHistory] = useState<ChatEntry[]>([]);
 
+  const { data: cities = [] } = useCities({ enabled: true });
+
   // Event basics
   const [eventType, setEventType] = useState<SpaceEventType | null>(null);
+  const [city, setCity] = useState<City | null>(null);
   const [date, setDate] = useState<CalendarDate | null>(null);
   const [startEnd, setStartEnd] = useState<{
     start: TimeDuration | null;
@@ -215,6 +221,7 @@ const BuilderPage = () => {
     setStep("event-type");
     setHistory([]);
     setEventType(null);
+    setCity(null);
     setDate(null);
     setStartEnd({ start: null, end: null });
     setNumPeople(undefined);
@@ -257,8 +264,14 @@ const BuilderPage = () => {
               <EventTypeStep
                 eventType={eventType}
                 setEventType={setEventType}
+                cities={cities}
+                city={city}
+                setCity={setCity}
                 onContinue={(label) => {
-                  pushHistory("Que tipo de evento quer organizar?", label);
+                  pushHistory(
+                    "Que tipo de evento quer organizar e em que zona?",
+                    label,
+                  );
                   setStep("details");
                   trackStep("event_type", label);
                 }}
@@ -289,6 +302,7 @@ const BuilderPage = () => {
             {step === "space" && basePacksQuery && (
               <SpaceStep
                 eventType={eventType}
+                city={city}
                 date={date}
                 startEnd={startEnd}
                 numPeople={numPeople}
@@ -385,6 +399,7 @@ const BuilderPage = () => {
               <ExternalServicesStep
                 basePacksQuery={basePacksQuery}
                 eventType={eventType}
+                city={city}
                 date={date}
                 startEnd={startEnd}
                 numPeople={numPeople}
@@ -540,51 +555,68 @@ const MAIN_EVENT_TYPE_IDS = [
 const EventTypeStep = ({
   eventType,
   setEventType,
+  cities,
+  city,
+  setCity,
   onContinue,
 }: {
   eventType: SpaceEventType | null;
   setEventType: (eventType: SpaceEventType | null) => void;
+  cities: City[];
+  city: City | null;
+  setCity: (city: City | null) => void;
   onContinue: (label: string) => void;
 }) => {
+  const [showErrors, setShowErrors] = useState(false);
+
   const mainOptions = MAIN_EVENT_TYPE_IDS.map(
     (id) => SPACE_EVENT_TYPES_FLAT.find((option) => option.id === id)!,
   ).filter(Boolean);
 
+  const submit = () => {
+    setShowErrors(true);
+    if (!eventType || !city) return;
+    const label =
+      SPACE_EVENT_TYPES_FLAT.find((option) => option.id === eventType)?.label ??
+      eventType;
+    onContinue(`${label} · ${city.Name}`);
+  };
+
   return (
     <div className={element("exchange")}>
       <AssistantBubble>
-        Que tipo de evento quer organizar?
+        Que tipo de evento quer organizar e em que zona?
         <div className={element("chips")}>
           {mainOptions.map((option) => (
             <button
               key={option.id}
               type="button"
               className={element("chip", { selected: eventType === option.id })}
-              onClick={() => {
-                setEventType(option.id);
-                onContinue(option.label);
-              }}
+              onClick={() => setEventType(option.id)}
             >
               {option.label}
             </button>
           ))}
         </div>
-        <div className={element("inline-input")}>
+        <div className={element("form-grid")}>
           <EventTypeSelect
             eventTypeOptions={allEventTypeOptions}
             eventType={eventType}
-            setEventType={(value) => {
-              setEventType(value);
-              if (value) {
-                const label =
-                  SPACE_EVENT_TYPES_FLAT.find((option) => option.id === value)
-                    ?.label ?? value;
-                onContinue(label);
-              }
-            }}
-            label="Outro tipo de evento"
+            setEventType={setEventType}
+            label="Tipo de evento"
+            invalid={showErrors && !eventType}
+          />
+          <InputSelect
+            label="Zona do país"
+            value={city?.Name}
+            onChange={(name) =>
+              setCity(cities.find(({ Name }) => Name === name) ?? null)
+            }
+            options={cities.map(({ Name }) => ({ id: Name, text: Name }))}
+            invalid={showErrors && !city}
           />
         </div>
+        <Button type="primary" label="Continuar" onClick={submit} />
       </AssistantBubble>
     </div>
   );
@@ -702,6 +734,7 @@ type BasePacksQuery = {
 const useAvailableSpaces = ({
   journey,
   eventType,
+  city,
   attributes,
   date,
   startEnd,
@@ -711,6 +744,7 @@ const useAvailableSpaces = ({
 }: {
   journey: "venues" | "services";
   eventType: SpaceEventType | null;
+  city?: City | null;
   attributes?: string[];
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
@@ -729,6 +763,10 @@ const useAvailableSpaces = ({
       start: startEnd.start?.string,
       end: startEnd.end?.string,
       numPeople,
+      top: city?.Top,
+      bottom: city?.Bottom,
+      left: city?.Left,
+      right: city?.Right,
       pageSize: 18,
       mode: "search",
     },
@@ -770,6 +808,7 @@ const useAvailableSpaces = ({
 
 const SpaceStep = ({
   eventType,
+  city,
   date,
   startEnd,
   numPeople,
@@ -778,6 +817,7 @@ const SpaceStep = ({
   onSelect,
 }: {
   eventType: SpaceEventType | null;
+  city: City | null;
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
@@ -790,6 +830,7 @@ const SpaceStep = ({
   const { isLoading, availableSpaces } = useAvailableSpaces({
     journey: "venues",
     eventType,
+    city,
     date,
     startEnd,
     numPeople,
@@ -830,15 +871,12 @@ const SpaceStep = ({
           <>
             <div className={element("options")}>
               {options.map(({ searchResult, packs }) => (
-                <SpaceOption
+                <OfferCard
                   key={searchResult.id}
                   searchResult={searchResult}
-                  minPrice={Math.min(
-                    ...packs.map((pack) => pack.price?.value ?? Infinity),
-                  )}
+                  packs={packs}
                   budget={budget}
-                  numPacks={packs.length}
-                  onSelect={() => onSelect(searchResult, packs)}
+                  onChoose={() => onSelect(searchResult, packs)}
                 />
               ))}
             </div>
@@ -855,19 +893,25 @@ const SpaceStep = ({
   );
 };
 
-const SpaceOption = ({
+// Shared rich card for both spaces and services: photo swipe, description
+// (capped at 600 chars), available-packs count and a price-from column.
+const OfferCard = ({
   searchResult,
-  minPrice,
+  packs,
   budget,
-  numPacks,
-  onSelect,
+  ctaLabel = "Escolher",
+  onChoose,
 }: {
   searchResult: SearchResult;
-  minPrice: number;
-  budget: number | undefined;
-  numPacks: number;
-  onSelect: () => void;
+  packs: Pack[];
+  budget?: number | undefined;
+  ctaLabel?: string;
+  onChoose: () => void;
 }) => {
+  const minPrice = Math.min(
+    ...packs.map((pack) => pack.price?.value ?? Infinity),
+  );
+  const numPacks = packs.length;
   const description =
     searchResult.description.length > 600
       ? `${searchResult.description.slice(0, 600)}…`
@@ -886,7 +930,7 @@ const SpaceOption = ({
           )}
         </div>
         <TextButton
-          text="Ver mais fotos"
+          text="Mais detalhes"
           href={`/space/${searchResult.id}`}
           target="_blank"
           size="small"
@@ -904,9 +948,13 @@ const SpaceOption = ({
         </p>
         <p className={element("space-card__detail")}>
           {searchResult.address.city}
-          {" · "}
-          <IconUserInterfaceMiscellaneousUsers />{" "}
-          {formatInt(searchResult.capacity)}
+          {searchResult.capacity > 0 && (
+            <>
+              {" · "}
+              <IconUserInterfaceMiscellaneousUsers />{" "}
+              {formatInt(searchResult.capacity)}
+            </>
+          )}
           {" · "}
           {numPacks} {numPacks === 1 ? "pack disponível" : "packs disponíveis"}
         </p>
@@ -922,7 +970,7 @@ const SpaceOption = ({
             <span>para o seu evento</span>
           </div>
         )}
-        <Button type="primary" label="Escolher" onClick={onSelect} />
+        <Button type="primary" label={ctaLabel} onClick={onChoose} />
       </div>
     </div>
   );
@@ -971,9 +1019,7 @@ const PackStep = ({
                   <p className={element("option__title")}>{pack.name}</p>
                   {!!pack.description && (
                     <p className={element("option__detail")}>
-                      {pack.description.length > 240
-                        ? `${pack.description.slice(0, 240)}…`
-                        : pack.description}
+                      {pack.description}
                     </p>
                   )}
                 </div>
@@ -1202,6 +1248,7 @@ function extraPriceExplanation(
 const ExternalServicesStep = ({
   basePacksQuery,
   eventType,
+  city,
   date,
   startEnd,
   numPeople,
@@ -1213,6 +1260,7 @@ const ExternalServicesStep = ({
 }: {
   basePacksQuery: BasePacksQuery;
   eventType: SpaceEventType | null;
+  city: City | null;
   date: CalendarDate | null;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
   numPeople: number | undefined;
@@ -1229,23 +1277,38 @@ const ExternalServicesStep = ({
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
+  // When a chosen service has multiple packs, let the client pick which one.
+  const [pendingService, setPendingService] = useState<{
+    space: SearchResult;
+    packs: Pack[];
+  } | null>(null);
 
   const handleAdd = (selection: ServicePackSelection) => {
     onAdd(selection);
-    // Reset the category picker and ask whether to add another service.
+    // Reset the picker and ask whether to add another service.
     setActiveCategory(null);
+    setPendingService(null);
     setJustAdded(selection.space.spaceName);
+  };
+
+  const handleChoose = (space: SearchResult, packs: Pack[]) => {
+    if (packs.length === 1) {
+      handleAdd({ pack: packs[0], space });
+    } else {
+      setPendingService({ space, packs });
+    }
   };
 
   const { isLoading, availableSpaces } = useAvailableSpaces({
     journey: "services",
     eventType,
+    city,
     attributes: activeCategory ? [activeCategory] : undefined,
     date,
     startEnd,
     numPeople,
     basePacksQuery,
-    enabled: !!activeCategory,
+    enabled: !!activeCategory && !pendingService,
   });
 
   const addedPackIDs = new Set(servicePacks.map(({ pack }) => pack.id));
@@ -1273,26 +1336,66 @@ const ExternalServicesStep = ({
             juntar vários ao mesmo booking.
           </>
         )}
-        <div className={element("chips")}>
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              className={element("chip", {
-                selected: activeCategory === category.id,
-              })}
-              onClick={() => {
-                setJustAdded(null);
-                setActiveCategory(
-                  activeCategory === category.id ? null : category.id,
-                );
-              }}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-        {!!activeCategory &&
+        {!pendingService && (
+          <div className={element("chips")}>
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                className={element("chip", {
+                  selected: activeCategory === category.id,
+                })}
+                onClick={() => {
+                  setJustAdded(null);
+                  setActiveCategory(
+                    activeCategory === category.id ? null : category.id,
+                  );
+                }}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {pendingService ? (
+          <>
+            <p>Escolha o pack de {pendingService.space.spaceName}:</p>
+            <div className={element("options")}>
+              {pendingService.packs.map((pack) => (
+                <div key={pack.id} className={element("option")}>
+                  <div className={element("option__info")}>
+                    <p className={element("option__title")}>{pack.name}</p>
+                    {!!pack.description && (
+                      <p className={element("option__detail")}>
+                        {pack.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className={element("option__actions")}>
+                    {!!pack.price && (
+                      <p className={element("option__price")}>
+                        <b>{money(pack.price.value)}</b>
+                      </p>
+                    )}
+                    <Button
+                      type="primary"
+                      label="Adicionar"
+                      disabled={!canAddMore || addedPackIDs.has(pack.id)}
+                      onClick={() =>
+                        handleAdd({ pack, space: pendingService.space })
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <TextButton
+              text="Escolher outro serviço"
+              onClick={() => setPendingService(null)}
+            />
+          </>
+        ) : (
+          !!activeCategory &&
           (isLoading ? (
             <div className={element("loading")}>
               <CircleLoader size={48} />
@@ -1305,60 +1408,18 @@ const ExternalServicesStep = ({
             </p>
           ) : (
             <div className={element("options")}>
-              {offers.slice(0, 4).map(({ searchResult, packs }) => {
-                const cheapestPack = packs.reduce((cheapest, pack) =>
-                  (pack.price?.value ?? Infinity) <
-                  (cheapest.price?.value ?? Infinity)
-                    ? pack
-                    : cheapest,
-                );
-                return (
-                  <div key={searchResult.id} className={element("option")}>
-                    <div className={element("option__photo")}>
-                      {searchResult.photoURLs[0] && (
-                        <Image
-                          alt=""
-                          src={searchResult.photoURLs[0]}
-                          fill
-                          sizes="10rem"
-                        />
-                      )}
-                    </div>
-                    <div className={element("option__info")}>
-                      <p className={element("option__title")}>
-                        {searchResult.spaceName}
-                      </p>
-                      <p className={element("option__detail")}>
-                        {cheapestPack.name}
-                      </p>
-                    </div>
-                    <div className={element("option__actions")}>
-                      {!!cheapestPack.price && (
-                        <p className={element("option__price")}>
-                          <b>{money(cheapestPack.price.value)}</b>
-                        </p>
-                      )}
-                      <Button
-                        type="primary"
-                        label="Adicionar"
-                        disabled={
-                          !canAddMore || addedPackIDs.has(cheapestPack.id)
-                        }
-                        onClick={() =>
-                          handleAdd({ pack: cheapestPack, space: searchResult })
-                        }
-                      />
-                      <TextButton
-                        text="Ver detalhes"
-                        href={`/space/${searchResult.id}`}
-                        target="_blank"
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+              {offers.slice(0, 4).map(({ searchResult, packs }) => (
+                <OfferCard
+                  key={searchResult.id}
+                  searchResult={searchResult}
+                  packs={packs}
+                  ctaLabel="Escolher"
+                  onChoose={() => handleChoose(searchResult, packs)}
+                />
+              ))}
             </div>
-          ))}
+          ))
+        )}
         {servicePacks.length > 0 && (
           <div className={element("added-services")}>
             <p>Serviços adicionados:</p>

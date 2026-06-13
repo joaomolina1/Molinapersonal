@@ -480,6 +480,31 @@ export async function handleSearchRoute(
         );
       }
 
+      // Geographic bounds (from a selected city): keep venues whose
+      // coordinates fall inside the box. Used by the homepage search and
+      // the event builder's zone question.
+      const top = parseFloat(ctx.query.get("top") ?? "");
+      const bottom = parseFloat(ctx.query.get("bottom") ?? "");
+      const left = parseFloat(ctx.query.get("left") ?? "");
+      const right = parseFloat(ctx.query.get("right") ?? "");
+      const hasBounds =
+        !Number.isNaN(top) &&
+        !Number.isNaN(bottom) &&
+        !Number.isNaN(left) &&
+        !Number.isNaN(right);
+      if (hasBounds) {
+        qualifyingRows = qualifyingRows.filter((row) => {
+          const venue = row.venues as unknown as {
+            latitude?: number | null;
+            longitude?: number | null;
+          };
+          const lat = Number(venue?.latitude ?? 0);
+          const lng = Number(venue?.longitude ?? 0);
+          if (!lat || !lng) return false;
+          return lat <= top && lat >= bottom && lng >= left && lng <= right;
+        });
+      }
+
       if (searchMode) {
         qualifyingRows.sort((a, b) => {
           const ha = highlightsBySpace.get(a.id as string);
