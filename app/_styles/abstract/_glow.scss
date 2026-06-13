@@ -1,0 +1,55 @@
+@use "./colors" as *;
+
+// Animated metallic-blue ring shared by the AI Planner button and the
+// recommended-space highlight, so both read as the same treatment.
+@property --rinu-glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rinu-glow-spin {
+  to {
+    --rinu-glow-angle: 360deg;
+  }
+}
+
+@mixin rinu-rotating-glow($width: 2px, $radius: 8px) {
+  position: relative;
+  border-radius: $radius;
+  isolation: isolate;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    padding: $width;
+    background: conic-gradient(
+      from var(--rinu-glow-angle),
+      $color-brand-primary,
+      #dff1ff,
+      $color-brand-secondary,
+      #f4faff,
+      #8ecdf7,
+      $color-brand-primary
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: rinu-glow-spin 3s linear infinite;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
