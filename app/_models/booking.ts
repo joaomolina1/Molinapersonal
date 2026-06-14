@@ -6,6 +6,17 @@ import { TimeDuration } from "@/_utils/number";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDate, parseDate } from "@internationalized/date";
 
+export type BookingProviderContact = {
+  name: string | null;
+  email: string | null;
+  phoneExtension: number | null;
+  phoneNumber: number | null;
+  street1: string | null;
+  street2: string | null;
+  postalCode: string | null;
+  city: string | null;
+};
+
 export type BookingServicePack = {
   packID: string;
   spaceID: string | null;
@@ -14,6 +25,7 @@ export type BookingServicePack = {
   amount: number;
   extraIDs: string[];
   extraParams: { id: string; hours?: number | null; pax?: number | null }[];
+  provider?: BookingProviderContact | null;
 };
 
 export class Booking {
@@ -71,6 +83,7 @@ export class Booking {
   extraIDs!: string[];
   extraParams!: { id: string; hours?: number | null; pax?: number | null }[];
   servicePacks?: BookingServicePack[];
+  provider?: BookingProviderContact | null;
 
   get shortId() {
     return this.id.slice(0, 8).toUpperCase();

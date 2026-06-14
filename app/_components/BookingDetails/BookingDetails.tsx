@@ -17,9 +17,11 @@ import IconUserInterfaceMiscellaneousEmail from "@/_design_system/_icons/UserInt
 import IconUserInterfaceMiscellaneousPhone from "@/_design_system/_icons/UserInterface/Miscellaneous/Phone.svg";
 import IconUserInterfaceMiscellaneousPin from "@/_design_system/_icons/UserInterface/Miscellaneous/Pin.svg";
 import { getLocalTimeZone } from "@internationalized/date";
-import { Booking } from "@/_models/booking";
+import {
+  Booking,
+  BookingProviderContact as BookingProviderContactData,
+} from "@/_models/booking";
 import { isNotNil } from "@/_utils/filter";
-import { Venue } from "@/_models/venue";
 import type { PackPaymentBreakdown } from "@lib/payment/upfront";
 import {
   formatRemainingPaymentDate,
@@ -391,33 +393,96 @@ export const BookingContact = ({ booking }: { booking: Booking }) => {
   );
 };
 
-export const BookingHostContact = ({ venue }: { venue?: Venue }) => (
-  <BookingDetailsSection label="Contacto do fornecedor">
+const ProviderContactLines = ({
+  provider,
+}: {
+  provider: BookingProviderContactData;
+}) => {
+  const phone =
+    provider.phoneNumber != null
+      ? `+${provider.phoneExtension ?? ""} ${provider.phoneNumber}`.trim()
+      : null;
+  const street = [provider.street1, provider.street2]
+    .filter(Boolean)
+    .join(" ");
+  const cityLine = [provider.postalCode, provider.city]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
     <Stack gap="0.5rem">
-      <AmenitiesItem
-        icon={<IconUserInterfaceMiscellaneousEmail />}
-        label={venue?.contactEmail}
-        iconSize="small"
-        textSize="small"
-      />
-      <AmenitiesItem
-        icon={<IconUserInterfaceMiscellaneousPhone />}
-        label={`+${venue?.contactPhoneExtension}${venue?.contactPhoneNumber}`}
-        iconSize="small"
-        textSize="small"
-      />
-      <AmenitiesItem
-        icon={<IconUserInterfaceMiscellaneousPin />}
-        label={
-          <>
-            {venue?.street1} {venue?.street2}
-            <br />
-            {venue?.postalCode} {venue?.city}, Portugal
-          </>
-        }
-        iconSize="small"
-        textSize="small"
-      />
+      {!!provider.email && (
+        <AmenitiesItem
+          icon={<IconUserInterfaceMiscellaneousEmail />}
+          label={provider.email}
+          iconSize="small"
+          textSize="small"
+        />
+      )}
+      {!!phone && (
+        <AmenitiesItem
+          icon={<IconUserInterfaceMiscellaneousPhone />}
+          label={phone}
+          iconSize="small"
+          textSize="small"
+        />
+      )}
+      {(!!street || !!cityLine) && (
+        <AmenitiesItem
+          icon={<IconUserInterfaceMiscellaneousPin />}
+          label={
+            <>
+              {street}
+              {!!street && <br />}
+              {cityLine ? `${cityLine}, Portugal` : "Portugal"}
+            </>
+          }
+          iconSize="small"
+          textSize="small"
+        />
+      )}
     </Stack>
-  </BookingDetailsSection>
-);
+  );
+};
+
+export const BookingHostContact = ({
+  provider,
+}: {
+  provider?: BookingProviderContactData | null;
+}) => {
+  if (!provider) {
+    return null;
+  }
+
+  return (
+    <BookingDetailsSection label="Contacto do espaço">
+      <ProviderContactLines provider={provider} />
+    </BookingDetailsSection>
+  );
+};
+
+export const BookingServiceContacts = ({
+  servicePacks,
+}: {
+  servicePacks: NonNullable<Booking["servicePacks"]>;
+}) => {
+  const withProvider = servicePacks.filter((servicePack) => servicePack.provider);
+  if (withProvider.length === 0) {
+    return null;
+  }
+
+  return (
+    <BookingDetailsSection label="Contactos dos serviços externos">
+      <Stack gap="1.5rem">
+        {withProvider.map((servicePack) => (
+          <Stack gap="0.375rem" key={servicePack.packID}>
+            <p className={element("provider-name")}>
+              {servicePack.provider?.name || servicePack.spaceName}
+            </p>
+            <ProviderContactLines provider={servicePack.provider!} />
+          </Stack>
+        ))}
+      </Stack>
+    </BookingDetailsSection>
+  );
+};

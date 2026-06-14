@@ -1646,29 +1646,84 @@ export async function handleBookingsRoute(
       .maybeSingle();
     if (error || !data) return emptyResponse(404);
 
+    const mapProviderContact = (
+      venue:
+        | {
+            name?: string | null;
+            contact_email?: string | null;
+            contact_phone_extension?: number | null;
+            contact_phone_number?: number | null;
+            street1?: string | null;
+            street2?: string | null;
+            postal_code?: string | null;
+            city?: string | null;
+          }
+        | null
+        | undefined,
+    ) => {
+      if (!venue) return null;
+      const email = venue.contact_email ? String(venue.contact_email) : null;
+      const phoneNumber =
+        venue.contact_phone_number != null
+          ? Number(venue.contact_phone_number)
+          : null;
+      // No usable contact info → let the client hide the section entirely.
+      if (!email && !phoneNumber) return null;
+      return {
+        name: venue.name ? String(venue.name) : null,
+        email,
+        phoneExtension:
+          venue.contact_phone_extension != null
+            ? Number(venue.contact_phone_extension)
+            : null,
+        phoneNumber,
+        street1: venue.street1 ? String(venue.street1) : null,
+        street2: venue.street2 ? String(venue.street2) : null,
+        postalCode: venue.postal_code ? String(venue.postal_code) : null,
+        city: venue.city ? String(venue.city) : null,
+      };
+    };
+
+    const VENUE_CONTACT_SELECT =
+      "name, contact_email, contact_phone_extension, contact_phone_number, street1, street2, postal_code, city";
+
+    const { data: spaceRow } = await admin
+      .from("spaces")
+      .select(`venues(${VENUE_CONTACT_SELECT})`)
+      .eq("id", data.space_id)
+      .maybeSingle();
+    const provider = mapProviderContact(
+      spaceRow?.venues as unknown as Parameters<typeof mapProviderContact>[0],
+    );
+
     const { data: servicePackRows } = await admin
       .from("booking_packs")
       .select(
-        "pack_id, space_id, amount, extra_ids, extra_params, packs(name), spaces(name)",
+        `pack_id, space_id, amount, extra_ids, extra_params, packs(name), spaces(name, venues(${VENUE_CONTACT_SELECT}))`,
       )
       .eq("booking_id", action)
       .order("created_at", { ascending: true });
 
-    const servicePacks = (servicePackRows ?? []).map((row) => ({
-      packID: String(row.pack_id),
-      spaceID: row.space_id ? String(row.space_id) : null,
-      packName: String(
-        (row.packs as unknown as { name?: string } | null)?.name ?? "",
-      ),
-      spaceName: String(
-        (row.spaces as unknown as { name?: string } | null)?.name ?? "",
-      ),
-      amount: Number(row.amount ?? 0),
-      extraIDs: (row.extra_ids as string[] | null) ?? [],
-      extraParams: row.extra_params ?? [],
-    }));
+    const servicePacks = (servicePackRows ?? []).map((row) => {
+      const space = row.spaces as unknown as {
+        name?: string;
+        venues?: Parameters<typeof mapProviderContact>[0];
+      } | null;
+      return {
+        packID: String(row.pack_id),
+        spaceID: row.space_id ? String(row.space_id) : null,
+        packName: String(
+          (row.packs as unknown as { name?: string } | null)?.name ?? "",
+        ),
+        spaceName: String(space?.name ?? ""),
+        amount: Number(row.amount ?? 0),
+        extraIDs: (row.extra_ids as string[] | null) ?? [],
+        extraParams: row.extra_params ?? [],
+        provider: mapProviderContact(space?.venues),
+      };
+    });
 
-    return jsonResponse({ ...mapBooking(data), servicePacks });
+    return jsonResponse({ ...mapBooking(data), provider, servicePacks });
   }
 
   if (ctx.request.method === "POST" && !action) {
