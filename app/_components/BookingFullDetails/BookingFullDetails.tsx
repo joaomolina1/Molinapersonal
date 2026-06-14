@@ -1,6 +1,6 @@
 "use client";
 
-import { Booking } from "@/_models/booking";
+import { Booking, useBooking } from "@/_models/booking";
 import { createBEMClasses } from "@/_utils/classname";
 import {
   BookingBilling,
@@ -26,7 +26,12 @@ import Stack from "@/_design_system/Stack";
 
 const { block, element } = createBEMClasses("booking-full-details");
 
-const BookingFullDetails = ({ booking }: { booking: Booking }) => {
+const BookingFullDetails = ({ booking: listBooking }: { booking: Booking }) => {
+  // Booking lists don't carry the external service packs / provider contacts;
+  // fetch the full booking by id so they show in every detail view.
+  const { data: fullBooking } = useBooking({ id: listBooking.id });
+  const booking = fullBooking ?? listBooking;
+
   const { data: pack } = usePack(booking.packID);
   const { data: space } = useSpace(booking.spaceID);
   const { data: venue } = useVenue(space?.venueID);

@@ -219,10 +219,15 @@ export const BookingServicePacks = ({
   servicePacks: NonNullable<Booking["servicePacks"]>;
 }) => (
   <BookingDetailsSection label="Serviços externos">
-    <Stack gap="0.75rem">
+    <Stack gap="0.75rem" className={element("service-list")}>
       {servicePacks.map((servicePack) => (
         <Stack gap="0.25rem" key={servicePack.packID}>
-          <Stack row justifyContent="space-between" gap="0.75rem">
+          <Stack
+            row
+            justifyContent="space-between"
+            gap="0.75rem"
+            className={element("service-row")}
+          >
             <span>
               {servicePack.spaceName || servicePack.packName}
               {servicePack.spaceName && servicePack.packName
