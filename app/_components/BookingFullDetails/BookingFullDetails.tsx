@@ -7,6 +7,8 @@ import {
   BookingCancellation,
   BookingContact,
   BookingHostContact,
+  BookingServiceContacts,
+  BookingServicePacks,
   BookingMainDetails,
   BookingPackAttributes,
   BookingPhotoName,
@@ -15,6 +17,7 @@ import {
   BookingTotalPrice,
   BookingVenueAttributes,
 } from "../BookingDetails";
+import { serializeExtraParamsQuery } from "@lib/extras/quantities";
 import { usePack, usePacks } from "@/_models/pack";
 import { useSpace } from "@/_models/space";
 import { useVenue } from "@/_models/venue";
@@ -37,7 +40,8 @@ const BookingFullDetails = ({ booking }: { booking: Booking }) => {
       start: booking.start?.string ?? "",
       end: booking.end?.string ?? "",
       num_persons: booking.numPeople,
-      extras: "", // TO DO
+      extras: booking.extraIDs?.join(",") ?? "",
+      extra_params: serializeExtraParamsQuery(booking.extraParams ?? []),
     },
   });
 
@@ -73,22 +77,26 @@ const BookingFullDetails = ({ booking }: { booking: Booking }) => {
         )}
         <Stack gap="0.5rem">
           {priceDetail && (
-            <>
-              <BookingPriceDetail
-                priceDetail={priceDetail}
-                start={booking.start}
-              />
-              <hr />
-            </>
+            <BookingPriceDetail
+              priceDetail={priceDetail}
+              start={booking.start}
+            />
           )}
+          {!!booking.servicePacks?.length && (
+            <BookingServicePacks servicePacks={booking.servicePacks} />
+          )}
+          <hr />
           <BookingTotalPrice amount={booking.totalAmount} />
         </Stack>
         <BookingBilling booking={booking} />
         <BookingContact booking={booking} />
       </Stack>
-      <div>
-        <BookingHostContact venue={venue} />
-      </div>
+      <Stack gap="1.5rem">
+        <BookingHostContact provider={booking.provider} />
+        {!!booking.servicePacks?.length && (
+          <BookingServiceContacts servicePacks={booking.servicePacks} />
+        )}
+      </Stack>
     </div>
   );
 };

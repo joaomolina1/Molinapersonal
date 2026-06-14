@@ -13,4 +13,5 @@ export {
   BookingBilling,
   BookingContact,
   BookingHostContact,
+  BookingServiceContacts,
 } from "./BookingDetails";
