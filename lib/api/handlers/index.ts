@@ -1699,26 +1699,66 @@ export async function handleBookingsRoute(
     const { data: servicePackRows } = await admin
       .from("booking_packs")
       .select(
-        `pack_id, space_id, amount, extra_ids, extra_params, packs(name), spaces(name, venues(${VENUE_CONTACT_SELECT}))`,
+        `pack_id, space_id, amount, extra_ids, extra_params, packs(*), spaces(name, venues(${VENUE_CONTACT_SELECT}))`,
       )
       .eq("booking_id", action)
       .order("created_at", { ascending: true });
+
+    // Re-derive each service pack's extras breakdown (description + value)
+    // from the stored selection so the booking screens can list them.
+    const serviceFilterDate = new Date(String(data.event_date));
+    const serviceStart = parseGoDuration(intervalToGoDuration(data.start_at));
+    const serviceEnd = parseGoDuration(intervalToGoDuration(data.end_at));
+    const servicePax =
+      data.num_people != null ? Number(data.num_people) : null;
 
     const servicePacks = (servicePackRows ?? []).map((row) => {
       const space = row.spaces as unknown as {
         name?: string;
         venues?: Parameters<typeof mapProviderContact>[0];
       } | null;
+      const packRow = row.packs as unknown as Record<string, unknown> | null;
+      const extraIDs = (row.extra_ids as string[] | null) ?? [];
+      const extraParamsArr = (row.extra_params as
+        | { id: string; hours?: number | null; pax?: number | null }[]
+        | null) ?? [];
+
+      let extras: { id: string; description: string; value: number }[] = [];
+      if (packRow && extraIDs.length > 0) {
+        const extraParamsMapped: Record<
+          string,
+          { hours?: number; pax?: number }
+        > = {};
+        for (const param of extraParamsArr) {
+          extraParamsMapped[param.id] = {
+            ...(param.hours != null ? { hours: param.hours } : {}),
+            ...(param.pax != null ? { pax: param.pax } : {}),
+          };
+        }
+        try {
+          const price = computePackPrice(packRow as never, {
+            date: serviceFilterDate,
+            start: serviceStart,
+            end: serviceEnd,
+            pax: servicePax,
+            extraIDs,
+            extraParams: extraParamsMapped,
+          });
+          extras = price?.extras ?? [];
+        } catch {
+          extras = [];
+        }
+      }
+
       return {
         packID: String(row.pack_id),
         spaceID: row.space_id ? String(row.space_id) : null,
-        packName: String(
-          (row.packs as unknown as { name?: string } | null)?.name ?? "",
-        ),
+        packName: String(packRow?.name ?? ""),
         spaceName: String(space?.name ?? ""),
         amount: Number(row.amount ?? 0),
-        extraIDs: (row.extra_ids as string[] | null) ?? [],
-        extraParams: row.extra_params ?? [],
+        extraIDs,
+        extraParams: extraParamsArr,
+        extras,
         provider: mapProviderContact(space?.venues),
       };
     });

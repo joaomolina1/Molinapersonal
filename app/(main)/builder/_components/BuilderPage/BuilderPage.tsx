@@ -87,6 +87,7 @@ type ExtraSelectionMap = Record<
 type ServicePackSelection = {
   pack: Pack;
   space: SearchResult;
+  extraSelection: ExtraSelectionMap;
 };
 
 const money = (value: number) =>
@@ -1047,14 +1048,13 @@ const PackStep = ({
   );
 };
 
-const ServicesStep = ({
+// Shared chips + per-extra quantity/price UI for a pack's optional services.
+const ExtrasSelector = ({
   pack,
   startEnd,
   numPeople,
   extraSelection,
   setExtraSelection,
-  isFetchingPrice,
-  onContinue,
 }: {
   pack: Pack;
   startEnd: { start: TimeDuration | null; end: TimeDuration | null };
@@ -1063,8 +1063,6 @@ const ServicesStep = ({
   setExtraSelection: (
     update: (current: ExtraSelectionMap) => ExtraSelectionMap,
   ) => void;
-  isFetchingPrice: boolean;
-  onContinue: () => void;
 }) => {
   const eventHours =
     startEnd.start && startEnd.end
@@ -1113,117 +1111,193 @@ const ServicesStep = ({
   );
 
   return (
-    <div className={element("exchange")}>
-      <AssistantBubble>
-        Este pack inclui serviços opcionais. Quais quer adicionar?
-        <div className={element("chips")}>
-          {pack.extras.map((extra) => {
-            const selected = !!extraSelection[extra.id];
+    <>
+      <div className={element("chips")}>
+        {pack.extras.map((extra) => {
+          const selected = !!extraSelection[extra.id];
+          return (
+            <button
+              key={extra.id}
+              type="button"
+              className={element("chip", {
+                selected,
+                locked: extra.mandatory,
+              })}
+              onClick={() => toggleExtra(extra)}
+              aria-pressed={selected}
+            >
+              {extra.description}
+              {extra.mandatory && " · incluído"}
+            </button>
+          );
+        })}
+      </div>
+      <div className={element("extras")}>
+        {pack.extras
+          .filter((extra) => !!extraSelection[extra.id])
+          .map((extra) => {
+            const quantities = extraSelection[extra.id];
+            const value =
+              serverExtraValues.get(extra.id) ??
+              computeExtraPrice(extra, quantities.hours, quantities.pax);
             return (
-              <button
-                key={extra.id}
-                type="button"
-                className={element("chip", {
-                  selected,
-                  locked: extra.mandatory,
-                })}
-                onClick={() => toggleExtra(extra)}
-                aria-pressed={selected}
-              >
-                {extra.description}
-                {extra.mandatory && " · incluído"}
-              </button>
-            );
-          })}
-        </div>
-        <div className={element("extras")}>
-          {pack.extras
-            .filter((extra) => !!extraSelection[extra.id])
-            .map((extra) => {
-              const quantities = extraSelection[extra.id];
-              const value =
-                serverExtraValues.get(extra.id) ??
-                computeExtraPrice(extra, quantities.hours, quantities.pax);
-              return (
-                <div key={extra.id} className={element("extras__item")}>
+              <div key={extra.id} className={element("extras__item")}>
+                <Stack
+                  row
+                  gap="0.75rem"
+                  alignItems="center"
+                  flexWrap="wrap"
+                  justifyContent="space-between"
+                >
+                  <Stack row gap="0.375rem" alignItems="center">
+                    <span className={element("extras__item__name")}>
+                      {extra.description}
+                    </span>
+                    <Tooltip
+                      content={extraPriceExplanation(extra, quantities)}
+                      visibleOnTouchDevice
+                    >
+                      <span
+                        className={element("extras__item__info")}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Como é calculado o preço de ${extra.description}`}
+                      >
+                        <IconUserInterfaceMiscellaneousInfo />
+                      </span>
+                    </Tooltip>
+                  </Stack>
+                  <span className={element("extras__item__price")}>
+                    {money(value)}
+                  </span>
+                </Stack>
+                {(usesExtraHours(extra) || usesExtraPax(extra)) && (
                   <Stack
                     row
                     gap="0.75rem"
                     alignItems="center"
                     flexWrap="wrap"
-                    justifyContent="space-between"
+                    className={element("extras__item__details")}
                   >
-                    <Stack row gap="0.375rem" alignItems="center">
-                      <span className={element("extras__item__name")}>
-                        {extra.description}
-                      </span>
-                      <Tooltip
-                        content={extraPriceExplanation(extra, quantities)}
-                        visibleOnTouchDevice
-                      >
-                        <span
-                          className={element("extras__item__info")}
-                          tabIndex={0}
-                          role="button"
-                          aria-label={`Como é calculado o preço de ${extra.description}`}
-                        >
-                          <IconUserInterfaceMiscellaneousInfo />
-                        </span>
-                      </Tooltip>
-                    </Stack>
-                    <span className={element("extras__item__price")}>
-                      {money(value)}
-                    </span>
+                    {usesExtraHours(extra) && (
+                      <InputNumber
+                        label="Horas"
+                        value={quantities.hours ?? undefined}
+                        onChange={(value) =>
+                          updateQuantity(extra, "hours", value)
+                        }
+                        allowNegative={false}
+                        suffix=" h"
+                      />
+                    )}
+                    {usesExtraPax(extra) && (
+                      <InputNumber
+                        label="Pessoas"
+                        value={quantities.pax ?? undefined}
+                        onChange={(value) =>
+                          updateQuantity(extra, "pax", value)
+                        }
+                        allowNegative={false}
+                        decimalScale={0}
+                        suffix=" pax"
+                      />
+                    )}
                   </Stack>
-                  {(usesExtraHours(extra) || usesExtraPax(extra)) && (
-                    <Stack
-                      row
-                      gap="0.75rem"
-                      alignItems="center"
-                      flexWrap="wrap"
-                      className={element("extras__item__details")}
-                    >
-                      {usesExtraHours(extra) && (
-                        <InputNumber
-                          label="Horas"
-                          value={quantities.hours ?? undefined}
-                          onChange={(value) =>
-                            updateQuantity(extra, "hours", value)
-                          }
-                          allowNegative={false}
-                          suffix=" h"
-                        />
-                      )}
-                      {usesExtraPax(extra) && (
-                        <InputNumber
-                          label="Pessoas"
-                          value={quantities.pax ?? undefined}
-                          onChange={(value) =>
-                            updateQuantity(extra, "pax", value)
-                          }
-                          allowNegative={false}
-                          decimalScale={0}
-                          suffix=" pax"
-                        />
-                      )}
-                    </Stack>
-                  )}
-                </div>
-              );
-            })}
-        </div>
-        <Button
-          type="primary"
-          label={
-            pack.price ? `Continuar · ${money(pack.price.value)}` : "Continuar"
-          }
-          loading={isFetchingPrice}
-          onClick={onContinue}
-        />
-      </AssistantBubble>
-    </div>
+                )}
+              </div>
+            );
+          })}
+      </div>
+    </>
   );
 };
+
+const ServicesStep = ({
+  pack,
+  startEnd,
+  numPeople,
+  extraSelection,
+  setExtraSelection,
+  isFetchingPrice,
+  onContinue,
+}: {
+  pack: Pack;
+  startEnd: { start: TimeDuration | null; end: TimeDuration | null };
+  numPeople: number | undefined;
+  extraSelection: ExtraSelectionMap;
+  setExtraSelection: (
+    update: (current: ExtraSelectionMap) => ExtraSelectionMap,
+  ) => void;
+  isFetchingPrice: boolean;
+  onContinue: () => void;
+}) => (
+  <div className={element("exchange")}>
+    <AssistantBubble>
+      Este pack inclui serviços opcionais. Quais quer adicionar?
+      <ExtrasSelector
+        pack={pack}
+        startEnd={startEnd}
+        numPeople={numPeople}
+        extraSelection={extraSelection}
+        setExtraSelection={setExtraSelection}
+      />
+      <Button
+        type="primary"
+        label={
+          pack.price ? `Continuar · ${money(pack.price.value)}` : "Continuar"
+        }
+        loading={isFetchingPrice}
+        onClick={onContinue}
+      />
+    </AssistantBubble>
+  </div>
+);
+
+// Inline extras picker for an external service pack (no chat bubble of its
+// own — it renders inside the external-services step).
+const ServiceExtrasPicker = ({
+  pack,
+  spaceName,
+  startEnd,
+  numPeople,
+  extraSelection,
+  setExtraSelection,
+  isPricing,
+  onConfirm,
+  onBack,
+}: {
+  pack: Pack;
+  spaceName: string;
+  startEnd: { start: TimeDuration | null; end: TimeDuration | null };
+  numPeople: number | undefined;
+  extraSelection: ExtraSelectionMap;
+  setExtraSelection: (
+    update: (current: ExtraSelectionMap) => ExtraSelectionMap,
+  ) => void;
+  isPricing: boolean;
+  onConfirm: () => void;
+  onBack: () => void;
+}) => (
+  <>
+    <p>
+      Serviços opcionais de {spaceName} ({pack.name}):
+    </p>
+    <ExtrasSelector
+      pack={pack}
+      startEnd={startEnd}
+      numPeople={numPeople}
+      extraSelection={extraSelection}
+      setExtraSelection={setExtraSelection}
+    />
+    <Button
+      type="primary"
+      label="Adicionar ao evento"
+      loading={isPricing}
+      onClick={onConfirm}
+    />
+    <TextButton text="Escolher outro serviço" onClick={onBack} />
+  </>
+);
 
 function extraPriceExplanation(
   extra: Extra,
@@ -1270,6 +1344,7 @@ const ExternalServicesStep = ({
   onRemove: (packID: string) => void;
   onContinue: () => void;
 }) => {
+  const fetchApi = useFetch();
   const { data: availableAttributes = [] } = useAttributes();
   const categories = getServiceTabFilters(availableAttributes).filter(
     ({ id }) => id !== "all",
@@ -1282,20 +1357,84 @@ const ExternalServicesStep = ({
     space: SearchResult;
     packs: Pack[];
   } | null>(null);
+  // A chosen service pack whose optional extras the client is configuring.
+  const [extrasService, setExtrasService] = useState<{
+    space: SearchResult;
+    pack: Pack;
+  } | null>(null);
+  const [serviceExtraSelection, setServiceExtraSelection] =
+    useState<ExtraSelectionMap>({});
+  const [isPricingService, setIsPricingService] = useState(false);
 
   const handleAdd = (selection: ServicePackSelection) => {
     onAdd(selection);
     // Reset the picker and ask whether to add another service.
     setActiveCategory(null);
     setPendingService(null);
+    setExtrasService(null);
+    setServiceExtraSelection({});
     setJustAdded(selection.space.spaceName);
+  };
+
+  const choosePack = (space: SearchResult, pack: Pack) => {
+    if (pack.extras.length > 0) {
+      setExtrasService({ space, pack });
+      setServiceExtraSelection(mandatorySelection(pack, startEnd, numPeople));
+      setPendingService(null);
+    } else {
+      handleAdd({ pack, space, extraSelection: {} });
+    }
   };
 
   const handleChoose = (space: SearchResult, packs: Pack[]) => {
     if (packs.length === 1) {
-      handleAdd({ pack: packs[0], space });
+      choosePack(space, packs[0]);
     } else {
       setPendingService({ space, packs });
+    }
+  };
+
+  // Re-price the chosen service pack with the selected extras (same engine
+  // the server uses at booking time) before adding it to the plan.
+  const confirmServiceExtras = async () => {
+    if (!extrasService) return;
+    setIsPricingService(true);
+    try {
+      const selections = extraParamsFromRecord(
+        Object.fromEntries(
+          Object.entries(serviceExtraSelection).map(([id, quantities]) => [
+            id,
+            {
+              ...(quantities.hours != null ? { hours: quantities.hours } : {}),
+              ...(quantities.pax != null ? { pax: quantities.pax } : {}),
+            },
+          ]),
+        ),
+      );
+      const query = {
+        ...basePacksQuery,
+        extras: Object.keys(serviceExtraSelection).join(","),
+        ...(selections.length > 0
+          ? { extra_params: serializeExtraParamsQuery(selections) }
+          : {}),
+      };
+      const pricedPacks: Pack[] = await fetchApi(
+        "public/packs",
+        `space/${extrasService.space.id}`,
+        undefined,
+        undefined,
+        query,
+      ).then((packs: any[]) => packs.map((pack) => new Pack(pack)));
+      const pricedPack =
+        pricedPacks.find((pack) => pack.id === extrasService.pack.id) ??
+        extrasService.pack;
+      handleAdd({
+        pack: pricedPack,
+        space: extrasService.space,
+        extraSelection: serviceExtraSelection,
+      });
+    } finally {
+      setIsPricingService(false);
     }
   };
 
@@ -1308,7 +1447,7 @@ const ExternalServicesStep = ({
     startEnd,
     numPeople,
     basePacksQuery,
-    enabled: !!activeCategory && !pendingService,
+    enabled: !!activeCategory && !pendingService && !extrasService,
   });
 
   const addedPackIDs = new Set(servicePacks.map(({ pack }) => pack.id));
@@ -1336,7 +1475,7 @@ const ExternalServicesStep = ({
             juntar vários ao mesmo booking.
           </>
         )}
-        {!pendingService && (
+        {!pendingService && !extrasService && (
           <div className={element("chips")}>
             {categories.map((category) => (
               <button
@@ -1357,7 +1496,22 @@ const ExternalServicesStep = ({
             ))}
           </div>
         )}
-        {pendingService ? (
+        {extrasService ? (
+          <ServiceExtrasPicker
+            pack={extrasService.pack}
+            spaceName={extrasService.space.spaceName}
+            startEnd={startEnd}
+            numPeople={numPeople}
+            extraSelection={serviceExtraSelection}
+            setExtraSelection={setServiceExtraSelection}
+            isPricing={isPricingService}
+            onConfirm={() => void confirmServiceExtras()}
+            onBack={() => {
+              setExtrasService(null);
+              setServiceExtraSelection({});
+            }}
+          />
+        ) : pendingService ? (
           <>
             <p>Escolha o pack de {pendingService.space.spaceName}:</p>
             <div className={element("options")}>
@@ -1379,11 +1533,9 @@ const ExternalServicesStep = ({
                     )}
                     <Button
                       type="primary"
-                      label="Adicionar"
+                      label="Escolher"
                       disabled={!canAddMore || addedPackIDs.has(pack.id)}
-                      onClick={() =>
-                        handleAdd({ pack, space: pendingService.space })
-                      }
+                      onClick={() => choosePack(pendingService.space, pack)}
                     />
                   </div>
                 </div>
@@ -1420,7 +1572,7 @@ const ExternalServicesStep = ({
             </div>
           ))
         )}
-        {servicePacks.length > 0 && (
+        {!extrasService && servicePacks.length > 0 && (
           <div className={element("added-services")}>
             <p>Serviços adicionados:</p>
             {servicePacks.map(({ pack, space }) => (
@@ -1438,15 +1590,17 @@ const ExternalServicesStep = ({
             ))}
           </div>
         )}
-        <Button
-          type="primary"
-          label={
-            servicePacks.length > 0
-              ? "Continuar com estes serviços"
-              : "Continuar sem serviços externos"
-          }
-          onClick={onContinue}
-        />
+        {!extrasService && (
+          <Button
+            type="primary"
+            label={
+              servicePacks.length > 0
+                ? "Continuar com estes serviços"
+                : "Continuar sem serviços externos"
+            }
+            onClick={onContinue}
+          />
+        )}
       </AssistantBubble>
     </div>
   );
@@ -1530,9 +1684,19 @@ const ReviewStep = ({
           ...(quantities.hours != null ? { hours: quantities.hours } : {}),
           ...(quantities.pax != null ? { pax: quantities.pax } : {}),
         })),
-        servicePacks: servicePacks.map(({ pack: servicePack }) => ({
-          packID: servicePack.id,
-        })),
+        servicePacks: servicePacks.map(
+          ({ pack: servicePack, extraSelection: serviceExtras }) => ({
+            packID: servicePack.id,
+            extras: Object.keys(serviceExtras),
+            extraParams: Object.entries(serviceExtras).map(
+              ([id, quantities]) => ({
+                id,
+                ...(quantities.hours != null ? { hours: quantities.hours } : {}),
+                ...(quantities.pax != null ? { pax: quantities.pax } : {}),
+              }),
+            ),
+          }),
+        ),
       });
       onBooked(bookingID);
     } catch (e) {

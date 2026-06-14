@@ -25,6 +25,7 @@ export type BookingServicePack = {
   amount: number;
   extraIDs: string[];
   extraParams: { id: string; hours?: number | null; pax?: number | null }[];
+  extras?: { id: string; description: string; value: number }[];
   provider?: BookingProviderContact | null;
 };
 
