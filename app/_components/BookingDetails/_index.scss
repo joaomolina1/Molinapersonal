@@ -69,6 +69,11 @@
     color: $color-neutral-7;
   }
 
+  &__service-row {
+    @include font-body-s;
+    color: $color-neutral-7;
+  }
+
   &__service-extra {
     @include font-body-s;
     color: $color-neutral-7;
