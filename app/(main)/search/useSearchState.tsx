@@ -33,11 +33,6 @@ import {
   getTabFilters,
 } from "./_utils/attributes";
 import { useSession } from "@/_services/session";
-import { useRouterPush } from "@/_services/navigation";
-import {
-  usePathname,
-  useSearchParams as useNextSearchParams,
-} from "next/navigation";
 import { ALL_KEYWORD_OPTIONS } from "./_components/KeywordSearch/KeywordSearch";
 
 const PAGE_SIZE = 23;
@@ -189,10 +184,6 @@ export const useBudget = () => {
 
 export const useSearchState = () => {
   const [page, setPage] = useState(1);
-
-  const routerPush = useRouterPush();
-  const pathname = usePathname();
-  const searchParamsSnapshot = useNextSearchParams();
 
   const { data: cities = [] } = useCities({ enabled: true });
   const { data: availableAttributes = [] } = useAttributes();
@@ -473,18 +464,6 @@ export const useSearchState = () => {
         setPage(1);
       },
       journey,
-      setJourney: (newJourney: "venues" | "services") => {
-        if (newJourney === journey) return;
-        // Single atomic URL update: the category tab and attribute filters
-        // are journey-specific so they are cleared together.
-        const params = new URLSearchParams(searchParamsSnapshot);
-        if (newJourney === "services") params.set("journey", newJourney);
-        else params.delete("journey");
-        params.delete("category");
-        params.delete("attributes");
-        routerPush(`${pathname}?${params.toString()}`, { scroll: false });
-        setPage(1);
-      },
       cities,
       city,
       setCity: (newCity: string | null) => {
@@ -558,9 +537,6 @@ export const useSearchState = () => {
       eventType,
       setEventType,
       journey,
-      searchParamsSnapshot,
-      routerPush,
-      pathname,
       cities,
       city,
       setCity,
@@ -605,7 +581,6 @@ export const SearchContext = createContext<SearchState>({
   eventType: null,
   setEventType: () => {},
   journey: "venues",
-  setJourney: () => {},
   cities: [],
   city: null,
   setCity: () => {},
