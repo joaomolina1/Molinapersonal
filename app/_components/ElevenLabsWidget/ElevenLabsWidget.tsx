@@ -13,7 +13,7 @@ declare module "react" {
       "elevenlabs-convai": React.DetailedHTMLProps<
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
-      > & { "agent-id"?: string };
+      > & { "agent-id"?: string; variant?: string };
     }
   }
 }
@@ -27,7 +27,7 @@ export const ElevenLabsWidget = () => {
 
   return (
     <>
-      <elevenlabs-convai agent-id={agentId} />
+      <elevenlabs-convai agent-id={agentId} variant="tiny" />
       <Script
         src="https://unpkg.com/@elevenlabs/convai-widget-embed"
         strategy="afterInteractive"
