@@ -22,6 +22,7 @@ const config = {
   posthogKey: process.env.NEXT_PUBLIC_POSTHOG_KEY,
   posthogHost: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   n8nWebhookUrl: process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL,
+  elevenLabsAgentId: process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID,
 };
 
 export default config;

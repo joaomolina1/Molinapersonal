@@ -20,6 +20,7 @@ import { CookiesProvider } from "./_services/cookies";
 import { QuoteRequestProvider } from "./(main)/_components/QuoteRequest";
 import { PostHogProvider } from "./_services/posthog/PostHogProvider";
 import { N8NChat } from "./_components/N8NChat";
+import { ElevenLabsWidget } from "./_components/ElevenLabsWidget";
 
 const TITLE =
   "RINU - Espaços para festas de anos, eventos corporativos e batizados";
@@ -119,6 +120,7 @@ export default function RootLayout({
                         <MetaPixel metaPixelId={config.metaPixelId} />
                       )}
                       <N8NChat />
+                      <ElevenLabsWidget />
                       {children}
                     </PostHogProvider>
                   </QuoteRequestProvider>
