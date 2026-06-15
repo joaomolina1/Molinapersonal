@@ -8,7 +8,6 @@ import { ANNUAL_DISCOUNT_LABEL, PLANS, Plan } from "@/_constants/plans";
 import { createBEMClasses } from "@/_utils/classname";
 import { formatMoney } from "@/_utils/number";
 import BecomeHostButton from "@/(main)/(info)/help-host/_components/BecomeHostButton";
-import ScheduleDemoButton from "@/(main)/(info)/help-host/_components/ScheduleDemoButton";
 
 const { element } = createBEMClasses("subscription-plans-page");
 
@@ -67,8 +66,14 @@ const PlanCard = ({
   interval: Interval;
 }) => {
   const isFree = plan.priceMonthly === null;
-  const price = interval === "year" ? plan.priceAnnual : plan.priceMonthly;
-  const suffix = interval === "year" ? "/ano" : "/mês";
+  const isYear = interval === "year";
+  // In the annual view we headline the equivalent monthly price and show the
+  // yearly total below in a muted line; the monthly view shows the monthly
+  // price directly.
+  const headline =
+    isYear && plan.priceAnnual != null
+      ? plan.priceAnnual / 12
+      : plan.priceMonthly;
 
   return (
     <article className={element("card", { featured: plan.featured })}>
@@ -90,15 +95,20 @@ const PlanCard = ({
           "Gratuito"
         ) : (
           <>
-            {formatMoney(price ?? 0, { maximumFractionDigits: 0 })}
-            <span className={element("card__price__suffix")}>{suffix}</span>
+            {formatMoney(headline ?? 0, { maximumFractionDigits: 0 })}
+            <span className={element("card__price__suffix")}>/mês</span>
           </>
         )}
       </div>
+      {!isFree && isYear && plan.priceAnnual != null && (
+        <p className={element("card__annual")}>
+          {formatMoney(plan.priceAnnual, { maximumFractionDigits: 0 })}/ano
+        </p>
+      )}
       {plan.note && <p className={element("card__note")}>{plan.note}</p>}
 
       <div className={element("card__cta")}>
-        {plan.id === "expert" ? <ScheduleDemoButton /> : <BecomeHostButton />}
+        <BecomeHostButton />
       </div>
 
       <FeatureList features={plan.coreFeatures} />
