@@ -68,7 +68,11 @@ export const Session = ({ menuDrawer, collapse, loginHref }: SessionProps) => {
       {!!session &&
         (menuDrawer ? (
           <Stack row alignItems="center" gap="1rem" className={block()}>
-            <Avatar name={session.name} size="medium" />
+            <Avatar
+              name={session.name}
+              url={session.photoURL ?? undefined}
+              size="medium"
+            />
             <div>
               <p className={element("greeting")}>Olá,</p>
               <p className={element("name")}>{session.name}</p>
@@ -76,7 +80,11 @@ export const Session = ({ menuDrawer, collapse, loginHref }: SessionProps) => {
           </Stack>
         ) : (
           <AriaMenuTrigger>
-            <ProfileButton name={session.name} collapse={collapse} />
+            <ProfileButton
+              name={session.name}
+              url={session.photoURL ?? undefined}
+              collapse={collapse}
+            />
             <AriaPopover placement="bottom right" offset={8}>
               <Callout
                 ariaLabel="Account menu options"

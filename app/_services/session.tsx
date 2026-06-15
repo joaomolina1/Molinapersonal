@@ -27,6 +27,7 @@ export type Session = {
   token: string;
   roles: Role[];
   profileComplete?: boolean;
+  photoURL?: string | null;
 };
 
 const fetchApi = getFetchApiForSession(undefined);

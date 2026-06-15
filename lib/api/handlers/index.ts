@@ -2267,6 +2267,76 @@ export async function handleUsersRoute(
     return jsonResponse(data);
   }
 
+  // Update own personal data.
+  if (ctx.request.method === "PATCH" && !action) {
+    const body = (ctx.body ?? {}) as Record<string, unknown>;
+    const update: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (typeof body.name === "string") update.name = body.name.trim();
+    if (body.phoneExtension !== undefined) {
+      update.phone_extension =
+        body.phoneExtension != null ? Number(body.phoneExtension) : null;
+    }
+    if (body.phoneNumber !== undefined) {
+      update.phone_number =
+        body.phoneNumber != null ? Number(body.phoneNumber) : null;
+    }
+    if (body.dateOfBirth !== undefined) {
+      update.date_of_birth = body.dateOfBirth
+        ? String(body.dateOfBirth)
+        : null;
+    }
+    const { data, error } = await admin
+      .from("profiles")
+      .update(update)
+      .eq("id", ctx.session.user_id)
+      .select("*")
+      .single();
+    if (error) return emptyResponse(500);
+    return jsonResponse(data);
+  }
+
+  // Upload own avatar photo.
+  if (ctx.request.method === "POST" && action === "avatar") {
+    const file = ctx.form?.get("file");
+    if (!(file instanceof File) || file.size === 0) return emptyResponse(400);
+    if (file.size > MAX_ATTACHMENT_BYTES) return emptyResponse(413);
+    if (!file.type.startsWith("image/")) return emptyResponse(415);
+
+    const id = crypto.randomUUID();
+    const ext = attachmentExtension(file.name);
+    const path = `avatars/${ctx.session.user_id}/${id}${ext ? `.${ext}` : ""}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const { error: uploadError } = await admin.storage
+      .from(ATTACHMENTS_BUCKET)
+      .upload(path, buffer, {
+        contentType: file.type || "image/jpeg",
+        upsert: true,
+      });
+    if (uploadError) {
+      console.error("avatar upload error", uploadError);
+      return emptyResponse(500);
+    }
+
+    const { data: publicUrl } = admin.storage
+      .from(ATTACHMENTS_BUCKET)
+      .getPublicUrl(path);
+    const photoURL = publicUrl.publicUrl;
+
+    const { error } = await admin
+      .from("profiles")
+      .update({ photo_url: photoURL, updated_at: new Date().toISOString() })
+      .eq("id", ctx.session.user_id);
+    if (error) {
+      await admin.storage.from(ATTACHMENTS_BUCKET).remove([path]);
+      return emptyResponse(500);
+    }
+
+    return jsonResponse({ photoURL });
+  }
+
   const userRolesMatch = action.match(/^([^/]+)\/roles$/);
   if (ctx.request.method === "PATCH" && userRolesMatch) {
     if (!requireAdmin(ctx)) return emptyResponse(403);
