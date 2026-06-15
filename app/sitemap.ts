@@ -35,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `https://rinu.pt` },
     { url: `https://rinu.pt/search` },
     { url: `https://rinu.pt/help-host` },
+    { url: `https://rinu.pt/subscription-plans` },
     { url: `https://rinu.pt/about-us` },
     { url: `https://rinu.pt/help-customer` },
     { url: `https://rinu.pt/contacts` },
