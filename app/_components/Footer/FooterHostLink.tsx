@@ -56,6 +56,14 @@ export const FooterHostLink = () => {
             onClick={() => handlePartnerFooterOptions("Vantagens do parceiro")}
           />
         </li>
+        <li>
+          <TextButton
+            href="/subscription-plans"
+            text="Planos de subscrição"
+            className={element("map__others__section__link")}
+            onClick={() => handlePartnerFooterOptions("Planos de subscrição")}
+          />
+        </li>
       </ul>
     </div>
   );
