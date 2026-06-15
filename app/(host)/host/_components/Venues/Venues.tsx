@@ -81,16 +81,24 @@ const VenueDetail = ({ venue }: { venue: DashboardList["venues"][number] }) => {
 
   return (
     <Stack gap="1.5rem" style={{ padding: "24px 0" }}>
-      <Stack row gap="0.5rem" alignItems="center" flexWrap="wrap">
-        <VenueName showEdit={isOwner} venue={venue.venue} />
-        {isCollaborator && (
-          <Tag size="small" type="info" text="Acesso de colaborador" />
-        )}
+      <Stack
+        row
+        gap="1rem"
+        alignItems="center"
+        justifyContent="space-between"
+        flexWrap="wrap"
+      >
+        <Stack row gap="0.5rem" alignItems="center" flexWrap="wrap">
+          <VenueName showEdit={isOwner} venue={venue.venue} />
+          {isCollaborator && (
+            <Tag size="small" type="info" text="Acesso de colaborador" />
+          )}
+        </Stack>
+        {isOwner && <VenueCollaboratorsSection venue={venue.venue} />}
       </Stack>
       {isOwner && venue.spaces.length > 0 && (
         <SubscriptionSection venue={venue.venue} />
       )}
-      {isOwner && <VenueCollaboratorsSection venue={venue.venue} />}
       <SpacesTable venue={venue} />
     </Stack>
   );

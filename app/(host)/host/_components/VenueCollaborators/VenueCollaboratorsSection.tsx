@@ -4,6 +4,7 @@ import { useState } from "react";
 import Stack from "@/_design_system/Stack";
 import InputText from "@/_design_system/InputText";
 import Button, { IconButton } from "@/_design_system/Button";
+import Modal from "@/_design_system/Modal";
 import Tag from "@/_design_system/Tag";
 import { Venue } from "@/_models/venue";
 import {
@@ -14,6 +15,7 @@ import {
 import { useShowToast } from "@/_design_system/Toast";
 import { createBEMClasses } from "@/_utils/classname";
 import IconUserInterfaceActionsClose from "@/_design_system/_icons/UserInterface/Actions/Close.svg";
+import IconUserInterfaceMiscellaneousUsers from "@/_design_system/_icons/UserInterface/Miscellaneous/Users.svg";
 import { useSession } from "@/_services/session";
 
 const { block, element } = createBEMClasses("venue-collaborators");
@@ -21,23 +23,49 @@ const { block, element } = createBEMClasses("venue-collaborators");
 const isPaidVenue = (venue: Venue) =>
   venue.subscription === "premium" || venue.subscription === "expert";
 
-const VenueCollaboratorsSection = ({ venue }: { venue: Venue }) => {
+// Managing venue team members is a rare action, so it lives behind a
+// "Gerir utilizadores" button that opens this modal instead of an always-on
+// inline section.
+const VenueCollaboratorsButton = ({ venue }: { venue: Venue }) => {
   const [session] = useSession();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const isOwner = session?.user_id === venue.ownerID;
+  if (!isOwner) return null;
+
+  return (
+    <>
+      <Button
+        type="secondary"
+        label="Gerir utilizadores"
+        leftIcon={<IconUserInterfaceMiscellaneousUsers />}
+        onClick={() => setIsOpen(true)}
+      />
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+        ariaLabel="Gerir utilizadores do local"
+        width="large"
+      >
+        <VenueCollaboratorsContent venue={venue} />
+      </Modal>
+    </>
+  );
+};
+
+const VenueCollaboratorsContent = ({ venue }: { venue: Venue }) => {
   const showToast = useShowToast();
   const [email, setEmail] = useState("");
 
-  const isOwner = session?.user_id === venue.ownerID;
   const paid = isPaidVenue(venue);
 
   const { data: collaborators = [], isPending } = useVenueCollaborators(
-    isOwner && paid ? venue.id : undefined,
+    paid ? venue.id : undefined,
   );
   const { mutateAsync: addCollaborator, isPending: isAdding } =
     useAddVenueCollaborator();
   const { mutateAsync: removeCollaborator, isPending: isRemoving } =
     useRemoveVenueCollaborator();
-
-  if (!isOwner) return null;
 
   const handleAdd = async () => {
     const trimmed = email.trim();
@@ -66,7 +94,7 @@ const VenueCollaboratorsSection = ({ venue }: { venue: Venue }) => {
     <div className={block()}>
       <Stack gap="0.75rem" alignItems="flex-start">
         <Stack row gap="0.5rem" alignItems="center" flexWrap="wrap">
-          <strong>Equipa do local</strong>
+          <h3>Equipa do local</h3>
           {!paid && (
             <Tag
               size="small"
@@ -77,12 +105,18 @@ const VenueCollaboratorsSection = ({ venue }: { venue: Venue }) => {
         </Stack>
         <p className={element("hint")}>
           Dê acesso a outros utilizadores RINU para gerir espaços e packs deste
-          local. O acesso termina se a subscrição deixar de ser Premium ou Expert.
+          local. O acesso termina se a subscrição deixar de ser Premium ou
+          Expert.
         </p>
 
         {paid && (
           <>
-            <Stack row gap="0.75rem" alignItems="flex-end" className={element("add")}>
+            <Stack
+              row
+              gap="0.75rem"
+              alignItems="flex-end"
+              className={element("add")}
+            >
               <InputText
                 label="Email do utilizador"
                 value={email}
@@ -109,9 +143,13 @@ const VenueCollaboratorsSection = ({ venue }: { venue: Venue }) => {
               {collaborators.map((member) => (
                 <div key={member.id} className={element("item")}>
                   <Stack gap="0.15rem" alignItems="flex-start">
-                    <span className={element("item__email")}>{member.email}</span>
+                    <span className={element("item__email")}>
+                      {member.email}
+                    </span>
                     {member.name && (
-                      <span className={element("item__name")}>{member.name}</span>
+                      <span className={element("item__name")}>
+                        {member.name}
+                      </span>
                     )}
                   </Stack>
                   <IconButton
@@ -131,4 +169,4 @@ const VenueCollaboratorsSection = ({ venue }: { venue: Venue }) => {
   );
 };
 
-export default VenueCollaboratorsSection;
+export default VenueCollaboratorsButton;
