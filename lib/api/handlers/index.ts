@@ -619,6 +619,66 @@ export async function handleVenuesRoute(
   const collabSearchMatch = action.match(/^collaborators\/search$/);
   const collabListMatch = action.match(/^([^/]+)\/collaborators$/);
   const collabDeleteMatch = action.match(/^([^/]+)\/collaborators\/([^/]+)$/);
+  const ownerTransferMatch = action.match(/^([^/]+)\/owner$/);
+
+  // PATCH /venues/:id/owner — admin reassigns a venue (and its spaces/packs)
+  // to another user.
+  if (ctx.request.method === "PATCH" && ownerTransferMatch) {
+    if (!requireAdmin(ctx)) return emptyResponse(403);
+    const venueId = ownerTransferMatch[1];
+    const body = (ctx.body ?? {}) as { ownerId?: unknown };
+    const ownerId = String(body.ownerId ?? "");
+    if (!ownerId) return emptyResponse(400);
+
+    const { data: owner } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("id", ownerId)
+      .maybeSingle();
+    if (!owner) return errorResponse("Utilizador não encontrado", 404);
+
+    const { data: venue } = await admin
+      .from("venues")
+      .select("id")
+      .eq("id", venueId)
+      .maybeSingle();
+    if (!venue) return emptyResponse(404);
+
+    const now = new Date().toISOString();
+    const { error: venueError } = await admin
+      .from("venues")
+      .update({ owner_id: ownerId, updated_at: now })
+      .eq("id", venueId);
+    if (venueError) return emptyResponse(500);
+
+    await admin
+      .from("spaces")
+      .update({ owner_id: ownerId, updated_at: now })
+      .eq("venue_id", venueId);
+
+    const { data: spaceRows } = await admin
+      .from("spaces")
+      .select("id")
+      .eq("venue_id", venueId);
+    const spaceIds = (spaceRows ?? []).map((row) => row.id as string);
+    if (spaceIds.length > 0) {
+      const { data: links } = await admin
+        .from("packs_spaces")
+        .select("pack_id")
+        .in("space_id", spaceIds);
+      const packIds = [
+        ...new Set((links ?? []).map((link) => link.pack_id as string)),
+      ];
+      if (packIds.length > 0) {
+        await admin
+          .from("packs")
+          .update({ owner_id: ownerId, updated_at: now })
+          .in("id", packIds);
+      }
+    }
+
+    return emptyResponse(200);
+  }
 
   // GET /venues/collaborators/search?email= — find existing RINU user (venue owners)
   if (ctx.request.method === "GET" && collabSearchMatch) {
@@ -2205,6 +2265,49 @@ export async function handleUsersRoute(
       .maybeSingle();
     if (error || !data) return emptyResponse(404);
     return jsonResponse(data);
+  }
+
+  const userRolesMatch = action.match(/^([^/]+)\/roles$/);
+  if (ctx.request.method === "PATCH" && userRolesMatch) {
+    if (!requireAdmin(ctx)) return emptyResponse(403);
+    const userId = userRolesMatch[1];
+    const body = (ctx.body ?? {}) as { roles?: unknown };
+    if (!Array.isArray(body.roles)) return emptyResponse(400);
+    const allowed = new Set([
+      "customer",
+      "vendor",
+      "host",
+      "admin",
+      "comercial",
+    ]);
+    const roles = [...new Set(body.roles.map(String))].filter((role) =>
+      allowed.has(role),
+    );
+    // "Comercial" users are admins that quote requests can be assigned to.
+    if (roles.includes("comercial") && !roles.includes("admin")) {
+      roles.push("admin");
+    }
+    const { error } = await admin
+      .from("profiles")
+      .update({ roles, updated_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (error) return emptyResponse(500);
+    return jsonResponse({ id: userId, roles });
+  }
+
+  const userEmailMatch = action.match(/^([^/]+)\/email$/);
+  if (ctx.request.method === "PATCH" && userEmailMatch) {
+    if (!requireAdmin(ctx)) return emptyResponse(403);
+    const userId = userEmailMatch[1];
+    const body = (ctx.body ?? {}) as { email?: unknown };
+    const email = String(body.email ?? "").trim();
+    if (!email || !email.includes("@")) return emptyResponse(400);
+    const { error } = await admin.auth.admin.updateUserById(userId, {
+      email,
+      email_confirm: true,
+    });
+    if (error) return errorResponse("Não foi possível alterar o email", 400);
+    return emptyResponse(200);
   }
 
   return emptyResponse(501);

@@ -18,7 +18,7 @@ import { UserKind } from "@/_constants/space/userKinds";
 
 // Auth Provider
 
-export type Role = "customer" | "vendor" | "admin";
+export type Role = "customer" | "vendor" | "admin" | "comercial";
 
 export type Session = {
   user_id: string;
@@ -263,7 +263,7 @@ export const useAdminResetPassword = () => {
     mutationFn: (body) =>
       fetchApi(
         "auth",
-        "reset-password",
+        "admin/reset-password",
         { method: "POST", body },
         {
           contentType: "form-data",

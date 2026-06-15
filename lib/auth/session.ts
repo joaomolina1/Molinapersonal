@@ -2,7 +2,7 @@ import type { Session } from "@supabase/supabase-js";
 import { createAdminClient } from "@lib/db";
 import { createSupabaseServerClient } from "@lib/supabase/server";
 
-export type Role = "customer" | "vendor" | "admin";
+export type Role = "customer" | "vendor" | "admin" | "comercial";
 
 export type ApiSession = {
   id: string;
