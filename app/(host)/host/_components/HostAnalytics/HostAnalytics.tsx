@@ -106,6 +106,7 @@ const HostAnalytics = () => {
 
   const [period, setPeriod] = useState<string>("30");
   const [venueId, setVenueId] = useState<string>("all");
+  const [spaceId, setSpaceId] = useState<string>("all");
 
   const periodDays = Number(period);
 
@@ -114,16 +115,34 @@ const HostAnalytics = () => {
     ...venues.map((venue) => ({ id: venue.id, text: venue.name || "Sem nome" })),
   ];
 
-  const seedKey = venueId === "all" ? "all-venues" : venueId;
+  // Space options are scoped to the selected venue.
+  const venueSpaces =
+    venueId === "all"
+      ? spaces
+      : spaces.filter((space) => space.venueID === venueId);
+  const spaceOptions = [
+    { id: "all", text: "Todos os espaços" },
+    ...venueSpaces.map((space) => ({
+      id: space.id,
+      text: space.name || "Espaço sem nome",
+    })),
+  ];
+
+  const seedKey =
+    spaceId !== "all"
+      ? spaceId
+      : venueId === "all"
+        ? "all-venues"
+        : venueId;
   const metrics = useMemo(
     () => buildMetrics(seedKey, periodDays),
     [seedKey, periodDays],
   );
 
   const relevantSpaces =
-    venueId === "all"
-      ? spaces
-      : spaces.filter((space) => space.venueID === venueId);
+    spaceId !== "all"
+      ? venueSpaces.filter((space) => space.id === spaceId)
+      : venueSpaces;
 
   const topSpaces = useMemo(() => {
     return relevantSpaces
@@ -140,7 +159,7 @@ const HostAnalytics = () => {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 6);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venueId, periodDays, spaces.length]);
+  }, [venueId, spaceId, periodDays, spaces.length]);
 
   const maxBar = Math.max(...metrics.series.map((s) => s.value), 1);
 
@@ -154,10 +173,20 @@ const HostAnalytics = () => {
         <div className={element("filters")}>
           <InputSelect
             value={venueId}
-            onChange={(value) => setVenueId(value ?? "all")}
+            onChange={(value) => {
+              setVenueId(value ?? "all");
+              setSpaceId("all");
+            }}
             options={venueOptions}
             showLabel={false}
             label="Local"
+          />
+          <InputSelect
+            value={spaceId}
+            onChange={(value) => setSpaceId(value ?? "all")}
+            options={spaceOptions}
+            showLabel={false}
+            label="Espaço"
           />
           <InputSelect
             value={period}
