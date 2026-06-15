@@ -8,8 +8,17 @@ import VenueCollaboratorsSection from "../VenueCollaborators";
 import { DashboardList } from "../useDashboardList";
 import { useSession } from "@/_services/session";
 import Tag from "@/_design_system/Tag";
+import EmptyState from "@/_components/EmptyState";
 
-const Venues = ({ dashboardList }: { dashboardList: DashboardList }) => {
+const Venues = ({
+  dashboardList,
+  journey,
+}: {
+  dashboardList: DashboardList;
+  // When set, only that journey is shown (used by the dedicated
+  // "Gestão de espaços" / "Gestão de serviços" pages).
+  journey?: "venues" | "services";
+}) => {
   if (dashboardList.isPendingSpaces) {
     return null;
   }
@@ -21,18 +30,32 @@ const Venues = ({ dashboardList }: { dashboardList: DashboardList }) => {
     (venue) => venue.venue.isServicesJourney,
   );
 
-  const hasVenues = venuesFromVenuesJourney.length > 0;
-  const hasServices = venuesFromServicesJourney.length > 0;
+  const showVenues = journey !== "services";
+  const showServices = journey !== "venues";
+
+  const hasVenues = showVenues && venuesFromVenuesJourney.length > 0;
+  const hasServices = showServices && venuesFromServicesJourney.length > 0;
 
   if (!hasVenues && !hasServices) {
-    return null;
+    return (
+      <EmptyState
+        text={{
+          body:
+            journey === "services"
+              ? "Ainda não tem empresas de serviços. Adicione a primeira."
+              : journey === "venues"
+                ? "Ainda não tem locais. Adicione o primeiro."
+                : "Ainda não tem locais nem empresas.",
+        }}
+      />
+    );
   }
 
   return (
     <>
       {hasVenues && (
         <>
-          <h2>Locais</h2>
+          {!journey && <h2>Locais</h2>}
           {venuesFromVenuesJourney.map((venue) => (
             <VenueDetail key={venue.venue.id} venue={venue} />
           ))}
@@ -41,7 +64,7 @@ const Venues = ({ dashboardList }: { dashboardList: DashboardList }) => {
       {hasVenues && hasServices && <hr />}
       {hasServices && (
         <>
-          <h2>Empresas</h2>
+          {!journey && <h2>Empresas</h2>}
           {venuesFromServicesJourney.map((venue) => (
             <VenueDetail key={venue.venue.id} venue={venue} />
           ))}

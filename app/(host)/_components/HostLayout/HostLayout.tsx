@@ -1,15 +1,16 @@
 "use client";
 
 import { createBEMClasses } from "@/_utils/classname";
-import HostHeader from "../Header";
 import { useSession } from "@/_services/session";
+import { useLocalStorage } from "@/_services/localStorage";
 import { useRouter } from "next/navigation";
 import { useAllSpaces } from "@/_models/space";
 import { useVenues } from "@/_models/venue";
-import Footer from "@/_components/Footer";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Sidebar from "../Sidebar";
+import Topbar from "../Topbar";
 
-const { block } = createBEMClasses("host-layout");
+const { block, element } = createBEMClasses("host-shell");
 
 const HostLayout = ({ children }: { children: React.ReactNode }) => {
   const [session] = useSession();
@@ -21,6 +22,14 @@ const HostLayout = ({ children }: { children: React.ReactNode }) => {
   const { data: spaces, isPending: isPendingSpaces } = useAllSpaces();
 
   const hasHostContent = (venues?.length ?? 0) > 0 || (spaces?.length ?? 0) > 0;
+  const hasPaidTier = (venues ?? []).some(
+    (venue) =>
+      venue.subscription === "premium" || venue.subscription === "expert",
+  );
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const collapsedStorage = useLocalStorage<boolean>("host-sidebar-collapsed");
+  const isCollapsed = collapsedStorage.value === true;
 
   useEffect(() => {
     if (session === null || (!!session && session.roles.includes("admin"))) {
@@ -45,11 +54,30 @@ const HostLayout = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <>
-      <HostHeader />
-      <div className={block()}>{!!session && children}</div>
-      <Footer />
-    </>
+    <div className={block()}>
+      <Sidebar
+        isOpen={isSidebarOpen}
+        isCollapsed={isCollapsed}
+        hasPaidTier={hasPaidTier}
+        onToggleCollapsed={() => collapsedStorage.setValue(!isCollapsed)}
+        onNavigate={() => setIsSidebarOpen(false)}
+      />
+      {isSidebarOpen && (
+        <button
+          type="button"
+          className={element("backdrop")}
+          aria-label="Fechar menu"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      <div className={element("main")}>
+        <Topbar
+          hasPaidTier={hasPaidTier}
+          onMenuToggle={() => setIsSidebarOpen((open) => !open)}
+        />
+        <main className={element("content")}>{children}</main>
+      </div>
+    </div>
   );
 };
 
