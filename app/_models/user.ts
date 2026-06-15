@@ -4,11 +4,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export class User {
   constructor(data: any) {
     Object.assign(this, data);
+    this.roles = Array.isArray(data.roles) ? data.roles : [];
   }
 
   id!: string;
   name!: string;
   email!: string;
+  roles!: string[];
+
+  get isAdmin() {
+    return this.roles.includes("admin");
+  }
+
+  get isComercial() {
+    return this.roles.includes("comercial");
+  }
 }
 
 type UsersQuery = {
@@ -41,6 +51,62 @@ export const useUpdateUserEmail = () => {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+export const useUpdateUserRoles = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { id: string; roles: string[] },
+    unknown,
+    { userId: string; roles: string[] }
+  >({
+    mutationFn: ({ userId, roles }) =>
+      fetchApi("users", `${userId}/roles`, {
+        method: "PATCH",
+        body: { roles },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+export const useFindUserByEmail = () => {
+  const fetchApi = useFetch();
+
+  return useMutation<
+    { userID: string; email: string; name: string },
+    unknown,
+    { email: string }
+  >({
+    mutationFn: ({ email }) =>
+      fetchApi(
+        "venues",
+        "collaborators/search",
+        undefined,
+        undefined,
+        { email },
+      ),
+  });
+};
+
+export const useTransferVenueOwner = () => {
+  const fetchApi = useFetch();
+  const queryClient = useQueryClient();
+
+  return useMutation<void, unknown, { venueID: string; ownerID: string }>({
+    mutationFn: ({ venueID, ownerID }) =>
+      fetchApi("venues", `${venueID}/owner`, {
+        method: "PATCH",
+        body: { ownerId: ownerID },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      await queryClient.invalidateQueries({ queryKey: ["venues"] });
     },
   });
 };

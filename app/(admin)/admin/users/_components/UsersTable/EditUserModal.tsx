@@ -5,6 +5,7 @@ import { User } from "@/_models/user";
 import { useState } from "react";
 import UpdateUserEmail from "./UpdateUserEmail";
 import ResetUserPassword from "./ResetUserPassword";
+import TransferVenues from "./TransferVenues";
 import Stack from "@/_design_system/Stack";
 
 export const EditUserModal = ({ user }: { user: User }) => {
@@ -25,9 +26,10 @@ export const EditUserModal = ({ user }: { user: User }) => {
         ariaLabel="Editar utilizador"
         width="x-large"
       >
-        <Stack gap="1.5rem">
+        <Stack gap="2rem">
           <UpdateUserEmail user={user} />
           <ResetUserPassword user={user} />
+          <TransferVenues user={user} />
         </Stack>
       </Modal>
     </>
