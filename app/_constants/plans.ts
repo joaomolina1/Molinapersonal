@@ -40,7 +40,7 @@ export const PLANS: Plan[] = [
     name: "Premium",
     subtitle: "Indicado para espaços mais pequenos, com tickets médios mais baixos.",
     priceMonthly: 49,
-    priceAnnual: 517,
+    priceAnnual: 516,
     note: "No plano anual: desconto 12% + 1 sessão de shooting.",
     badge: "Mais escolhido",
     featured: true,
@@ -71,7 +71,7 @@ export const PLANS: Plan[] = [
     name: "Expert",
     subtitle: "Indicado para espaços de maior dimensão e tickets médios mais elevados.",
     priceMonthly: 99,
-    priceAnnual: 1072,
+    priceAnnual: 1068,
     note: "No plano anual: desconto 12% + 2 sessões de shooting.",
     coreFeatures: [
       { label: "Venues, Espaços e packs: Ilimitado" },

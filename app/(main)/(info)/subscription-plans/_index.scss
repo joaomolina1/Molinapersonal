@@ -131,6 +131,12 @@
       }
     }
 
+    &__annual {
+      @include font-body-s;
+      color: $color-neutral-7;
+      margin-top: -0.5rem;
+    }
+
     &__note {
       @include font-body-s;
       color: $color-neutral-7;
