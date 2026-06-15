@@ -13,13 +13,14 @@ export type ApiSession = {
   token: string;
   expiry: string;
   profileComplete: boolean;
+  photoURL: string | null;
 };
 
 export async function getProfile(userId: string) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("profiles")
-    .select("id, name, roles, kind, date_of_birth")
+    .select("id, name, roles, kind, date_of_birth, photo_url")
     .eq("id", userId)
     .maybeSingle();
   if (error) throw error;
@@ -48,6 +49,7 @@ export async function buildApiSession(
     token: session.access_token,
     expiry: new Date(session.expires_at! * 1000).toISOString(),
     profileComplete,
+    photoURL: (profile?.photo_url as string | null | undefined) ?? null,
   };
 }
 
